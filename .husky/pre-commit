@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Format lại code trước khi commit"
+
+npm run lint --silent > nul 2>&1
+echo "✅ Lint done"
+
+npm run format --silent > nul 2>&1
+echo "✅ Format done"

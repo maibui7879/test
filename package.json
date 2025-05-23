@@ -11,6 +11,7 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "antd": "^5.25.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
@@ -21,7 +22,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prepare": "husky install",
+    "lint": "eslint \"src/**/*.{js,jsx}\" --fix --cache --cache-strategy content --cache-location ./node_modules/.cache/eslint",
+    "format": "prettier --cache --write \"src/**/*.{js,jsx,json,css,md}\""
   },
   "eslintConfig": {
     "extends": [
@@ -40,5 +44,12 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "autoprefixer": "^10.4.21",
+    "husky": "^8.0.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17"
   }
 }

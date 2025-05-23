@@ -8,9 +8,11 @@
 # testing
 /coverage
 
+
 # production
 /build
-
+# /.vscode
+nul
 # misc
 .DS_Store
 .env.local
