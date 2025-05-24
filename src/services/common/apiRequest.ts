@@ -40,7 +40,7 @@ async function apiRequest<T = any>(
             }
         }
 
-        const baseUrl = process.env.BASE_URL || '';
+        const baseUrl = 'http://localhost:5000/api';
         const response = await fetch(`${baseUrl}${endpoint}`, options);
         const data = await response.json();
 

@@ -5,66 +5,74 @@ import { UserProfile } from '../../services/types/types';
 import { clearToken, getToken, saveToken } from '../../utils/auth/authUtils';
 
 interface UserContextType {
-    user: UserProfile | null;
-    token: string | null;
-    login: (email: string, password: string) => Promise<void>;
-    logout: () => void;
-    fetchUserInfo: () => Promise<void>;
-    isAuthenticated: boolean;
+  user: UserProfile | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  fetchUserInfo: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-    const [token, setToken] = useState<string | null>(getToken());
-    const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(getToken());
+  const [user, setUser] = useState<UserProfile | null>(null);
 
-    const logout = useCallback(() => {
-        clearToken();
-        setToken(null);
-        setUser(null);
-    }, []);
+  const logout = useCallback(() => {
+    clearToken();
+    setToken(null);
+    setUser(null);
+  }, []);
 
-    const fetchUserInfo = useCallback(async () => {
-        if (!token) return;
-        try {
-            const userInfo = await getMeProfile();
-            setUser(userInfo);
-        } catch (error) {
-            console.error('Lỗi khi lấy user info:', error);
-            logout();
-        }
-    }, [token, logout]);
+  const fetchUserInfo = useCallback(async () => {
+    if (!token) return;
+    try {
+      const userInfo = await getMeProfile();
+      setUser(userInfo);
+    } catch (error) {
+      console.error('Lỗi khi lấy user info:', error);
+      logout();
+    }
+  }, [token, logout]);
 
-    const login = async (email: string, password: string) => {
-        try {
-            const res = await loginApi(email, password);
-            const receivedToken = res.data?.token;
-            if (!receivedToken) throw new Error('Token không tồn tại');
-            saveToken(receivedToken);
-            setToken(receivedToken);
-        } catch (error) {
-            logout();
-            throw error;
-        }
-    };
+  const login = async (email: string, password: string) => {
+    try {
+      const res = await loginApi(email, password);
+      const receivedToken = res.data?.token;
+      if (!receivedToken) throw new Error('Token không tồn tại');
+      saveToken(receivedToken);
+      setToken(receivedToken);
 
-    useEffect(() => {
-        if (token) fetchUserInfo();
-    }, [token, fetchUserInfo]);
+      const userInfo = await getMeProfile();
 
-    return (
-        <UserContext.Provider value={{ user, token, login, logout, fetchUserInfo, isAuthenticated: !!user && !!token }}>
-            {children}
-        </UserContext.Provider>
-    );
+      // Chỉ cho phép role là admin hoặc member
+      const allowedRoles = ['admin', 'member'];
+      if (!allowedRoles.includes(userInfo.role)) {
+        logout();
+        throw new Error('Bạn không có quyền truy cập');
+      }
+
+      setUser(userInfo);
+    } catch (error) {
+      logout();
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchUserInfo();
+  }, [token, fetchUserInfo]);
+
+  return (
+    <UserContext.Provider value={{ user, token, login, logout, fetchUserInfo, isAuthenticated: !!user && !!token }}>
+      {children}
+    </UserContext.Provider>
+  );
 };
 
 export const useUser = (): UserContextType => {
-    const context = useContext(UserContext);
-    if (!context) throw new Error('useUser phải dùng trong UserProvider');
-    return context;
+  const context = useContext(UserContext);
+  if (!context) throw new Error('useUser phải dùng trong UserProvider');
+  return context;
 };
-//=============Cách dùng===========================
-// import { useUser } from '../contexts/UserContext';
-// const { user, token, login, logout, isAuthenticated } = useUser();

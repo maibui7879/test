@@ -1,5 +1,5 @@
 function Home() {
-    return <>Xin chào</>;
+    return <></>;
 }
 
 export default Home;
