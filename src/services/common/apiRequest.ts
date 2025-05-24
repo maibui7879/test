@@ -1,3 +1,5 @@
+import { getToken } from '../../utils/auth/authUtils';
+
 interface ApiResponse<T = any> {
     success: boolean;
     data?: T;
@@ -11,12 +13,11 @@ async function apiRequest<T = any>(
     requiresAuth: boolean = true,
 ): Promise<ApiResponse<T>> {
     try {
-        const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-        };
+        const headers: HeadersInit = {};
 
+        // Add Authorization header if required
         if (requiresAuth) {
-            const token = localStorage.getItem('accessToken');
+            const token = getToken();
             if (!token) {
                 return { success: false, message: 'Bạn cần đăng nhập để thực hiện thao tác này.' };
             }
@@ -28,8 +29,15 @@ async function apiRequest<T = any>(
             headers,
         };
 
+        // Xử lý body: nếu là FormData thì không set Content-Type
         if (body) {
-            options.body = JSON.stringify(body);
+            if (body instanceof FormData) {
+                options.body = body;
+                // FormData: không cần set Content-Type, browser sẽ tự set boundary
+            } else {
+                headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
         }
 
         const baseUrl = process.env.BASE_URL || '';

@@ -1,22 +1,14 @@
-import React, { ReactNode } from 'react';
-import classNames from 'classnames/bind';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import styles from './DefaultLayout.module.scss';
-
-const cx = classNames.bind(styles);
-
-interface DefaultLayoutProps {
-    children: ReactNode;
-}
+import DefaultLayoutProps from './type';
 
 function DefaultLayout({ children }: DefaultLayoutProps) {
     return (
-        <div className={cx('wrapper')}>
+        <div className="min-h-screen flex flex-col">
             <Header />
-            <div className={cx('container')}>
+            <div className="flex flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* <Sidebar /> */}
-                <div className={cx('content')}>{children}</div>
+                <main className="flex-grow">{children}</main>
             </div>
             <Footer />
         </div>
