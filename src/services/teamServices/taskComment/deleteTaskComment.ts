@@ -1,4 +1,3 @@
-// api/taskComments/deleteTaskComment.ts
 import apiRequest from '../../common/apiRequest';
 
 export const deleteTaskComment = async (commentId: number): Promise<void> => {

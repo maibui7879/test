@@ -52,9 +52,4 @@ a {
     color: var(--text-color);
     text-decoration: none;
 }
-.ant-notification {
-  z-index: 9999 !important;
-  top: 24px !important;
-  right: 24px !important;
-  position: fixed !important;
-}
+

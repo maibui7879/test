@@ -1,4 +1,2 @@
-import AuthForm from "./components/AuthForm";
-export {
-    AuthForm
-};
+import AuthForm from './components/AuthForm';
+export { AuthForm };

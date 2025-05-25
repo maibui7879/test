@@ -1,4 +1,3 @@
-// api/taskComments/getTaskCommentsByTaskId.ts
 import apiRequest from '../../common/apiRequest';
 import { TaskComment } from '../../types/types';
 

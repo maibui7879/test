@@ -1,18 +1,12 @@
-import AuthForm from '../pages/Auth/components/AuthForm';
 import DefaultLayout from '../layouts/DefaultLayout';
-import AuthLayout from '../layouts/AuthLayout';
-import Route from './type';
+import { publicRoutes as publicData, privateRoutes as privateData } from './data';
 
-const publicRoutes: Route[] = [
-    {
-        path: '/auth',
-        component: AuthForm,
-        layout: AuthLayout, 
-    },
-];
+export const publicRoutes = publicData.map(route => ({
+  ...route,
+  layout: route.layout === null ? null : DefaultLayout,
+}));
 
-const privateRoutes: Route[] = [
-
-];
-
-export { publicRoutes, privateRoutes };
+export const privateRoutes = privateData.map(route => ({
+  ...route,
+  layout: DefaultLayout, 
+}));

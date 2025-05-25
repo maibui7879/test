@@ -7,13 +7,13 @@ export interface UserProfile {
     email: string;
     role: string;
     status: string;
-    full_name: string;
-    phone_number?: string | null;
-    avatar_url: string | null;
-    gender: string;
-    date_of_birth: string | null;
+    full_name?: string;
+    phone_number?: string;
+    avatar_url: string | File;
+    gender?: string;
+    date_of_birth?: string | null;
     address?: string | null;
-    bio: string | null;
+    bio?: string | null;
 }
 //===========================
 export interface ChangePasswordPayload {
@@ -64,4 +64,51 @@ export interface TaskComment {
     comment: string; // Nội dung comment
     is_from_assignee: boolean; // Có phải từ người được giao task không
     created_at: string;
+}
+//==================================
+export interface CreateTeamPayload {
+    name: string;
+    description?: string;
+}
+export interface UpdateTeamPayload {
+    name?: string;
+    description?: string;
+    avatar_url?: File | null;
+}
+export interface Team {
+    id: number;
+    name: string;
+    description: string;
+    avatar_url: string | null;
+    created_at: string;
+    creator_name: string;
+}
+export interface TeamListResponse {
+    items: Team[];
+}
+
+// ======================
+export interface UpdateAssignmentPayload {
+    taskId: number;
+    userId: number;
+}
+export interface TaskAssignment {
+    id: number;
+    task_id: number;
+    user_id: number | null;
+    assigned_by: number | null;
+    assigned_at: string;
+    updated_at: string;
+}
+//============================
+export interface Reminder {
+    id: number;
+    user_id: number;
+    task_id: number;
+    start_time?: string;
+    end_time?: string;
+    mes?: string;
+    is_sent?: boolean;
+    is_read?: boolean;
+    created_at?: string;
 }
