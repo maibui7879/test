@@ -22,6 +22,8 @@ export interface ChangePasswordPayload {
 }
 //=========================
 export interface TaskPayload {
+    id?: string;
+    _id?: string;
     title: string;
     team_id?: number | null;
     start_time: string;

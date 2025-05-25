@@ -1,0 +1,43 @@
+.task-item {
+    transition: all 0.3s ease;
+}
+
+.task-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.task-description {
+    color: #666;
+    margin: 12px 0;
+    white-space: pre-wrap;
+}
+
+.task-time {
+    color: #888;
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+.task-time .anticon {
+    margin-right: 4px;
+}
+
+.task-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.task-actions .ant-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+} 

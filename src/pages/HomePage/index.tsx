@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { getAllTaskUser } from '../../services/taskServices';
-import { TaskPayload } from '../../services/types/types';
-import TaskItem from '../../components/TaskItem';
-import TaskListSection from '../../components/TaskListSection';
+import { getAllTaskUser } from '../../services/taskServices'; // Import getAllTaskUser service
+import { TaskPayload } from '../../services/types/types'; // Import TaskPayload type
+import TaskItem from '../../components/TaskItem'; // Import TaskItem (assuming it exists)
+import TaskListSection from '../../components/TaskListSection'; // Import TaskListSection (assuming it exists)
 import TaskForm from '../../components/TaskForm';
-import { Button, Modal, message, Empty } from 'antd';
+import { Button, Modal, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import './styles.css';
 
-function PersonalTask() {
+function Home() {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -18,21 +18,13 @@ function PersonalTask() {
         try {
             setLoading(true);
             const response = await getAllTaskUser();
-            console.log('Fetched tasks:', response);
-            
-            if (response && response.personalTasks) {
-                // Sort tasks by start time
-                const sortedTasks = [...response.personalTasks].sort((a, b) => 
-                    new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-                );
-                setTasks(sortedTasks);
+            if (response && Array.isArray(response)) {
+                setTasks(response);
             } else {
-                console.error('Invalid response format:', response);
                 throw new Error('Invalid response format');
             }
             setLoading(false);
         } catch (err: any) {
-            console.error('Error fetching tasks:', err);
             const errorMessage = err.message || 'Failed to load tasks';
             setError(errorMessage);
             message.error(errorMessage);
@@ -52,10 +44,9 @@ function PersonalTask() {
         setIsModalVisible(false);
     };
 
-    const handleSuccess = async () => {
+    const handleSuccess = () => {
         setIsModalVisible(false);
-        message.success('Tạo công việc thành công!');
-        await fetchTasks();
+        fetchTasks();
     };
 
     if (loading) {
@@ -72,15 +63,12 @@ function PersonalTask() {
             <div className="error-container">
                 <h2>Lỗi</h2>
                 <p>{error}</p>
-                <Button type="primary" onClick={fetchTasks}>
-                    Thử lại
-                </Button>
             </div>
         );
     }
 
     return (
-        <div className="personal-task-container">
+        <div className="home-container">
             <div className="header-section">
                 <h1 className="page-title">Danh sách công việc</h1>
                 <Button 
@@ -101,10 +89,9 @@ function PersonalTask() {
                         />
                     ))
                 ) : (
-                    <Empty
-                        description="Không có công việc nào"
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    />
+                    <div className="no-tasks-message">
+                        Không có công việc nào.
+                    </div>
                 )}
             </TaskListSection>
 
@@ -121,4 +108,4 @@ function PersonalTask() {
     );
 }
 
-export default PersonalTask;
+export default Home;
