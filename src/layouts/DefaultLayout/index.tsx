@@ -8,7 +8,7 @@ function DefaultLayout({ children }: DefaultLayoutProps) {
         <div className="min-h-screen flex flex-col">
             <Header />
             <div className="flex flex-1 ">
-                <Sidebar routes={privateRoutes}/>
+                <Sidebar routes={privateRoutes} />
                 <main className="flex-grow px-4 sm:px-6 lg:px-8">{children}</main>
             </div>
             <Footer />

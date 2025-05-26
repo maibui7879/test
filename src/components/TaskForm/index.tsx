@@ -65,24 +65,12 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
     };
 
     return (
-        <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            className="task-form"
-        >
-            <Form.Item
-                name="title"
-                label="Tiêu đề"
-                rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
-            >
+        <Form form={form} layout="vertical" onFinish={handleSubmit} className="task-form">
+            <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}>
                 <Input placeholder="Nhập tiêu đề công việc" />
             </Form.Item>
 
-            <Form.Item
-                name="description"
-                label="Mô tả"
-            >
+            <Form.Item name="description" label="Mô tả">
                 <TextArea rows={4} placeholder="Nhập mô tả công việc" />
             </Form.Item>
 
@@ -91,11 +79,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
                 label="Thời gian bắt đầu"
                 rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
             >
-                <DatePicker 
-                    showTime 
-                    format="YYYY-MM-DD HH:mm"
-                    placeholder="Chọn thời gian bắt đầu"
-                />
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" placeholder="Chọn thời gian bắt đầu" />
             </Form.Item>
 
             <Form.Item
@@ -105,8 +89,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
                     { required: true, message: 'Vui lòng chọn thời gian kết thúc' },
                     ({ getFieldValue }) => ({
                         validator(_, value) {
-                            if (!value || !getFieldValue('start_time') || 
-                                value.isAfter(getFieldValue('start_time'))) {
+                            if (!value || !getFieldValue('start_time') || value.isAfter(getFieldValue('start_time'))) {
                                 return Promise.resolve();
                             }
                             return Promise.reject(new Error('Thời gian kết thúc phải sau thời gian bắt đầu'));
@@ -114,11 +97,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
                     }),
                 ]}
             >
-                <DatePicker 
-                    showTime 
-                    format="YYYY-MM-DD HH:mm"
-                    placeholder="Chọn thời gian kết thúc"
-                />
+                <DatePicker showTime format="YYYY-MM-DD HH:mm" placeholder="Chọn thời gian kết thúc" />
             </Form.Item>
 
             <Form.Item
@@ -154,4 +133,4 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
     );
 };
 
-export default TaskForm; 
+export default TaskForm;

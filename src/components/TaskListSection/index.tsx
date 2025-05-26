@@ -9,11 +9,9 @@ const TaskListSection: React.FC<TaskListSectionProps> = ({ title, children }) =>
     return (
         <div className="task-list-section">
             <h2>{title}</h2>
-            <div className="task-list">
-                {children}
-            </div>
+            <div className="task-list">{children}</div>
         </div>
     );
 };
 
-export default TaskListSection; 
+export default TaskListSection;

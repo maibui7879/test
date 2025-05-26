@@ -33,7 +33,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess }) => {
             toast.success('Đăng ký thành công! Chào mừng bạn đến với ứng dụng!', { autoClose: 2000 });
 
             setTimeout(() => {
-                onRegisterSuccess(); 
+                onRegisterSuccess();
             }, 2000);
         } catch (err: any) {
             setError(err.message || 'Đăng ký thất bại');

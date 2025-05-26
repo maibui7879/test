@@ -10,7 +10,7 @@ const createTask = async (payload: TaskPayload): Promise<void> => {
         end_time: payload.end_time,
         status: payload.status,
         priority: payload.priority,
-        team_id: payload.team_id || null
+        team_id: payload.team_id || null,
     };
 
     const res = await apiRequest('/tasks', 'POST', cleanPayload, true);

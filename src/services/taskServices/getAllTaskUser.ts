@@ -15,14 +15,14 @@ const getAllTaskUser = async (): Promise<TaskResponse> => {
         if (!res.success) {
             throw new Error(res.message || 'Không thể lấy task');
         }
-        
+
         if (!res.data) {
             return {
                 totalItems: 0,
                 totalPages: 0,
                 currentPage: 1,
                 pageSize: 10,
-                personalTasks: []
+                personalTasks: [],
             };
         }
 

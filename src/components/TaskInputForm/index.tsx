@@ -20,7 +20,15 @@ const TaskInputForm: React.FC<TaskInputFormProps> = ({ onAddTask, loading }) => 
     };
 
     return (
-        <div style={{ maxWidth: 500, margin: '20px auto', padding: '20px', border: '1px solid #eee', borderRadius: '8px' }}>
+        <div
+            style={{
+                maxWidth: 500,
+                margin: '20px auto',
+                padding: '20px',
+                border: '1px solid #eee',
+                borderRadius: '8px',
+            }}
+        >
             <h2>Thêm Nhiệm vụ Mới</h2>
             <Input
                 placeholder="Tiêu đề nhiệm vụ" // Placeholder dựa trên ảnh
@@ -44,4 +52,4 @@ const TaskInputForm: React.FC<TaskInputFormProps> = ({ onAddTask, loading }) => 
 
 export default TaskInputForm;
 
-export {}; // Add an empty export to make it a module 
+export {}; // Add an empty export to make it a module

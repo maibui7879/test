@@ -57,7 +57,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate }) => {
         try {
             const updatedTask: TaskPayload = {
                 ...currentTask,
-                status: 'done' as const
+                status: 'done' as const,
             };
             setCurrentTask(updatedTask);
             if (onUpdate) {
@@ -75,11 +75,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate }) => {
 
     return (
         <>
-            <Card 
-                className="task-item" 
-                style={{ marginBottom: '16px', cursor: 'pointer' }}
-                onClick={showModal}
-            >
+            <Card className="task-item" style={{ marginBottom: '16px', cursor: 'pointer' }} onClick={showModal}>
                 <div className="task-header">
                     <h3 style={{ margin: 0 }}>{currentTask.title}</h3>
                     <Space>
@@ -87,14 +83,15 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate }) => {
                             <FlagOutlined /> {currentTask.priority}
                         </Tag>
                         <Tag color={getStatusColor(currentTask.status)}>
-                            {currentTask.status === 'todo' ? 'Chưa thực hiện' :
-                             currentTask.status === 'in_progress' ? 'Đang thực hiện' : 'Hoàn thành'}
+                            {currentTask.status === 'todo'
+                                ? 'Chưa thực hiện'
+                                : currentTask.status === 'in_progress'
+                                  ? 'Đang thực hiện'
+                                  : 'Hoàn thành'}
                         </Tag>
                     </Space>
                 </div>
-                {currentTask.description && (
-                    <p className="task-description">{currentTask.description}</p>
-                )}
+                {currentTask.description && <p className="task-description">{currentTask.description}</p>}
                 <div className="task-time">
                     <Space>
                         <ClockCircleOutlined />
@@ -105,32 +102,18 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate }) => {
                 </div>
                 {currentTask.status !== 'done' && (
                     <div className="task-actions" onClick={(e) => e.stopPropagation()}>
-                        <Button 
-                            type="primary" 
-                            icon={<CheckCircleOutlined />} 
-                            onClick={handleComplete}
-                        >
+                        <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleComplete}>
                             Hoàn thành
                         </Button>
                     </div>
                 )}
             </Card>
 
-            <Modal
-                title="Chỉnh sửa công việc"
-                open={isModalVisible}
-                onCancel={handleCancel}
-                footer={null}
-                width={700}
-            >
-                <TaskForm 
-                    mode="edit"
-                    initialValues={currentTask}
-                    onSuccess={handleSuccess} 
-                />
+            <Modal title="Chỉnh sửa công việc" open={isModalVisible} onCancel={handleCancel} footer={null} width={700}>
+                <TaskForm mode="edit" initialValues={currentTask} onSuccess={handleSuccess} />
             </Modal>
         </>
     );
 };
 
-export default TaskItem; 
+export default TaskItem;

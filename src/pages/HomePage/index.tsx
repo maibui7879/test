@@ -6,7 +6,6 @@ import TaskListSection from '../../components/TaskListSection'; // Import TaskLi
 import TaskForm from '../../components/TaskForm';
 import { Button, Modal, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import './styles.css';
 
 function Home() {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
@@ -51,8 +50,8 @@ function Home() {
 
     if (loading) {
         return (
-            <div className="loading-container">
-                <div className="loading-spinner" />
+            <div className="flex flex-col items-center justify-center min-h-[200px]">
+                <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4" />
                 <p>Đang tải danh sách công việc...</p>
             </div>
         );
@@ -60,48 +59,31 @@ function Home() {
 
     if (error) {
         return (
-            <div className="error-container">
-                <h2>Lỗi</h2>
+            <div className="p-5 bg-red-50 border border-red-200 rounded-md my-5">
+                <h2 className="text-red-500 mb-2.5">Lỗi</h2>
                 <p>{error}</p>
             </div>
         );
     }
 
     return (
-        <div className="home-container">
-            <div className="header-section">
-                <h1 className="page-title">Danh sách công việc</h1>
-                <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />}
-                    onClick={showModal}
-                >
+        <div className="p-5 max-w-7xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl m-0 text-gray-700">Danh sách công việc</h1>
+                <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
                     Thêm công việc mới
                 </Button>
             </div>
 
             <TaskListSection title="Tất cả công việc">
                 {tasks.length > 0 ? (
-                    tasks.map((task) => (
-                        <TaskItem 
-                            key={task.id || task._id || Math.random().toString()} 
-                            task={task}
-                        />
-                    ))
+                    tasks.map((task) => <TaskItem key={task.id || task._id || Math.random().toString()} task={task} />)
                 ) : (
-                    <div className="no-tasks-message">
-                        Không có công việc nào.
-                    </div>
+                    <div className="text-center p-5 text-gray-600 italic">Không có công việc nào.</div>
                 )}
             </TaskListSection>
 
-            <Modal
-                title="Thêm công việc mới"
-                open={isModalVisible}
-                onCancel={handleCancel}
-                footer={null}
-                width={700}
-            >
+            <Modal title="Thêm công việc mới" open={isModalVisible} onCancel={handleCancel} footer={null} width={700}>
                 <TaskForm onSuccess={handleSuccess} />
             </Modal>
         </div>
