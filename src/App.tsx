@@ -12,7 +12,7 @@ function App() {
     const renderRoutes = (routes: any[]) =>
         routes.map((route, index) => {
             const Page = route.component;
-            let Layout: React.FC<{ children: React.ReactNode }> | React.ExoticComponent = DefaultLayout;
+            let Layout: React.FC<{ children: React.ReactNode }> = DefaultLayout;
 
             if (route.layout === null) {
                 Layout = Fragment;
@@ -22,14 +22,16 @@ function App() {
 
             return (
                 <Route key={index} path={route.path}>
-                    <Route
-                        index
-                        element={
-                            <Layout>
-                                <Page />
-                            </Layout>
-                        }
-                    />
+                    {Page && (
+                        <Route
+                            index
+                            element={
+                                <Layout>
+                                    <Page />
+                                </Layout>
+                            }
+                        />
+                    )}
                     {route.children && renderRoutes(route.children)}
                 </Route>
             );

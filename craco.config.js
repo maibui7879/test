@@ -1,0 +1,15 @@
+const path = require('path');
+
+module.exports = {
+    webpack: {
+        alias: {
+            '@common': path.resolve(__dirname, 'src/common'),
+            '@config': path.resolve(__dirname, 'src/config'),
+            '@components': path.resolve(__dirname, 'src/components'),
+            '@services': path.resolve(__dirname, 'src/services'),
+            '@pages': path.resolve(__dirname, 'src/pages'),
+            '@contexts': path.resolve(__dirname, 'src/contexts'),
+            '@': path.resolve(__dirname, 'src/'),
+        },
+    },
+};

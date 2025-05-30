@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, DatePicker, Select, Button, message } from 'antd';
 import { TaskPayload } from '../../services/types/types';
-import { createTask, updateTask } from '../../services/taskServices';
 import dayjs from 'dayjs';
+import { createTask, updateTask } from '@services/taskServices';
 
 const { TextArea } = Input;
 
