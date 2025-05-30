@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaUserCircle } from 'react-icons/fa';
-import FaIcon from '../../../utils/FaIconUtils';
+import FaIcon from '@/utils/FaIconUtils';
 
 interface User {
     avatar_url?: string | File;
@@ -15,7 +15,7 @@ interface SidebarHeaderProps {
     renderUserInfo?: (user: User) => React.ReactNode;
 }
 
-const SidebarHeader: React.FC<SidebarHeaderProps> = ({ user, className = '', renderAvatar, renderUserInfo }) => {
+function SidebarHeader({ user, className = '', renderAvatar, renderUserInfo }: SidebarHeaderProps) {
     const defaultAvatar = <FaIcon icon={FaUserCircle} className="md:w-16 md:h-16 h-8 w-8 text-gray-400" />;
 
     const defaultUserInfo = (
@@ -25,24 +25,28 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ user, className = '', ren
         </>
     );
 
-    return (
-        <div className={`flex items-center gap-3 px-4 pb-6 border-b border-gray-700 ${className}`}>
-            {renderAvatar ? (
-                renderAvatar(user || {})
-            ) : user?.avatar_url ? (
+    const renderAvatarContent = () => {
+        if (renderAvatar) return renderAvatar(user || {});
+        if (user?.avatar_url) {
+            return (
                 <img
                     src={typeof user.avatar_url === 'string' ? user.avatar_url : URL.createObjectURL(user.avatar_url)}
                     alt="Avatar"
                     className="md:w-16 md:h-16 h-12 w-12 rounded-full object-cover"
                 />
-            ) : (
-                defaultAvatar
-            )}
+            );
+        }
+        return defaultAvatar;
+    };
+
+    return (
+        <div className={`flex items-center gap-3 px-4 pb-6 border-b border-gray-700 ${className}`}>
+            {renderAvatarContent()}
             <div className="flex-1 hidden xl:block">
                 {renderUserInfo ? renderUserInfo(user || {}) : defaultUserInfo}
             </div>
         </div>
     );
-};
+}
 
 export default SidebarHeader;

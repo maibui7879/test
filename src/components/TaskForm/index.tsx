@@ -7,7 +7,7 @@ import { createTask, updateTask } from '@services/taskServices';
 const { TextArea } = Input;
 
 interface TaskFormProps {
-    onSuccess?: () => void;
+    onSuccess?: (taskData: TaskPayload) => void;
     initialValues?: TaskPayload;
     mode?: 'create' | 'edit';
 }
@@ -49,7 +49,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
                 await updateTask(Number(initialValues.id), taskData);
                 message.success('Cập nhật công việc thành công!');
             }
-            onSuccess?.();
+            onSuccess?.(taskData);
         } catch (error: any) {
             if (error.message === 'Công việc với tên này đã tồn tại!') {
                 message.error('Tên công việc này đã tồn tại. Vui lòng chọn tên khác!');

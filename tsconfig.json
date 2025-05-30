@@ -17,13 +17,17 @@
         "jsx": "react-jsx",
         "baseUrl": "src",
         "paths": {
-            "@common/*": ["./common/*"],
-            "@config/*": ["./config/*"],
-            "@components/*": ["./components/*"],
-            "@services/*": ["./services/*"],
-            "@pages/*": ["./pages/*"],
-            "@contexts/*": ["./contexts/*"],
-            "@/*": ["./*"],
+            "@common/*": ["common/*"],
+            "@config/*": ["config/*"],
+            "@components/*": ["components/*"],
+            "@services/*": ["services/*"],
+            "@pages/*": ["pages/*"],
+            "@contexts/*": ["contexts/*"],
+            "@utils/*": ["utils/*"],
+            "@hooks/*": ["hooks/*"],
+            "@layouts/*": ["layouts/*"],
+            "@assets/*": ["assets/*"],
+            "@/*": ["./*"]
         }
     },
     "include": ["src"]

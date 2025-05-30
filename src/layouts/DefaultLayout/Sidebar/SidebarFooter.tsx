@@ -1,33 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSignOutAlt } from 'react-icons/fa';
-import FaIcon from '../../../utils/FaIconUtils';
+import FaIcon from '@/utils/FaIconUtils';
 import { Modal } from 'antd';
+import { SidebarFooterProps } from './type';
 
-interface SidebarFooterProps {
-    onLogout?: () => void;
-    className?: string;
-    renderLogoutButton?: (onClick: () => void) => React.ReactNode;
-    renderLogoutModal?: (isOpen: boolean, onOk: () => void, onCancel: () => void) => React.ReactNode;
-}
-
-const SidebarFooter: React.FC<SidebarFooterProps> = ({
-    onLogout,
-    className = '',
-    renderLogoutButton,
-    renderLogoutModal,
-}) => {
+function SidebarFooter({ onLogout, className = '', renderLogoutButton, renderLogoutModal }: SidebarFooterProps) {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const showModal = () => setIsModalOpen(true);
-
     const handleOk = () => {
         onLogout?.();
         setIsModalOpen(false);
         navigate('/auth');
     };
-
     const handleCancel = () => setIsModalOpen(false);
 
     const defaultLogoutButton = (
@@ -60,6 +47,6 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
             {renderLogoutModal ? renderLogoutModal(isModalOpen, handleOk, handleCancel) : defaultLogoutModal}
         </div>
     );
-};
+}
 
 export default SidebarFooter;

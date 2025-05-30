@@ -25,7 +25,7 @@ export interface TaskPayload {
     id?: string;
     _id?: string;
     title: string;
-    team_id?: number | null;
+    team_id?: string | null;
     start_time: string;
     end_time: string;
     description?: string;

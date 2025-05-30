@@ -9,9 +9,10 @@ import './styles.css';
 interface TaskItemProps {
     task: TaskPayload;
     onUpdate?: (updatedTask: TaskPayload) => void;
+    onDelete?: () => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentTask, setCurrentTask] = useState<TaskPayload>(task);
 
