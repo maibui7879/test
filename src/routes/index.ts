@@ -15,7 +15,7 @@ export const publicRoutes: Route[] = [
     },
 ];
 
-export const privateRoutes: Route[] = [
+export const sidebarRoutes: Route[] = [
     {
         path: '/',
         name: 'TRANG CHỦ',
@@ -63,3 +63,4 @@ export const privateRoutes: Route[] = [
         ],
     },
 ];
+export const privateRoutes: Route[] = [];

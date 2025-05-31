@@ -40,7 +40,7 @@ function SidebarHeader({ user, className = '', renderAvatar, renderUserInfo }: S
     };
 
     return (
-        <div className={`flex items-center gap-3 px-4 pb-6 border-b border-gray-700 ${className}`}>
+        <div className={`flex items-center gap-3 px-4 pb-6 border-b border-gray-700 w-full ${className}`}>
             {renderAvatarContent()}
             <div className="flex-1 hidden xl:block">
                 {renderUserInfo ? renderUserInfo(user || {}) : defaultUserInfo}

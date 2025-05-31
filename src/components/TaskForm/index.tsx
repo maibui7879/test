@@ -1,62 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, DatePicker, Select, Button, message } from 'antd';
-import { TaskPayload } from '../../services/types/types';
+import React, { useState } from 'react';
+import { Form, Input, DatePicker, Select, Button } from 'antd';
+import { createTask } from '@services/taskServices';
+import { TaskPayload } from '@services/types/types';
+import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { createTask, updateTask } from '@services/taskServices';
+import { toast } from 'react-toastify';
 
 const { TextArea } = Input;
 
 interface TaskFormProps {
-    onSuccess?: (taskData: TaskPayload) => void;
-    initialValues?: TaskPayload;
-    mode?: 'create' | 'edit';
+    onTaskCreated?: (task: TaskPayload) => void;
+    onClose?: () => void;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'create' }) => {
+function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        if (initialValues) {
-            form.setFieldsValue({
-                ...initialValues,
-                start_time: dayjs(initialValues.start_time),
-                end_time: dayjs(initialValues.end_time),
-            });
-        }
-    }, [initialValues, form]);
 
     const handleSubmit = async (values: any) => {
         try {
             setLoading(true);
             const taskData: TaskPayload = {
-                ...(initialValues || {}),
                 title: values.title,
                 description: values.description || '',
-                start_time: values.start_time.format('YYYY-MM-DD HH:mm:ss'),
-                end_time: values.end_time.format('YYYY-MM-DD HH:mm:ss'),
+                start_time: values.start_time
+                    ? values.start_time.format('YYYY-MM-DD HH:mm:ss')
+                    : dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                end_time: values.end_time
+                    ? values.end_time.format('YYYY-MM-DD HH:mm:ss')
+                    : dayjs().add(1, 'day').format('YYYY-MM-DD HH:mm:ss'),
                 status: values.status || 'todo',
-                priority: values.priority,
+                priority: values.priority || 'medium',
             };
 
-            if (mode === 'create') {
-                await createTask(taskData);
-                message.success('Tạo công việc thành công!');
-            } else {
-                if (!initialValues?.id) {
-                    throw new Error('Không tìm thấy ID của công việc');
-                }
-                await updateTask(Number(initialValues.id), taskData);
-                message.success('Cập nhật công việc thành công!');
-            }
-            onSuccess?.(taskData);
+            await createTask(taskData);
+            toast.success('Tạo công việc thành công!');
+            form.resetFields();
+            onTaskCreated?.(taskData);
+            onClose?.();
         } catch (error: any) {
             if (error.message === 'Công việc với tên này đã tồn tại!') {
-                message.error('Tên công việc này đã tồn tại. Vui lòng chọn tên khác!');
+                toast.error('Tên công việc này đã tồn tại. Vui lòng chọn tên khác!');
             } else if (error.message === 'Định dạng start_time không hợp lệ!') {
-                message.error('Định dạng thời gian không hợp lệ. Vui lòng kiểm tra lại!');
+                toast.error('Định dạng thời gian không hợp lệ. Vui lòng kiểm tra lại!');
             } else {
-                message.error('Có lỗi xảy ra khi xử lý công việc. Vui lòng thử lại!');
+                toast.error('Có lỗi xảy ra khi xử lý công việc. Vui lòng thử lại!');
             }
             console.error('Error handling task:', error);
         } finally {
@@ -65,72 +53,94 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, initialValues, mode = 'c
     };
 
     return (
-        <Form form={form} layout="vertical" onFinish={handleSubmit} className="task-form">
-            <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}>
-                <Input placeholder="Nhập tiêu đề công việc" />
-            </Form.Item>
-
-            <Form.Item name="description" label="Mô tả">
-                <TextArea rows={4} placeholder="Nhập mô tả công việc" />
-            </Form.Item>
-
+        <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            className="space-y-4 p-4 bg-white rounded-lg shadow-sm"
+        >
             <Form.Item
-                name="start_time"
-                label="Thời gian bắt đầu"
-                rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
+                name="title"
+                label={<span className="text-gray-700 font-medium">Tiêu đề</span>}
+                rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
             >
-                <DatePicker showTime format="YYYY-MM-DD HH:mm" placeholder="Chọn thời gian bắt đầu" />
+                <Input
+                    placeholder="Nhập tiêu đề công việc"
+                    className="rounded-md hover:border-blue-400 focus:border-blue-400"
+                />
             </Form.Item>
 
-            <Form.Item
-                name="end_time"
-                label="Thời gian kết thúc"
-                rules={[
-                    { required: true, message: 'Vui lòng chọn thời gian kết thúc' },
-                    ({ getFieldValue }) => ({
-                        validator(_, value) {
-                            if (!value || !getFieldValue('start_time') || value.isAfter(getFieldValue('start_time'))) {
-                                return Promise.resolve();
-                            }
-                            return Promise.reject(new Error('Thời gian kết thúc phải sau thời gian bắt đầu'));
-                        },
-                    }),
-                ]}
-            >
-                <DatePicker showTime format="YYYY-MM-DD HH:mm" placeholder="Chọn thời gian kết thúc" />
+            <Form.Item name="description" label={<span className="text-gray-700 font-medium">Mô tả</span>}>
+                <TextArea
+                    rows={4}
+                    placeholder="Nhập mô tả công việc"
+                    className="rounded-md hover:border-blue-400 focus:border-blue-400"
+                />
             </Form.Item>
 
-            <Form.Item
-                name="status"
-                label="Trạng thái"
-                rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-            >
-                <Select placeholder="Chọn trạng thái">
-                    <Select.Option value="todo">Chưa thực hiện</Select.Option>
-                    <Select.Option value="in_progress">Đang thực hiện</Select.Option>
-                    <Select.Option value="done">Hoàn thành</Select.Option>
-                </Select>
-            </Form.Item>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Form.Item
+                    name="start_time"
+                    label={<span className="text-gray-700 font-medium">Thời gian bắt đầu</span>}
+                >
+                    <DatePicker
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
+                        placeholder="Chọn thời gian bắt đầu"
+                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                    />
+                </Form.Item>
 
-            <Form.Item
-                name="priority"
-                label="Độ ưu tiên"
-                rules={[{ required: true, message: 'Vui lòng chọn độ ưu tiên' }]}
-            >
-                <Select placeholder="Chọn độ ưu tiên">
-                    <Select.Option value="low">Thấp</Select.Option>
-                    <Select.Option value="medium">Trung bình</Select.Option>
-                    <Select.Option value="high">Cao</Select.Option>
-                </Select>
-            </Form.Item>
+                <Form.Item
+                    name="end_time"
+                    label={<span className="text-gray-700 font-medium">Thời gian kết thúc</span>}
+                >
+                    <DatePicker
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
+                        placeholder="Chọn thời gian kết thúc"
+                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                    />
+                </Form.Item>
+            </div>
 
-            <Form.Item>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                    {mode === 'create' ? 'Tạo công việc' : 'Cập nhật'}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Form.Item name="status" label={<span className="text-gray-700 font-medium">Trạng thái</span>}>
+                    <Select
+                        placeholder="Chọn trạng thái"
+                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                    >
+                        <Select.Option value="todo">Chưa thực hiện</Select.Option>
+                        <Select.Option value="in_progress">Đang thực hiện</Select.Option>
+                        <Select.Option value="done">Hoàn thành</Select.Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item name="priority" label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}>
+                    <Select
+                        placeholder="Chọn độ ưu tiên"
+                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                    >
+                        <Select.Option value="low">Thấp</Select.Option>
+                        <Select.Option value="medium">Trung bình</Select.Option>
+                        <Select.Option value="high">Cao</Select.Option>
+                    </Select>
+                </Form.Item>
+            </div>
+
+            <Form.Item className="mb-0">
+                <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    className="w-full md:w-auto"
+                    icon={<PlusOutlined />}
+                >
+                    Tạo công việc
                 </Button>
             </Form.Item>
         </Form>
     );
-};
+}
 
 export default TaskForm;

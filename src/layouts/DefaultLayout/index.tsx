@@ -7,7 +7,7 @@ import FaIcon from '../../utils/FaIconUtils';
 import SidebarItem from './Sidebar/SidebarItem';
 import { useUser } from '@contexts/useAuth/userContext';
 import Route from '@/routes/type';
-import { privateRoutes } from '@/routes';
+import { sidebarRoutes } from '@/routes';
 
 function DefaultLayout({ children }: DefaultLayoutProps) {
     const { user, logout } = useUser();
@@ -41,11 +41,13 @@ function DefaultLayout({ children }: DefaultLayoutProps) {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="h-screen flex flex-col">
             <Header />
-            <div className="flex flex-1">
-                <Sidebar>{renderSidebarItems(privateRoutes)}</Sidebar>
-                <main className="flex-grow px-4 sm:px-6 lg:px-8">{children}</main>
+            <div className="flex-1 flex overflow-hidden">
+                <Sidebar>{renderSidebarItems(sidebarRoutes)}</Sidebar>
+                <main className="flex-1 overflow-auto bg-gray-50">
+                    <div className="container mx-auto h-full p-4 sm:p-6 lg:p-8">{children}</div>
+                </main>
             </div>
             <Footer />
         </div>
