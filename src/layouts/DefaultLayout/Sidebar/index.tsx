@@ -1,4 +1,3 @@
-import React from 'react';
 import SidebarItem from './SidebarItem';
 import SidebarHeader from './SidebarHeader';
 import SidebarFooter from './SidebarFooter';
@@ -8,7 +7,7 @@ function Sidebar({ children, items, className = '', header, footer }: SidebarPro
     const renderContent = () => {
         if (items) {
             return (
-                <div className="flex-1 overflow-y-auto px-2 py-4">
+                <div className="flex-1 overflow-y-auto px-1.5 py-2 space-y-0.5">
                     {items.map((item, index) => (
                         <SidebarItem
                             key={index}
@@ -26,10 +25,10 @@ function Sidebar({ children, items, className = '', header, footer }: SidebarPro
 
     return (
         <nav
-            className={`relative bg-gray-900 min-h-screen py-6 w-20 xl:w-[250px] transition-all duration-300 ${className}`}
+            className={`relative bg-gray-900 min-h-screen py-4 w-16 xl:w-[240px] transition-all duration-300 shadow-xl ${className}`}
         >
             {header || <SidebarHeader />}
-            <div className="mt-6">{renderContent()}</div>
+            <div className="mt-4">{renderContent()}</div>
             {footer || <SidebarFooter />}
         </nav>
     );

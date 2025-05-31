@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Input, Space, Tag, Button, Drawer, Tabs, Select, DatePicker, Form } from 'antd';
+import { Input, Space, Tag, Button, Drawer, Tabs, Select, DatePicker, Form, Popconfirm } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { TaskPayload } from '@services/types/types';
-import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { EditOutlined, SaveOutlined, CloseOutlined, DeleteOutlined, FundViewOutlined } from '@ant-design/icons';
 import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
@@ -13,6 +13,10 @@ interface TaskTableProps {
     error: string | null;
     onReload: () => void;
     onEditTask: (task: TaskPayload) => void;
+    onDeleteTask: (taskId: string | number) => void;
+    currentPage: number;
+    totalTasks: number;
+    onPageChange: (page: number) => void;
 }
 
 const getPriorityColor = (priority: string) => {
@@ -54,7 +58,17 @@ const getStatusText = (status: string) => {
     }
 };
 
-function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTableProps) {
+function TaskTable({
+    tasks,
+    loading,
+    error,
+    onReload,
+    onEditTask,
+    onDeleteTask,
+    currentPage,
+    totalTasks,
+    onPageChange,
+}: TaskTableProps) {
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
@@ -118,7 +132,7 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
             title: 'Tiêu đề',
             dataIndex: 'title',
             key: 'title',
-            width: '25%',
+            width: '35%',
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing(record);
                 return editable ? (
@@ -140,7 +154,8 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
-            width: '15%',
+            width: '12%',
+            align: 'center',
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
                 { text: 'Đang thực hiện', value: 'in_progress' },
@@ -175,7 +190,8 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
             title: 'Độ ưu tiên',
             dataIndex: 'priority',
             key: 'priority',
-            width: '15%',
+            width: '12%',
+            align: 'center',
             filters: [
                 { text: 'Thấp', value: 'low' },
                 { text: 'Trung bình', value: 'medium' },
@@ -210,7 +226,8 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
             title: 'Thời gian bắt đầu',
             dataIndex: 'start_time',
             key: 'start_time',
-            width: '15%',
+            width: '13%',
+            align: 'center',
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing(record);
@@ -237,7 +254,8 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
             title: 'Thời gian kết thúc',
             dataIndex: 'end_time',
             key: 'end_time',
-            width: '15%',
+            width: '13%',
+            align: 'center',
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing(record);
@@ -264,6 +282,7 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
             title: 'Thao tác',
             key: 'action',
             width: '15%',
+            align: 'center',
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing(record);
                 return editable ? (
@@ -280,9 +299,7 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
                             onClick={cancel}
                             icon={<CloseOutlined />}
                             className="hover:border-red-400 hover:text-red-500 transition-colors duration-200"
-                        >
-                            Hủy
-                        </Button>
+                        ></Button>
                     </Space>
                 ) : (
                     <Space>
@@ -292,16 +309,33 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
                             onClick={() => edit(record)}
                             icon={<EditOutlined />}
                             className="bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
-                        >
-                            Sửa
-                        </Button>
+                        ></Button>
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
+                            icon={<FundViewOutlined />}
                             className="bg-purple-500 hover:bg-purple-600 transition-colors duration-200"
+                        ></Button>
+                        <Popconfirm
+                            title="Xóa công việc"
+                            description="Bạn có chắc chắn muốn xóa công việc này?"
+                            onConfirm={() => {
+                                const taskId = record.id || record._id;
+                                if (taskId) {
+                                    onDeleteTask(taskId);
+                                }
+                            }}
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            okButtonProps={{ danger: true }}
                         >
-                            Chi tiết
-                        </Button>
+                            <Button
+                                type="primary"
+                                danger
+                                icon={<DeleteOutlined />}
+                                className="bg-red-500 hover:bg-red-600 transition-colors duration-200"
+                            ></Button>
+                        </Popconfirm>
                     </Space>
                 );
             },
@@ -389,6 +423,9 @@ function TaskTable({ tasks, loading, error, onReload, onEditTask }: TaskTablePro
                     setSearchText={setSearchText}
                     filteredTasks={filteredTasks}
                     columns={columns}
+                    currentPage={currentPage}
+                    totalTasks={totalTasks}
+                    onPageChange={onPageChange}
                 />
             </Form>
 

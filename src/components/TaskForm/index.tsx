@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, DatePicker, Select, Button } from 'antd';
-import { createTask } from '@services/taskServices';
+import { createTask, updateTask } from '@services/taskServices';
 import { TaskPayload } from '@services/types/types';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 
@@ -11,11 +11,30 @@ const { TextArea } = Input;
 interface TaskFormProps {
     onTaskCreated?: (task: TaskPayload) => void;
     onClose?: () => void;
+    initialValues?: {
+        title?: string;
+        description?: string;
+        status?: string;
+        priority?: string;
+        date?: [dayjs.Dayjs, dayjs.Dayjs];
+    };
+    taskId?: number | string;
 }
 
-function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
+function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+    const isEditing = !!taskId;
+
+    useEffect(() => {
+        if (initialValues) {
+            form.setFieldsValue({
+                ...initialValues,
+                start_time: initialValues.date?.[0],
+                end_time: initialValues.date?.[1],
+            });
+        }
+    }, [initialValues, form]);
 
     const handleSubmit = async (values: any) => {
         try {
@@ -33,8 +52,15 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
                 priority: values.priority || 'medium',
             };
 
-            await createTask(taskData);
-            toast.success('Tạo công việc thành công!');
+            if (isEditing && taskId) {
+                const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
+                await updateTask(numericId, taskData);
+                toast.success('Cập nhật công việc thành công!');
+            } else {
+                await createTask(taskData);
+                toast.success('Tạo công việc thành công!');
+            }
+
             form.resetFields();
             onTaskCreated?.(taskData);
             onClose?.();
@@ -62,7 +88,11 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
             <Form.Item
                 name="title"
                 label={<span className="text-gray-700 font-medium">Tiêu đề</span>}
-                rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+                rules={[
+                    { required: true, message: 'Vui lòng nhập tiêu đề' },
+                    { min: 3, message: 'Tiêu đề phải có ít nhất 3 ký tự' },
+                    { max: 100, message: 'Tiêu đề không được vượt quá 100 ký tự' },
+                ]}
             >
                 <Input
                     placeholder="Nhập tiêu đề công việc"
@@ -82,6 +112,7 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
                 <Form.Item
                     name="start_time"
                     label={<span className="text-gray-700 font-medium">Thời gian bắt đầu</span>}
+                    rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
                 >
                     <DatePicker
                         showTime
@@ -94,6 +125,7 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
                 <Form.Item
                     name="end_time"
                     label={<span className="text-gray-700 font-medium">Thời gian kết thúc</span>}
+                    rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc' }]}
                 >
                     <DatePicker
                         showTime
@@ -105,7 +137,11 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item name="status" label={<span className="text-gray-700 font-medium">Trạng thái</span>}>
+                <Form.Item
+                    name="status"
+                    label={<span className="text-gray-700 font-medium">Trạng thái</span>}
+                    rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
+                >
                     <Select
                         placeholder="Chọn trạng thái"
                         className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
@@ -116,7 +152,11 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
                     </Select>
                 </Form.Item>
 
-                <Form.Item name="priority" label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}>
+                <Form.Item
+                    name="priority"
+                    label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}
+                    rules={[{ required: true, message: 'Vui lòng chọn độ ưu tiên' }]}
+                >
                     <Select
                         placeholder="Chọn độ ưu tiên"
                         className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
@@ -134,9 +174,9 @@ function TaskForm({ onTaskCreated, onClose }: TaskFormProps) {
                     htmlType="submit"
                     loading={loading}
                     className="w-full md:w-auto"
-                    icon={<PlusOutlined />}
+                    icon={isEditing ? <EditOutlined /> : <PlusOutlined />}
                 >
-                    Tạo công việc
+                    {isEditing ? 'Cập nhật công việc' : 'Tạo công việc'}
                 </Button>
             </Form.Item>
         </Form>

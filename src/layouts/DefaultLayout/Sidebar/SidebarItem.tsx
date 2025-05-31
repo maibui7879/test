@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import FaIcon from '@/utils/FaIconUtils';
 import { SidebarItemProps } from './type';
@@ -10,17 +10,22 @@ function SidebarItem({
     label,
     subItems,
     className = '',
-    activeClassName = 'bg-indigo-600 text-white font-semibold shadow-md',
-    inactiveClassName = 'text-gray-300 hover:bg-indigo-500 hover:text-white',
+    activeClassName = 'bg-blue-600 text-white font-medium shadow-md',
+    inactiveClassName = 'text-gray-300 hover:bg-gray-700 hover:text-white',
 }: SidebarItemProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const location = useLocation();
+
+    const isChildActive = subItems?.some((item) => location.pathname === item.path);
+    const parentActiveClassName = isChildActive ? 'text-blue-400' : 'text-gray-300';
 
     const renderNavLink = (to: string, icon: React.ReactNode, label: string) => (
         <NavLink
             to={to}
+            end
             className={({ isActive }) =>
-                `flex items-center px-4 py-4 rounded-md transition-colors duration-200 whitespace-nowrap ${
+                `flex items-center px-4 py-3 rounded-md transition-colors duration-200 whitespace-nowrap ${
                     isActive ? activeClassName : inactiveClassName
                 } justify-center xl:justify-start ${className}`
             }
@@ -36,7 +41,7 @@ function SidebarItem({
         return (
             <>
                 {isOpen && (
-                    <ul className="pl-6 mt-1 space-y-1 hidden xl:block">
+                    <ul className="pl-6 mt-2 space-y-2 hidden xl:block">
                         {subItems.map((item, idx) => (
                             <li key={idx}>{renderNavLink(item.path, item.icon, item.label)}</li>
                         ))}
@@ -68,7 +73,7 @@ function SidebarItem({
                 onClick={() => setIsOpen(!isOpen)}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                className={`flex items-center w-full px-4 py-4 text-indigo-400 hover:text-indigo-300 focus:outline-none justify-center xl:justify-start ${className}`}
+                className={`flex items-center w-full px-4 py-3 rounded-md transition-colors duration-200 justify-center xl:justify-start ${parentActiveClassName} hover:text-white hover:bg-gray-700 ${className}`}
             >
                 {icon && <span className="text-lg">{icon}</span>}
                 <span className="ml-3 hidden xl:inline">{label}</span>

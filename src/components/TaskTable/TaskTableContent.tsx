@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Input, Button, Spin, Tooltip } from 'antd';
+import { Table, Input, Button, Spin, Tooltip, Pagination } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { TaskPayload } from '@services/types/types';
 import useDebounce from '@hooks/useDebounce';
@@ -12,6 +12,9 @@ interface TaskTableContentProps {
     setSearchText: (text: string) => void;
     filteredTasks: TaskPayload[];
     columns: any[];
+    currentPage: number;
+    totalTasks: number;
+    onPageChange: (page: number) => void;
 }
 
 function TaskTableContent({
@@ -22,6 +25,9 @@ function TaskTableContent({
     setSearchText,
     filteredTasks,
     columns,
+    currentPage,
+    totalTasks,
+    onPageChange,
 }: TaskTableContentProps) {
     if (loading) {
         return (
@@ -60,23 +66,18 @@ function TaskTableContent({
                     prefix={<SearchOutlined className="text-gray-400" />}
                     allowClear
                 />
-                <div className="text-sm text-gray-500">
-                    Tổng số: <span className="font-medium text-blue-600">{filteredTasks.length}</span> công việc
-                </div>
             </div>
             <Table
                 dataSource={filteredTasks}
                 columns={columns}
                 rowKey={(record) => (record.id ? String(record.id) : String(record._id))}
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total) => `Tổng ${total} công việc`,
-                    className: 'mt-4',
-                }}
+                pagination={false}
                 className="task-table"
                 scroll={{ x: 'max-content' }}
             />
+            <div className="flex justify-center  mt-4">
+                <Pagination current={currentPage} pageSize={10} total={totalTasks} onChange={onPageChange} />
+            </div>
         </div>
     );
 }

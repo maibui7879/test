@@ -18,32 +18,32 @@ export const publicRoutes: Route[] = [
 export const sidebarRoutes: Route[] = [
     {
         path: '/',
-        name: 'TRANG CHỦ',
+        name: 'DashBoard',
         component: Dashboard,
         icon: FaClipboard,
         children: [],
     },
     {
         path: '/team',
-        name: 'ĐỘI NHÓM',
+        name: 'Nhóm của bạn',
         component: Team,
         icon: FaUsers,
         children: [],
     },
     {
-        path: '/task',
-        name: 'CÔNG VIỆC',
+        path: '/nhiem-vu-ca-nhan',
+        name: 'Công việc cá nhân',
         icon: FaTasks,
         children: [
             {
-                path: 'calendar',
+                path: 'lich',
                 name: 'Lịch cá nhân',
                 component: Calendar,
                 icon: FaCalendarAlt,
             },
             {
-                path: 'task',
-                name: 'Công việc cá nhân',
+                path: 'nhiem-vu',
+                name: 'Công việc của bạn',
                 component: PersonalTask,
                 icon: FaTasks,
             },
@@ -52,15 +52,8 @@ export const sidebarRoutes: Route[] = [
     {
         path: '/user',
         icon: FaUser,
-        name: 'HỒ SƠ',
-        children: [
-            {
-                path: 'profile',
-                name: 'Hồ sơ',
-                component: Profile,
-                icon: FaUser,
-            },
-        ],
+        name: 'Trang cá nhân',
+        component: Profile,
     },
 ];
 export const privateRoutes: Route[] = [];

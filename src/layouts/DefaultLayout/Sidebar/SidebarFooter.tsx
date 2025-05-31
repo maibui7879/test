@@ -20,10 +20,10 @@ function SidebarFooter({ onLogout, className = '', renderLogoutButton, renderLog
     const defaultLogoutButton = (
         <button
             onClick={showModal}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors duration-200 hover:font-medium"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 hover:bg-red-500/20 text-red-400"
         >
             <FaIcon icon={FaSignOutAlt} className="text-lg" />
-            <span className="hidden xl:inline select-none">Đăng xuất</span>
+            <span className="hidden xl:inline select-none font-medium">Đăng xuất</span>
         </button>
     );
 
@@ -36,13 +36,14 @@ function SidebarFooter({ onLogout, className = '', renderLogoutButton, renderLog
             okText="Đồng ý"
             cancelText="Hủy"
             okButtonProps={{ danger: true }}
+            className="custom-modal"
         >
-            <p>Bạn chắc chắn muốn đăng xuất?</p>
+            <p className="text-gray-700">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
         </Modal>
     );
 
     return (
-        <div className={`py-8 px-2 text-red-400 border-t border-gray-600 ${className}`}>
+        <div className={`py-4 px-2 border-t border-gray-700 ${className}`}>
             {renderLogoutButton ? renderLogoutButton(showModal) : defaultLogoutButton}
             {renderLogoutModal ? renderLogoutModal(isModalOpen, handleOk, handleCancel) : defaultLogoutModal}
         </div>

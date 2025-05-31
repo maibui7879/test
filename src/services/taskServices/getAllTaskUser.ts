@@ -9,19 +9,30 @@ interface TaskResponse {
     personalTasks: TaskPayload[];
 }
 
-const getAllTaskUser = async (): Promise<TaskResponse> => {
+interface TaskQueryParams {
+    page?: number;
+    limit?: number;
+}
+
+const getAllTaskUser = async (params?: TaskQueryParams): Promise<TaskResponse> => {
     try {
-        const res = await apiRequest<TaskResponse>(`/tasks`, 'GET', null, true);
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+        const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const res = await apiRequest<TaskResponse>(url, 'GET', null, true);
+
         if (!res.success) {
-            throw new Error(res.message || 'Không thể lấy task');
+            throw new Error(res.message || 'Không thể lấy danh sách công việc');
         }
 
         if (!res.data) {
             return {
                 totalItems: 0,
                 totalPages: 0,
-                currentPage: 1,
-                pageSize: 10,
+                currentPage: params?.page || 1,
+                pageSize: params?.limit || 10,
                 personalTasks: [],
             };
         }
