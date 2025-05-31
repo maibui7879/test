@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -9,8 +9,7 @@ import { FaPlus } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import FaIcon from '@/utils/FaIconUtils';
-import { getAllTaskUser, createTask, updateTask } from '@services/taskServices';
-import { useUser } from '@contexts/useAuth/userContext';
+import { getAllTaskUser } from '@services/taskServices';
 import { TaskPayload } from '@services/types/types';
 import dayjs from 'dayjs';
 import TaskForm from '@/components/TaskForm';
@@ -43,7 +42,6 @@ function Calendar() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [selectedDateTasks, setSelectedDateTasks] = useState<TaskPayload[]>([]);
-    const { user } = useUser();
     const [loading, setLoading] = useState(false);
 
     const fetchTasks = useCallback(async () => {
@@ -114,18 +112,6 @@ function Calendar() {
         [tasks],
     );
 
-    const handleMoreClick = useCallback((date: Date, tasks: TaskPayload[]) => {
-        setSelectedDate(date);
-        setSelectedDateTasks(tasks);
-        setIsViewModalOpen(true);
-    }, []);
-
-    const handleModalOk = useCallback(async () => {
-        setIsModalOpen(false);
-        setSelectedTask(null);
-        await fetchTasks();
-    }, [fetchTasks]);
-
     const handleModalCancel = useCallback(() => {
         setIsModalOpen(false);
         setSelectedTask(null);
@@ -135,35 +121,59 @@ function Calendar() {
         (taskData: TaskPayload) => {
             if (selectedTask) {
                 // Nếu đang chỉnh sửa task
-                setTasks((prevTasks) =>
-                    prevTasks.map((task) =>
-                        task.id === selectedTask.id || task._id === selectedTask._id ? taskData : task,
-                    ),
-                );
-                // Cập nhật selectedDateTasks nếu đang xem danh sách task của một ngày
-                if (selectedDate) {
-                    setSelectedDateTasks((prevTasks) =>
-                        prevTasks.map((task) =>
-                            task.id === selectedTask.id || task._id === selectedTask._id ? taskData : task,
-                        ),
+                const updatedTask = {
+                    ...taskData,
+                    id: selectedTask.id,
+                    _id: selectedTask._id,
+                };
+
+                // Cập nhật trong danh sách tasks
+                setTasks((prevTasks) => {
+                    // Tạo bản sao của danh sách hiện tại
+                    const currentTasks = [...prevTasks];
+                    // Tìm và cập nhật task cần sửa
+                    const taskIndex = currentTasks.findIndex(
+                        (task) => task.id === selectedTask.id || task._id === selectedTask._id,
                     );
+                    if (taskIndex !== -1) {
+                        currentTasks[taskIndex] = updatedTask;
+                    }
+                    return currentTasks.sort(
+                        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+                    );
+                });
+
+                if (selectedDate) {
+                    setSelectedDateTasks((prevTasks) => {
+                        const currentTasks = [...prevTasks];
+                        const taskIndex = currentTasks.findIndex(
+                            (task) => task.id === selectedTask.id || task._id === selectedTask._id,
+                        );
+                        if (taskIndex !== -1) {
+                            currentTasks[taskIndex] = updatedTask;
+                        }
+                        return currentTasks.sort(
+                            (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+                        );
+                    });
                 }
             } else {
                 // Nếu đang tạo task mới
-                setTasks((prevTasks) =>
-                    [...prevTasks, taskData].sort(
-                        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-                    ),
-                );
+                setTasks((prevTasks) => {
+                    const newTasks = [...prevTasks, taskData];
+                    return newTasks.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+                });
+
                 // Thêm task mới vào selectedDateTasks nếu task thuộc ngày đang xem
                 if (selectedDate) {
                     const taskDate = dayjs(taskData.start_time);
                     if (taskDate.format('YYYY-MM-DD') === dayjs(selectedDate).format('YYYY-MM-DD')) {
-                        setSelectedDateTasks((prevTasks) =>
-                            [...prevTasks, taskData].sort(
+                        setSelectedDateTasks((prevTasks) => {
+                            const newTasks = [...prevTasks, taskData];
+                            return newTasks.sort(
                                 (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-                            ),
-                        );
+                            );
+                        });
                     }
                 }
             }
@@ -366,14 +376,30 @@ function Calendar() {
             <Modal
                 title={selectedTask ? 'Chỉnh sửa công việc' : 'Thêm công việc mới'}
                 open={isModalOpen}
-                onOk={handleModalOk}
                 onCancel={handleModalCancel}
-                okText="Lưu"
-                cancelText="Hủy"
-                width={600}
                 footer={null}
+                width={600}
             >
-                <TaskForm onTaskCreated={handleTaskCreated} onClose={handleModalCancel} />
+                <TaskForm
+                    onTaskCreated={handleTaskCreated}
+                    onClose={handleModalCancel}
+                    initialValues={
+                        selectedTask
+                            ? {
+                                  title: selectedTask.title,
+                                  description: selectedTask.description,
+                                  status: selectedTask.status,
+                                  priority: selectedTask.priority,
+                                  date: [dayjs(selectedTask.start_time), dayjs(selectedTask.end_time)],
+                              }
+                            : selectedDate
+                              ? {
+                                    date: [dayjs(selectedDate), dayjs(selectedDate).add(1, 'hour')],
+                                }
+                              : undefined
+                    }
+                    taskId={selectedTask?.id || selectedTask?._id}
+                />
             </Modal>
 
             <style>{`

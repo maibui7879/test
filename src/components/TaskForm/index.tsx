@@ -100,7 +100,11 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
                 />
             </Form.Item>
 
-            <Form.Item name="description" label={<span className="text-gray-700 font-medium">Mô tả</span>}>
+            <Form.Item
+                name="description"
+                label={<span className="text-gray-700 font-medium">Mô tả</span>}
+                rules={[{ message: 'Vui lòng nhập mô tả' }]}
+            >
                 <TextArea
                     rows={4}
                     placeholder="Nhập mô tả công việc"
@@ -125,7 +129,21 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
                 <Form.Item
                     name="end_time"
                     label={<span className="text-gray-700 font-medium">Thời gian kết thúc</span>}
-                    rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc' }]}
+                    rules={[
+                        { required: true, message: 'Vui lòng chọn thời gian kết thúc' },
+                        ({ getFieldValue }) => ({
+                            validator(_, value) {
+                                if (
+                                    !value ||
+                                    !getFieldValue('start_time') ||
+                                    value.isAfter(getFieldValue('start_time'))
+                                ) {
+                                    return Promise.resolve();
+                                }
+                                return Promise.reject(new Error('Thời gian kết thúc phải sau thời gian bắt đầu!'));
+                            },
+                        }),
+                    ]}
                 >
                     <DatePicker
                         showTime
@@ -146,7 +164,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
                         placeholder="Chọn trạng thái"
                         className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
                     >
-                        <Select.Option value="todo">Chưa thực hiện</Select.Option>
+                        <Select.Option value="todo">Chờ thực hiện</Select.Option>
                         <Select.Option value="in_progress">Đang thực hiện</Select.Option>
                         <Select.Option value="done">Hoàn thành</Select.Option>
                     </Select>
