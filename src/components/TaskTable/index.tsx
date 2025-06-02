@@ -5,11 +5,11 @@ import { TaskPayload } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import TaskTableContent from './TaskTableContent';
-import TaskDetails from './TaskDetails';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
 import { getPriorityColor, getPriorityText, getStatusColor, getStatusText } from './tableState';
 import { TaskTableProps } from './types';
+import TaskDetails from '../TaskDetail/TaskDetails';
 
 function TaskTable({
     tasks,

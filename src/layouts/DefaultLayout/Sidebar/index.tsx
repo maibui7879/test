@@ -1,3 +1,4 @@
+import React from 'react';
 import SidebarItem from './SidebarItem';
 import SidebarFooter from './SidebarFooter';
 import { SidebarProps } from './type';
@@ -24,8 +25,9 @@ function Sidebar({ children, items, className = '', header, footer }: SidebarPro
 
     return (
         <nav
-            className={`relative bg-gray-900 min-h-screen py-4 w-16 xl:w-[240px] transition-all duration-300 shadow-xl ${className}`}
+            className={`relative bg-gray-900 min-h-screen py-4 w-16 xl:w-[240px] transition-all duration-300 shadow-xl border-r border-gray-800 ${className}`}
         >
+            {header && <div className="px-4 mb-4">{header}</div>}
             <div className="mt-4">{renderContent()}</div>
             {footer || <SidebarFooter />}
         </nav>

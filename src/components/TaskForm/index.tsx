@@ -5,7 +5,7 @@ import { TaskPayload } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEdit } from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import useNotification from '@components/Notification';
+import { useMessage } from '@/hooks/useMessage';
 
 const { TextArea } = Input;
 
@@ -26,7 +26,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const isEditing = !!taskId;
-    const notification = useNotification();
+    const { message, contextHolder } = useMessage();
 
     useEffect(() => {
         if (initialValues) {
@@ -42,7 +42,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
         const key = isEditing ? 'updateTask' : 'createTask';
         try {
             setLoading(true);
-            notification.loading(key, isEditing ? 'Đang cập nhật công việc...' : 'Đang tạo công việc...');
+            message.loading({ key, content: isEditing ? 'Đang cập nhật công việc...' : 'Đang tạo công việc...' });
 
             const taskData: TaskPayload = {
                 title: values.title,
@@ -60,10 +60,10 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
             if (isEditing && taskId) {
                 const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
                 await updateTask(numericId, taskData);
-                notification.success(key, 'Cập nhật công việc thành công!');
+                message.success({ key, content: 'Cập nhật công việc thành công!' });
             } else {
                 await createTask(taskData);
-                notification.success(key, 'Tạo công việc thành công!');
+                message.success({ key, content: 'Tạo công việc thành công!' });
             }
 
             form.resetFields();
@@ -71,11 +71,11 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
             onClose?.();
         } catch (error: any) {
             if (error.message === 'Công việc với tên này đã tồn tại!') {
-                notification.error(key, 'Tên công việc này đã tồn tại. Vui lòng chọn tên khác!');
+                message.error({ key, content: 'Tên công việc này đã tồn tại. Vui lòng chọn tên khác!' });
             } else if (error.message === 'Định dạng start_time không hợp lệ!') {
-                notification.error(key, 'Định dạng thời gian không hợp lệ. Vui lòng kiểm tra lại!');
+                message.error({ key, content: 'Định dạng thời gian không hợp lệ. Vui lòng kiểm tra lại!' });
             } else {
-                notification.error(key, 'Có lỗi xảy ra khi xử lý công việc. Vui lòng thử lại!');
+                message.error({ key, content: 'Có lỗi xảy ra khi xử lý công việc. Vui lòng thử lại!' });
             }
             console.error('Error handling task:', error);
         } finally {
@@ -84,125 +84,128 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
     };
 
     return (
-        <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            className="space-y-4 p-4 bg-white rounded-lg shadow-sm"
-        >
-            <Form.Item
-                name="title"
-                label={<span className="text-gray-700 font-medium">Tiêu đề</span>}
-                rules={[
-                    { required: true, message: 'Vui lòng nhập tiêu đề' },
-                    { min: 3, message: 'Tiêu đề phải có ít nhất 3 ký tự' },
-                    { max: 100, message: 'Tiêu đề không được vượt quá 100 ký tự' },
-                ]}
+        <>
+            {contextHolder}
+            <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSubmit}
+                className="space-y-4 p-4 bg-white rounded-lg shadow-sm"
             >
-                <Input
-                    placeholder="Nhập tiêu đề công việc"
-                    className="rounded-md hover:border-blue-400 focus:border-blue-400"
-                />
-            </Form.Item>
-
-            <Form.Item
-                name="description"
-                label={<span className="text-gray-700 font-medium">Mô tả</span>}
-                rules={[{ message: 'Vui lòng nhập mô tả' }]}
-            >
-                <TextArea
-                    rows={4}
-                    placeholder="Nhập mô tả công việc"
-                    className="rounded-md hover:border-blue-400 focus:border-blue-400"
-                />
-            </Form.Item>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Form.Item
-                    name="start_time"
-                    label={<span className="text-gray-700 font-medium">Thời gian bắt đầu</span>}
-                    rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
-                >
-                    <DatePicker
-                        showTime
-                        format="YYYY-MM-DD HH:mm"
-                        placeholder="Chọn thời gian bắt đầu"
-                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
-                    />
-                </Form.Item>
-
-                <Form.Item
-                    name="end_time"
-                    label={<span className="text-gray-700 font-medium">Thời gian kết thúc</span>}
+                    name="title"
+                    label={<span className="text-gray-700 font-medium">Tiêu đề</span>}
                     rules={[
-                        { required: true, message: 'Vui lòng chọn thời gian kết thúc' },
-                        ({ getFieldValue }) => ({
-                            validator(_, value) {
-                                if (
-                                    !value ||
-                                    !getFieldValue('start_time') ||
-                                    value.isAfter(getFieldValue('start_time'))
-                                ) {
-                                    return Promise.resolve();
-                                }
-                                return Promise.reject(new Error('Thời gian kết thúc phải sau thời gian bắt đầu!'));
-                            },
-                        }),
+                        { required: true, message: 'Vui lòng nhập tiêu đề' },
+                        { min: 3, message: 'Tiêu đề phải có ít nhất 3 ký tự' },
+                        { max: 100, message: 'Tiêu đề không được vượt quá 100 ký tự' },
                     ]}
                 >
-                    <DatePicker
-                        showTime
-                        format="YYYY-MM-DD HH:mm"
-                        placeholder="Chọn thời gian kết thúc"
-                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                    <Input
+                        placeholder="Nhập tiêu đề công việc"
+                        className="rounded-md hover:border-blue-400 focus:border-blue-400"
                     />
                 </Form.Item>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item
-                    name="status"
-                    label={<span className="text-gray-700 font-medium">Trạng thái</span>}
-                    rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-                >
-                    <Select
-                        placeholder="Chọn trạng thái"
-                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
-                    >
-                        <Select.Option value="todo">Chờ thực hiện</Select.Option>
-                        <Select.Option value="in_progress">Đang thực hiện</Select.Option>
-                        <Select.Option value="done">Hoàn thành</Select.Option>
-                    </Select>
-                </Form.Item>
 
                 <Form.Item
-                    name="priority"
-                    label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}
-                    rules={[{ required: true, message: 'Vui lòng chọn độ ưu tiên' }]}
+                    name="description"
+                    label={<span className="text-gray-700 font-medium">Mô tả</span>}
+                    rules={[{ message: 'Vui lòng nhập mô tả' }]}
                 >
-                    <Select
-                        placeholder="Chọn độ ưu tiên"
-                        className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
-                    >
-                        <Select.Option value="low">Thấp</Select.Option>
-                        <Select.Option value="medium">Trung bình</Select.Option>
-                        <Select.Option value="high">Cao</Select.Option>
-                    </Select>
+                    <TextArea
+                        rows={4}
+                        placeholder="Nhập mô tả công việc"
+                        className="rounded-md hover:border-blue-400 focus:border-blue-400"
+                    />
                 </Form.Item>
-            </div>
 
-            <Form.Item className="mb-0">
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    className="w-full md:w-auto"
-                    icon={isEditing ? <FontAwesomeIcon icon={faEdit} /> : <FontAwesomeIcon icon={faPlus} />}
-                >
-                    {isEditing ? 'Cập nhật công việc' : 'Tạo công việc'}
-                </Button>
-            </Form.Item>
-        </Form>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Form.Item
+                        name="start_time"
+                        label={<span className="text-gray-700 font-medium">Thời gian bắt đầu</span>}
+                        rules={[{ message: 'Vui lòng chọn thời gian bắt đầu' }]}
+                    >
+                        <DatePicker
+                            showTime
+                            format="YYYY-MM-DD HH:mm"
+                            placeholder="Chọn thời gian bắt đầu"
+                            className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="end_time"
+                        label={<span className="text-gray-700 font-medium">Thời gian kết thúc</span>}
+                        rules={[
+                            { message: 'Vui lòng chọn thời gian kết thúc' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    if (
+                                        !value ||
+                                        !getFieldValue('start_time') ||
+                                        value.isAfter(getFieldValue('start_time'))
+                                    ) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(new Error('Thời gian kết thúc phải sau thời gian bắt đầu!'));
+                                },
+                            }),
+                        ]}
+                    >
+                        <DatePicker
+                            showTime
+                            format="YYYY-MM-DD HH:mm"
+                            placeholder="Chọn thời gian kết thúc"
+                            className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                        />
+                    </Form.Item>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Form.Item
+                        name="status"
+                        label={<span className="text-gray-700 font-medium">Trạng thái</span>}
+                        rules={[{ message: 'Vui lòng chọn trạng thái' }]}
+                    >
+                        <Select
+                            placeholder="Chọn trạng thái"
+                            className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                        >
+                            <Select.Option value="todo">Chờ thực hiện</Select.Option>
+                            <Select.Option value="in_progress">Đang thực hiện</Select.Option>
+                            <Select.Option value="done">Hoàn thành</Select.Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="priority"
+                        label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}
+                        rules={[{ message: 'Vui lòng chọn độ ưu tiên' }]}
+                    >
+                        <Select
+                            placeholder="Chọn độ ưu tiên"
+                            className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
+                        >
+                            <Select.Option value="low">Thấp</Select.Option>
+                            <Select.Option value="medium">Trung bình</Select.Option>
+                            <Select.Option value="high">Cao</Select.Option>
+                        </Select>
+                    </Form.Item>
+                </div>
+
+                <Form.Item className="mb-0">
+                    <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        className="w-full md:w-auto"
+                        icon={isEditing ? <FontAwesomeIcon icon={faEdit} /> : <FontAwesomeIcon icon={faPlus} />}
+                    >
+                        {isEditing ? 'Cập nhật công việc' : 'Tạo công việc'}
+                    </Button>
+                </Form.Item>
+            </Form>
+        </>
     );
 }
 

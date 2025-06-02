@@ -6,7 +6,7 @@ import TaskTable from '@components/TaskTable';
 import { Button, Modal } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import useNotification from '@components/Notification';
+import { useMessage } from '@/hooks/useMessage';
 
 function PersonalTask() {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
@@ -15,18 +15,17 @@ function PersonalTask() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalTasks, setTotalTasks] = useState(0);
-    const notification = useNotification();
-    const notificationRef = useRef(notification);
+    const { message, contextHolder } = useMessage();
+    const messageRef = useRef(message);
 
     useEffect(() => {
-        notificationRef.current = notification;
-    }, [notification]);
+        messageRef.current = message;
+    }, [message]);
 
     const fetchTasks = useCallback(async () => {
         const key = 'fetchTasks';
         try {
             setLoading(true);
-            notificationRef.current.loading(key, 'Đang tải danh sách công việc...');
             const response = await getAllTaskUser({
                 page: currentPage,
                 limit: 10,
@@ -38,7 +37,6 @@ function PersonalTask() {
                 );
                 setTasks(sortedTasks);
                 setTotalTasks(response.totalItems || response.personalTasks.length);
-                notificationRef.current.success(key, 'Tải danh sách công việc thành công!');
             } else {
                 throw new Error('Dữ liệu không hợp lệ');
             }
@@ -46,11 +44,11 @@ function PersonalTask() {
             console.error('Error fetching tasks:', err);
             const errorMessage = err.message || 'Không thể tải danh sách công việc';
             setError(errorMessage);
-            notificationRef.current.error(key, errorMessage);
+            messageRef.current.error({ key, content: errorMessage });
         } finally {
             setLoading(false);
         }
-    }, [currentPage]); // Remove notification from dependencies
+    }, [currentPage]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -76,17 +74,17 @@ function PersonalTask() {
                 throw new Error('ID công việc không hợp lệ');
             }
 
-            notificationRef.current.loading(key, 'Đang cập nhật công việc...');
+            messageRef.current.loading({ key, content: 'Đang cập nhật công việc...' });
             await updateTask(numericId, taskData);
             setTasks((prevTasks) =>
                 prevTasks.map((task) => (task.id === taskId || task._id === taskId ? taskData : task)),
             );
-            notificationRef.current.success(key, 'Cập nhật công việc thành công!');
+            messageRef.current.success({ key, content: 'Cập nhật công việc thành công!' });
         } catch (err: any) {
             console.error('Error updating task:', err);
-            notificationRef.current.error(key, err.message || 'Không thể cập nhật công việc');
+            messageRef.current.error({ key, content: err.message || 'Không thể cập nhật công việc' });
         }
-    }, []); // Remove notification from dependencies
+    }, []);
 
     const handleDeleteTask = useCallback(async (taskId: string | number) => {
         const key = 'deleteTask';
@@ -95,7 +93,7 @@ function PersonalTask() {
             if (isNaN(numericId)) {
                 throw new Error('ID công việc không hợp lệ');
             }
-            notificationRef.current.loading(key, 'Đang xóa công việc...');
+            messageRef.current.loading({ key, content: 'Đang xóa công việc...' });
             await deleteTask(numericId);
             setTasks((prevTasks) =>
                 prevTasks.filter((task) => {
@@ -104,12 +102,12 @@ function PersonalTask() {
                 }),
             );
             setTotalTasks((prev) => prev - 1);
-            notificationRef.current.success(key, 'Xóa công việc thành công!');
+            messageRef.current.success({ key, content: 'Xóa công việc thành công!' });
         } catch (err: any) {
             console.error('Error deleting task:', err);
-            notificationRef.current.error(key, err.message || 'Không thể xóa công việc');
+            messageRef.current.error({ key, content: err.message || 'Không thể xóa công việc' });
         }
-    }, []); // Remove notification from dependencies
+    }, []);
 
     useEffect(() => {
         fetchTasks();
@@ -117,6 +115,7 @@ function PersonalTask() {
 
     return (
         <div className="h-full">
+            {contextHolder}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>
                 <Button

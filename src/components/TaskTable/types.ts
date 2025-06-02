@@ -26,10 +26,3 @@ export interface TaskTableContentProps extends BaseTaskProps {
     totalTasks: number;
     onPageChange: (page: number) => void;
 }
-
-export interface TaskDetailsProps {
-    task: TaskPayload;
-    onEditTask: (taskData: TaskPayload) => Promise<void>;
-    onDeleteTask: (taskId: string | number) => Promise<void>;
-    onReload?: () => void;
-}
