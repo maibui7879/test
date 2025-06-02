@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSignOutAlt } from 'react-icons/fa';
-import FaIcon from '@/utils/FaIconUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { Modal } from 'antd';
 import { SidebarFooterProps } from './type';
 
@@ -22,7 +22,7 @@ function SidebarFooter({ onLogout, className = '', renderLogoutButton, renderLog
             onClick={showModal}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 hover:bg-red-500/20 text-red-400"
         >
-            <FaIcon icon={FaSignOutAlt} className="text-lg" />
+            <FontAwesomeIcon icon={faSignOutAlt} className="text-lg" />
             <span className="hidden xl:inline select-none font-medium">Đăng xuất</span>
         </button>
     );

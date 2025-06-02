@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
-import FaIcon from '@/utils/FaIconUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { SidebarItemProps } from './type';
 
 function SidebarItem({
@@ -78,7 +78,7 @@ function SidebarItem({
                 {icon && <span className="text-lg">{icon}</span>}
                 <span className="ml-3 hidden xl:inline">{label}</span>
                 <span className="ml-auto hidden xl:inline">
-                    <FaIcon icon={isOpen ? FaChevronDown : FaChevronRight} />
+                    <FontAwesomeIcon icon={isOpen ? faChevronDown : faChevronRight} />
                 </span>
             </button>
             {renderSubItems()}

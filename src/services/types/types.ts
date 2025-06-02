@@ -34,6 +34,7 @@ export interface TaskPayload {
 }
 
 // ====================
+
 export interface TaskNote {
     id: number;
     task_id: number;
@@ -41,28 +42,42 @@ export interface TaskNote {
     content: string;
     created_at: string;
     updated_at: string;
+    full_name: string;
 }
 
 export interface TaskAttachment {
     id: number;
     task_id: number;
+    user_id: number;
     file_url: string;
     file_name: string;
-    file_type?: string | null;
-    file_size?: number | null;
-    uploaded_by?: number | null;
+    file_type: string;
+    file_size: number;
     created_at: string;
+    updated_at: string;
+    full_name: string;
 }
 
 export interface TaskNotesAndAttachments {
-    notes: TaskNote[];
-    attachments?: TaskAttachment[];
+    id: number;
+    task_id: number;
+    user_id: number;
+    content?: string;
+    file_url?: string;
+    file_name?: string;
+    file_type?: string;
+    file_size?: number;
+    created_at: string;
+    updated_at: string;
+    full_name: string;
 }
+
 //===========================
 export interface TaskComment {
     id: number;
     task_id: number;
     user_id: number; // ID người comment
+    full_name: string;
     comment: string; // Nội dung comment
     is_from_assignee: boolean; // Có phải từ người được giao task không
     created_at: string;

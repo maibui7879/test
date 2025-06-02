@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getAllTaskUser, updateTask, deleteTask } from '@services/taskServices';
 import { TaskPayload } from '@services/types/types';
 import TaskForm from '@components/TaskForm';
 import TaskTable from '@components/TaskTable';
 import { Button, Modal } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { toast } from 'react-toastify';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import useNotification from '@components/Notification';
 
 function PersonalTask() {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
@@ -14,10 +15,18 @@ function PersonalTask() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalTasks, setTotalTasks] = useState(0);
+    const notification = useNotification();
+    const notificationRef = useRef(notification);
+
+    useEffect(() => {
+        notificationRef.current = notification;
+    }, [notification]);
 
     const fetchTasks = useCallback(async () => {
+        const key = 'fetchTasks';
         try {
             setLoading(true);
+            notificationRef.current.loading(key, 'Đang tải danh sách công việc...');
             const response = await getAllTaskUser({
                 page: currentPage,
                 limit: 10,
@@ -29,34 +38,29 @@ function PersonalTask() {
                 );
                 setTasks(sortedTasks);
                 setTotalTasks(response.totalItems || response.personalTasks.length);
+                notificationRef.current.success(key, 'Tải danh sách công việc thành công!');
             } else {
-                throw new Error('Định dạng dữ liệu không hợp lệ');
+                throw new Error('Dữ liệu không hợp lệ');
             }
         } catch (err: any) {
             console.error('Error fetching tasks:', err);
             const errorMessage = err.message || 'Không thể tải danh sách công việc';
             setError(errorMessage);
-            toast.error(errorMessage, {
-                position: 'top-right',
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
+            notificationRef.current.error(key, errorMessage);
         } finally {
             setLoading(false);
         }
-    }, [currentPage]);
+    }, [currentPage]); // Remove notification from dependencies
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
     const handleUpdateTask = useCallback(async (taskData: TaskPayload) => {
+        const key = 'updateTask';
         try {
             if (!taskData.id && !taskData._id) {
-                throw new Error('Không tìm thấy ID của công việc để cập nhật');
+                throw new Error('Không tìm thấy ID công việc');
             }
             const taskId = taskData.id || taskData._id;
 
@@ -69,51 +73,43 @@ function PersonalTask() {
             } else if (typeof taskId === 'number') {
                 numericId = taskId;
             } else {
-                throw new Error('Định dạng ID công việc không hợp lệ');
+                throw new Error('ID công việc không hợp lệ');
             }
 
+            notificationRef.current.loading(key, 'Đang cập nhật công việc...');
             await updateTask(numericId, taskData);
             setTasks((prevTasks) =>
                 prevTasks.map((task) => (task.id === taskId || task._id === taskId ? taskData : task)),
             );
-            toast.success('Cập nhật công việc thành công!');
+            notificationRef.current.success(key, 'Cập nhật công việc thành công!');
         } catch (err: any) {
             console.error('Error updating task:', err);
-            toast.error(err.message || 'Không thể cập nhật công việc');
+            notificationRef.current.error(key, err.message || 'Không thể cập nhật công việc');
         }
-    }, []);
+    }, []); // Remove notification from dependencies
 
-    const handleDeleteTask = useCallback(
-        async (taskId: string | number) => {
-            try {
-                const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
-                if (isNaN(numericId)) {
-                    throw new Error('ID công việc không hợp lệ');
-                }
-                await deleteTask(numericId);
-                toast.success('Xóa công việc thành công!', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-                await fetchTasks();
-            } catch (err: any) {
-                console.error('Error deleting task:', err);
-                toast.error(err.message || 'Không thể xóa công việc', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
+    const handleDeleteTask = useCallback(async (taskId: string | number) => {
+        const key = 'deleteTask';
+        try {
+            const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
+            if (isNaN(numericId)) {
+                throw new Error('ID công việc không hợp lệ');
             }
-        },
-        [fetchTasks],
-    );
+            notificationRef.current.loading(key, 'Đang xóa công việc...');
+            await deleteTask(numericId);
+            setTasks((prevTasks) =>
+                prevTasks.filter((task) => {
+                    const id = task.id || task._id;
+                    return id !== taskId;
+                }),
+            );
+            setTotalTasks((prev) => prev - 1);
+            notificationRef.current.success(key, 'Xóa công việc thành công!');
+        } catch (err: any) {
+            console.error('Error deleting task:', err);
+            notificationRef.current.error(key, err.message || 'Không thể xóa công việc');
+        }
+    }, []); // Remove notification from dependencies
 
     useEffect(() => {
         fetchTasks();
@@ -125,11 +121,11 @@ function PersonalTask() {
                 <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>
                 <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={<FontAwesomeIcon icon={faPlus} />}
                     onClick={() => setIsModalVisible(true)}
                     className="flex items-center"
                 >
-                    Thêm công việc mới
+                    Thêm công việc
                 </Button>
             </div>
 
@@ -143,13 +139,14 @@ function PersonalTask() {
                 currentPage={currentPage}
                 totalTasks={totalTasks}
                 onPageChange={handlePageChange}
+                setTotalTasks={setTotalTasks}
             />
 
             <Modal
                 title={
                     <div className="flex items-center">
-                        <PlusOutlined className="mr-2" />
-                        Thêm công việc mới
+                        <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                        Thêm công việc
                     </div>
                 }
                 open={isModalVisible}

@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import DefaultLayoutProps from './type';
 import Sidebar from './Sidebar';
-import FaIcon from '../../utils/FaIconUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import SidebarItem from './Sidebar/SidebarItem';
 import { useUser } from '@contexts/useAuth/userContext';
 import Route from '@/routes/type';
@@ -18,11 +18,11 @@ function DefaultLayout({ children }: DefaultLayoutProps) {
                 return (
                     <SidebarItem
                         key={route.path}
-                        icon={route.icon && <FaIcon icon={route.icon} />}
+                        icon={route.icon && <FontAwesomeIcon icon={route.icon} />}
                         path={route.path}
                         label={route.name || ''}
                         subItems={route.children.map((child: Route) => ({
-                            icon: child.icon && <FaIcon icon={child.icon} />,
+                            icon: child.icon && <FontAwesomeIcon icon={child.icon} />,
                             path: `${route.path}/${child.path}`,
                             label: child.name || '',
                         }))}
@@ -32,7 +32,7 @@ function DefaultLayout({ children }: DefaultLayoutProps) {
             return (
                 <SidebarItem
                     key={route.path}
-                    icon={route.icon && <FaIcon icon={route.icon} />}
+                    icon={route.icon && <FontAwesomeIcon icon={route.icon} />}
                     path={route.path}
                     label={route.name || ''}
                 />

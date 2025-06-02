@@ -1,21 +1,7 @@
-import React from 'react';
-import { Table, Input, Button, Spin, Tooltip, Pagination } from 'antd';
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
-import { TaskPayload } from '@services/types/types';
-import useDebounce from '@hooks/useDebounce';
-
-interface TaskTableContentProps {
-    loading: boolean;
-    error: string | null;
-    onReload: () => void;
-    searchText: string;
-    setSearchText: (text: string) => void;
-    filteredTasks: TaskPayload[];
-    columns: any[];
-    currentPage: number;
-    totalTasks: number;
-    onPageChange: (page: number) => void;
-}
+import { Table, Input, Button, Spin, Pagination } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRotate, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { TaskTableContentProps } from './types';
 
 function TaskTableContent({
     loading,
@@ -46,7 +32,7 @@ function TaskTableContent({
                 <Button
                     type="primary"
                     onClick={onReload}
-                    icon={<ReloadOutlined />}
+                    icon={<FontAwesomeIcon icon={faRotate} />}
                     className="bg-red-500 hover:bg-red-600"
                 >
                     Thử lại
@@ -63,7 +49,7 @@ function TaskTableContent({
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="w-80"
-                    prefix={<SearchOutlined className="text-gray-400" />}
+                    prefix={<FontAwesomeIcon icon={faSearch} className="text-gray-400" />}
                     allowClear
                 />
             </div>
@@ -75,7 +61,7 @@ function TaskTableContent({
                 className="task-table"
                 scroll={{ x: 'max-content' }}
             />
-            <div className="flex justify-center  mt-4">
+            <div className="flex justify-center mt-4">
                 <Pagination current={currentPage} pageSize={10} total={totalTasks} onChange={onPageChange} />
             </div>
         </div>

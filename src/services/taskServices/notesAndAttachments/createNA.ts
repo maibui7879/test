@@ -1,13 +1,15 @@
 import apiRequest from '../../common/apiRequest';
+import { TaskNotesAndAttachments } from '../../types/types';
 
-const createTaskNote = async (taskId: number, note: string, attachment?: File): Promise<void> => {
+const createNA = async (taskId: number, data: { note?: string; file?: File }): Promise<TaskNotesAndAttachments> => {
     const formData = new FormData();
     formData.append('taskId', taskId.toString());
-    formData.append('note', note);
-    if (attachment) formData.append('attachment', attachment);
+    if (data.note) formData.append('note', data.note);
+    if (data.file) formData.append('attachment', data.file);
 
-    const res = await apiRequest('/task-notes', 'POST', formData, true);
-
-    if (!res.success) throw new Error(res.message || 'Không thể tạo ghi chú');
+    const res = await apiRequest<TaskNotesAndAttachments>(`/note/notes-attachments`, 'POST', formData, true);
+    if (!res.success || !res.data) throw new Error(res.message || 'Không thể tạo ghi chú hoặc tệp đính kèm');
+    return res.data;
 };
-export default createTaskNote;
+
+export default createNA;

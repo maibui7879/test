@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, DatePicker, Select, Button } from 'antd';
 import { createTask, updateTask } from '@services/taskServices';
 import { TaskPayload } from '@services/types/types';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faEdit } from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import { toast } from 'react-toastify';
+import useNotification from '@components/Notification';
 
 const { TextArea } = Input;
 
@@ -25,6 +26,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const isEditing = !!taskId;
+    const notification = useNotification();
 
     useEffect(() => {
         if (initialValues) {
@@ -37,8 +39,11 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
     }, [initialValues, form]);
 
     const handleSubmit = async (values: any) => {
+        const key = isEditing ? 'updateTask' : 'createTask';
         try {
             setLoading(true);
+            notification.loading(key, isEditing ? 'Đang cập nhật công việc...' : 'Đang tạo công việc...');
+
             const taskData: TaskPayload = {
                 title: values.title,
                 description: values.description || '',
@@ -55,10 +60,10 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
             if (isEditing && taskId) {
                 const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
                 await updateTask(numericId, taskData);
-                toast.success('Cập nhật công việc thành công!');
+                notification.success(key, 'Cập nhật công việc thành công!');
             } else {
                 await createTask(taskData);
-                toast.success('Tạo công việc thành công!');
+                notification.success(key, 'Tạo công việc thành công!');
             }
 
             form.resetFields();
@@ -66,11 +71,11 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
             onClose?.();
         } catch (error: any) {
             if (error.message === 'Công việc với tên này đã tồn tại!') {
-                toast.error('Tên công việc này đã tồn tại. Vui lòng chọn tên khác!');
+                notification.error(key, 'Tên công việc này đã tồn tại. Vui lòng chọn tên khác!');
             } else if (error.message === 'Định dạng start_time không hợp lệ!') {
-                toast.error('Định dạng thời gian không hợp lệ. Vui lòng kiểm tra lại!');
+                notification.error(key, 'Định dạng thời gian không hợp lệ. Vui lòng kiểm tra lại!');
             } else {
-                toast.error('Có lỗi xảy ra khi xử lý công việc. Vui lòng thử lại!');
+                notification.error(key, 'Có lỗi xảy ra khi xử lý công việc. Vui lòng thử lại!');
             }
             console.error('Error handling task:', error);
         } finally {
@@ -192,7 +197,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
                     htmlType="submit"
                     loading={loading}
                     className="w-full md:w-auto"
-                    icon={isEditing ? <EditOutlined /> : <PlusOutlined />}
+                    icon={isEditing ? <FontAwesomeIcon icon={faEdit} /> : <FontAwesomeIcon icon={faPlus} />}
                 >
                     {isEditing ? 'Cập nhật công việc' : 'Tạo công việc'}
                 </Button>

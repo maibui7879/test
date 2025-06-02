@@ -1,11 +1,11 @@
 import { AuthForm } from '@pages/Auth';
 import Dashboard from '@pages/Dashboard';
-import Team from '@pages/Team';
-import Calendar from '@pages/Calendar';
 import PersonalTask from '@pages/PersonalTask';
 import Profile from '@pages/Profile';
 import Route from './type';
-import { FaCalendarAlt, FaClipboard, FaTasks, FaUser, FaUsers } from 'react-icons/fa';
+import { faCalendarAlt, faClipboard, faTasks, faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
+import TeamPage from '@pages/TeamPage';
+import CalenderPerson from '@pages/PersonalTask/calendar';
 
 export const publicRoutes: Route[] = [
     {
@@ -20,38 +20,38 @@ export const sidebarRoutes: Route[] = [
         path: '/',
         name: 'DashBoard',
         component: Dashboard,
-        icon: FaClipboard,
+        icon: faClipboard,
         children: [],
     },
     {
         path: '/team',
         name: 'Nhóm của bạn',
-        component: Team,
-        icon: FaUsers,
+        component: TeamPage,
+        icon: faUsers,
         children: [],
     },
     {
         path: '/nhiem-vu-ca-nhan',
         name: 'Công việc cá nhân',
-        icon: FaTasks,
+        icon: faTasks,
         children: [
             {
                 path: 'lich',
                 name: 'Lịch cá nhân',
-                component: Calendar,
-                icon: FaCalendarAlt,
+                component: CalenderPerson,
+                icon: faCalendarAlt,
             },
             {
                 path: 'nhiem-vu',
                 name: 'Công việc của bạn',
                 component: PersonalTask,
-                icon: FaTasks,
+                icon: faTasks,
             },
         ],
     },
     {
         path: '/user',
-        icon: FaUser,
+        icon: faUser,
         name: 'Trang cá nhân',
         component: Profile,
     },

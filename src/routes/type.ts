@@ -1,5 +1,5 @@
-import { ComponentType, ReactNode } from 'react';
-import { IconType } from 'react-icons';
+import React, { ComponentType, ReactNode } from 'react';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 export default interface Route {
     path: string;
@@ -7,5 +7,5 @@ export default interface Route {
     component?: ComponentType<any>;
     layout?: ComponentType<{ children: ReactNode }> | null;
     children?: Route[];
-    icon?: IconType;
+    icon?: IconDefinition;
 }

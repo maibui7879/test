@@ -1,16 +1,15 @@
 import apiRequest from '../../common/apiRequest';
-//Tạm chưa dùng đang sai về mặt logic BE
-const updateTaskNote = async (noteId: number, note: string, attachment?: File): Promise<void> => {
-    const formData = new FormData();
-    formData.append('note', note);
-    if (attachment) {
-        formData.append('attachment', attachment);
-    }
-    const res = await apiRequest(`/task-notes/${noteId}`, 'PUT', formData, true);
+import { TaskNotesAndAttachments } from '../../types/types';
 
-    if (!res.success) {
-        throw new Error(res.message || 'Không thể cập nhật ghi chú');
-    }
+const updateNA = async (noteId: number, content: string): Promise<TaskNotesAndAttachments> => {
+    const res = await apiRequest<TaskNotesAndAttachments>(
+        `/note/notes-attachments/${noteId}`,
+        'PUT',
+        { content },
+        true,
+    );
+    if (!res.success || !res.data) throw new Error(res.message || 'Không thể cập nhật ghi chú');
+    return res.data;
 };
 
-export default updateTaskNote;
+export default updateNA;

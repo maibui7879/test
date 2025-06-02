@@ -1,62 +1,15 @@
-import { useState } from 'react';
-import { Input, Space, Tag, Button, Drawer, Tabs, Select, DatePicker, Form, Popconfirm } from 'antd';
+import { useState, useEffect } from 'react';
+import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { TaskPayload } from '@services/types/types';
-import { EditOutlined, SaveOutlined, CloseOutlined, DeleteOutlined, FundViewOutlined } from '@ant-design/icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import TaskTableContent from './TaskTableContent';
+import TaskDetails from './TaskDetails';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
-
-interface TaskTableProps {
-    tasks: TaskPayload[];
-    loading: boolean;
-    error: string | null;
-    onReload: () => void;
-    onEditTask: (task: TaskPayload) => void;
-    onDeleteTask: (taskId: string | number) => void;
-    currentPage: number;
-    totalTasks: number;
-    onPageChange: (page: number) => void;
-}
-
-const getPriorityColor = (priority: string) => {
-    switch (priority) {
-        case 'high':
-            return 'red';
-        case 'medium':
-            return 'orange';
-        case 'low':
-            return 'green';
-        default:
-            return 'blue';
-    }
-};
-
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'todo':
-            return 'default';
-        case 'in_progress':
-            return 'processing';
-        case 'done':
-            return 'success';
-        default:
-            return 'default';
-    }
-};
-
-const getStatusText = (status: string) => {
-    switch (status) {
-        case 'todo':
-            return 'Chưa thực hiện';
-        case 'in_progress':
-            return 'Đang thực hiện';
-        case 'done':
-            return 'Hoàn thành';
-        default:
-            return status;
-    }
-};
+import { getPriorityColor, getPriorityText, getStatusColor, getStatusText } from './tableState';
+import { TaskTableProps } from './types';
 
 function TaskTable({
     tasks,
@@ -68,12 +21,18 @@ function TaskTable({
     currentPage,
     totalTasks,
     onPageChange,
+    setTotalTasks,
 }: TaskTableProps) {
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [editingKey, setEditingKey] = useState<string | number>('');
     const [form] = Form.useForm();
+    const [localTasks, setLocalTasks] = useState<TaskPayload[]>(tasks);
+
+    useEffect(() => {
+        setLocalTasks(tasks);
+    }, [tasks]);
 
     const debouncedSearchText = useDebounce(searchText, 300);
 
@@ -101,7 +60,7 @@ function TaskTable({
         if (!id) return;
         try {
             const row = await form.validateFields();
-            const taskToUpdate = tasks.find((item) => {
+            const taskToUpdate = localTasks.find((item) => {
                 const itemId = item.id?.toString() || item._id?.toString();
                 return itemId === id.toString();
             });
@@ -125,6 +84,21 @@ function TaskTable({
     const handleViewDetail = (task: TaskPayload) => {
         setSelectedTask(task);
         setDrawerVisible(true);
+    };
+
+    const handleDeleteTask = async (taskId: string | number) => {
+        try {
+            await onDeleteTask(taskId);
+            setLocalTasks((prevTasks) =>
+                prevTasks.filter((task) => {
+                    const id = task.id || task._id;
+                    return id !== taskId;
+                }),
+            );
+            setTotalTasks(totalTasks - 1);
+        } catch (error) {
+            console.error('Error deleting task:', error);
+        }
     };
 
     const columns: ColumnsType<TaskPayload> = [
@@ -217,7 +191,7 @@ function TaskTable({
                         color={getPriorityColor(record.priority)}
                         className="px-3 py-1 hover:opacity-80 transition-opacity duration-200"
                     >
-                        {record.priority.toUpperCase()}
+                        {getPriorityText(record.priority)}
                     </Tag>
                 );
             },
@@ -290,14 +264,14 @@ function TaskTable({
                         <Button
                             type="primary"
                             onClick={() => save(record.id || record._id)}
-                            icon={<SaveOutlined />}
+                            icon={<FontAwesomeIcon icon={faSave} />}
                             className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
                         >
                             Lưu
                         </Button>
                         <Button
                             onClick={cancel}
-                            icon={<CloseOutlined />}
+                            icon={<FontAwesomeIcon icon={faTimes} />}
                             className="hover:border-red-400 hover:text-red-500 transition-colors duration-200"
                         ></Button>
                     </Space>
@@ -307,13 +281,13 @@ function TaskTable({
                             type="primary"
                             disabled={editingKey !== ''}
                             onClick={() => edit(record)}
-                            icon={<EditOutlined />}
+                            icon={<FontAwesomeIcon icon={faEdit} />}
                             className="bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
                         ></Button>
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
-                            icon={<FundViewOutlined />}
+                            icon={<FontAwesomeIcon icon={faEye} />}
                             className="bg-purple-500 hover:bg-purple-600 transition-colors duration-200"
                         ></Button>
                         <Popconfirm
@@ -322,7 +296,7 @@ function TaskTable({
                             onConfirm={() => {
                                 const taskId = record.id || record._id;
                                 if (taskId) {
-                                    onDeleteTask(taskId);
+                                    handleDeleteTask(taskId);
                                 }
                             }}
                             okText="Xóa"
@@ -332,7 +306,7 @@ function TaskTable({
                             <Button
                                 type="primary"
                                 danger
-                                icon={<DeleteOutlined />}
+                                icon={<FontAwesomeIcon icon={faTrash} />}
                                 className="bg-red-500 hover:bg-red-600 transition-colors duration-200"
                             ></Button>
                         </Popconfirm>
@@ -342,74 +316,21 @@ function TaskTable({
         },
     ];
 
-    const filteredTasks = tasks.filter((task) => {
+    const filteredTasks = localTasks.filter((task) => {
         const searchLower = debouncedSearchText.replace(/^\s+/, '').toLowerCase();
         return task.title.toLowerCase().includes(searchLower);
     });
 
     const renderTaskDetails = () => {
         if (!selectedTask) return null;
-
-        const items = [
-            {
-                key: '1',
-                label: 'Tổng quan',
-                children: (
-                    <div className="space-y-6">
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Thông tin cơ bản</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <p className="text-gray-600 mb-1">Tiêu đề:</p>
-                                    <p className="font-medium text-gray-800">{selectedTask.title}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-600 mb-1">Trạng thái:</p>
-                                    <Tag color={getStatusColor(selectedTask.status)} className="px-3 py-1">
-                                        {getStatusText(selectedTask.status)}
-                                    </Tag>
-                                </div>
-                                <div>
-                                    <p className="text-gray-600 mb-1">Độ ưu tiên:</p>
-                                    <Tag color={getPriorityColor(selectedTask.priority)} className="px-3 py-1">
-                                        {selectedTask.priority.toUpperCase()}
-                                    </Tag>
-                                </div>
-                                <div>
-                                    <p className="text-gray-600 mb-1">Thời gian bắt đầu:</p>
-                                    <p className="text-gray-800">
-                                        {dayjs(selectedTask.start_time).format('DD/MM/YYYY HH:mm')}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-600 mb-1">Thời gian kết thúc:</p>
-                                    <p className="text-gray-800">
-                                        {dayjs(selectedTask.end_time).format('DD/MM/YYYY HH:mm')}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Mô tả</h3>
-                            <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
-                                {selectedTask.description || 'Không có mô tả'}
-                            </p>
-                        </div>
-                    </div>
-                ),
-            },
-            {
-                key: '2',
-                label: 'Bình luận',
-                children: (
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                        <p className="text-gray-600">Chức năng bình luận đang được phát triển...</p>
-                    </div>
-                ),
-            },
-        ];
-
-        return <Tabs items={items} />;
+        return (
+            <TaskDetails
+                task={selectedTask}
+                onEditTask={onEditTask}
+                onDeleteTask={handleDeleteTask}
+                onReload={onReload}
+            />
+        );
     };
 
     return (
@@ -434,8 +355,9 @@ function TaskTable({
                 placement="right"
                 onClose={() => setDrawerVisible(false)}
                 open={drawerVisible}
+                closable
+                destroyOnHidden
                 width={window.innerWidth < 768 ? '100%' : '50%'}
-                bodyStyle={{ padding: 0 }}
             >
                 <div className="p-6">{renderTaskDetails()}</div>
             </Drawer>
