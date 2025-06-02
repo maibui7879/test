@@ -1,112 +1,105 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useUser } from '@contexts/useAuth/userContext';
+import { Avatar, Dropdown, Button, Badge, Space, Typography } from 'antd';
+import { BellOutlined, UserOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useMessage } from '@/hooks/useMessage';
+
+const { Text } = Typography;
 
 function Header() {
     const { user, logout } = useUser();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const { message, contextHolder } = useMessage();
 
-    const getAvatarUrl = () => {
-        if (!user?.avatar_url) {
-            return `https://ui-avatars.com/api/?name=${user?.full_name || 'User'}`;
-        }
-        if (typeof user.avatar_url === 'string') {
-            return user.avatar_url;
-        }
-        // If it's a File object, create a URL for it
-        return URL.createObjectURL(user.avatar_url);
+    const handleLogout = () => {
+        message.loading({ key: 'logout', content: 'Đang đăng xuất...' });
+        logout();
     };
 
+    const userMenuItems = [
+        {
+            key: 'profile',
+            label: 'Thông tin cá nhân',
+            icon: <UserOutlined />,
+            onClick: () => {},
+        },
+        {
+            key: 'settings',
+            label: 'Cài đặt',
+            icon: <SettingOutlined />,
+            onClick: () => {},
+        },
+        {
+            key: 'logout',
+            label: 'Đăng xuất',
+            icon: <LogoutOutlined />,
+            onClick: handleLogout,
+            danger: true,
+        },
+    ];
+
     return (
-        <nav className="bg-gray-900 border-b border-gray-800">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="relative flex h-16 items-center justify-between">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <img className="h-8 w-auto" src="/logo.png" alt="Logo" />
-                        </div>
-                        <div className="hidden md:block ml-6">
-                            <div className="flex items-center space-x-4">
-                                <span className="text-gray-300 text-sm font-medium">
-                                    Welcome, {user?.full_name || 'User'}
-                                </span>
+        <>
+            {contextHolder}
+            <nav className="bg-gradient-to-r from-gray-800 to-gray-900 shadow-lg">
+                <div className="mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="relative flex h-16 items-center justify-between">
+                        {/* Left side - Logo */}
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <img className="h-8 w-auto" src="/logo.png" alt="Logo" />
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex items-center">
-                        <button
-                            type="button"
-                            className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                        >
-                            <span className="sr-only">View notifications</span>
-                            <svg
-                                className="h-6 w-6"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0018 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-                                />
-                            </svg>
-                        </button>
+                        {/* Right side - User info and actions */}
+                        <div className="flex items-center">
+                            <Space size="middle" className="mr-4">
+                                <Badge
+                                    count={5}
+                                    size="small"
+                                    className="cursor-pointer"
+                                    style={{
+                                        boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.2)',
+                                    }}
+                                >
+                                    <Button
+                                        type="text"
+                                        icon={
+                                            <BellOutlined className="text-gray-300 text-xl hover:text-white transition-all duration-300 ease-in-out transform hover:scale-110" />
+                                        }
+                                        className="hover:bg-gray-700/50 rounded-full flex items-center justify-center w-10 h-10 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-gray-900/50"
+                                    />
+                                </Badge>
 
-                        <div className="relative ml-3">
-                            <div>
-                                <button
-                                    type="button"
-                                    className="flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                                    id="user-menu-button"
-                                    aria-expanded="false"
-                                    aria-haspopup="true"
+                                <Dropdown
+                                    menu={{ items: userMenuItems }}
+                                    trigger={['click']}
+                                    open={isDropdownOpen}
+                                    onOpenChange={setIsDropdownOpen}
+                                    placement="bottomRight"
                                 >
-                                    <span className="sr-only">Open user menu</span>
-                                    <img className="h-8 w-8 rounded-full" src={getAvatarUrl()} alt="" />
-                                </button>
-                            </div>
-
-                            <div
-                                className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden"
-                                role="menu"
-                                aria-orientation="vertical"
-                                aria-labelledby="user-menu-button"
-                                tabIndex={-1}
-                            >
-                                <a
-                                    href="#"
-                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    role="menuitem"
-                                    tabIndex={-1}
-                                    id="user-menu-item-0"
-                                >
-                                    Your Profile
-                                </a>
-                                <a
-                                    href="#"
-                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    role="menuitem"
-                                    tabIndex={-1}
-                                    id="user-menu-item-1"
-                                >
-                                    Settings
-                                </a>
-                                <button
-                                    onClick={logout}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    role="menuitem"
-                                    tabIndex={-1}
-                                    id="user-menu-item-2"
-                                >
-                                    Sign out
-                                </button>
-                            </div>
+                                    <Button
+                                        type="text"
+                                        className="p-0 hover:bg-gray-700/50 rounded-full flex items-center transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-gray-900/50"
+                                    >
+                                        <Space className="px-2">
+                                            <Text className="text-gray-300 text-sm font-medium md:block hover:text-white transition-colors duration-300">
+                                                Xin chào, {user?.full_name || 'User'}
+                                            </Text>
+                                            <Avatar
+                                                src={user?.avatar_url}
+                                                icon={<UserOutlined />}
+                                                className="border-2 border-gray-600 hover:border-gray-400 transition-all duration-300 ease-in-out transform hover:scale-105"
+                                            />
+                                        </Space>
+                                    </Button>
+                                </Dropdown>
+                            </Space>
                         </div>
                     </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </>
     );
 }
 

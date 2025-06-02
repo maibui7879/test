@@ -24,11 +24,10 @@ export const sidebarRoutes: Route[] = [
         children: [],
     },
     {
-        path: '/team',
+        path: '/doi-nhom',
         name: 'Nhóm của bạn',
         component: TeamPage,
         icon: faUsers,
-        children: [],
     },
     {
         path: '/nhiem-vu-ca-nhan',
@@ -56,4 +55,22 @@ export const sidebarRoutes: Route[] = [
         component: Profile,
     },
 ];
-export const privateRoutes: Route[] = [];
+export const privateRoutes: Route[] = [
+    {
+        path: '/doi-nhom',
+        component: TeamPage,
+
+        children: [
+            {
+                path: ':id',
+                component: AuthForm,
+                layout: null,
+            },
+            {
+                path: 'nhiem-vu',
+                component: PersonalTask,
+                layout: null,
+            },
+        ],
+    },
+];

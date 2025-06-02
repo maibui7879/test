@@ -9,6 +9,20 @@ export interface UserProfile {
     status: string;
     full_name?: string;
     phone_number?: string;
+    avatar_url: string;
+    gender?: string;
+    date_of_birth?: string | null;
+    address?: string | null;
+    bio?: string | null;
+}
+
+export interface UpdateUserProfile {
+    id: number;
+    email: string;
+    role: string;
+    status: string;
+    full_name?: string;
+    phone_number?: string;
     avatar_url: string | File;
     gender?: string;
     date_of_birth?: string | null;

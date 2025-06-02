@@ -10,7 +10,7 @@ function SidebarItem({
     label,
     subItems,
     className = '',
-    activeClassName = 'bg-blue-600 text-white font-medium shadow-md',
+    activeClassName = 'text-blue-300 text-white font-medium shadow-md',
     inactiveClassName = 'text-gray-300 hover:bg-gray-700 hover:text-white',
 }: SidebarItemProps) {
     const [isOpen, setIsOpen] = useState(false);
@@ -30,7 +30,7 @@ function SidebarItem({
                 } justify-center xl:justify-start ${className}`
             }
         >
-            {icon && <span className="text-lg">{icon}</span>}
+            {icon && <span className="text-lg m">{icon}</span>}
             <span className="ml-3 select-none hidden xl:inline">{label}</span>
         </NavLink>
     );

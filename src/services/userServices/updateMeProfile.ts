@@ -1,7 +1,7 @@
 import apiRequest from '../common/apiRequest';
-import { UserProfile } from '../types/types';
+import { UpdateUserProfile, UserProfile } from '../types/types';
 
-const updateMeProfile = async (data: Partial<UserProfile>): Promise<UserProfile> => {
+const updateMeProfile = async (data: Partial<UpdateUserProfile>): Promise<UserProfile> => {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {

@@ -46,7 +46,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
             const userInfo = await getMeProfile();
 
-            // Chỉ cho phép role là admin hoặc member
             const allowedRoles = ['admin', 'member'];
             if (!allowedRoles.includes(userInfo.role)) {
                 logout();
