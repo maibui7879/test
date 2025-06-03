@@ -113,7 +113,6 @@
     padding: 0;
 }
 
-
 body {
     font-family: var(--font-family);
     font-size: var(--text-base);
@@ -171,8 +170,6 @@ a {
 .ant-input {
     @apply rounded-md;
 }
-
-
 
 .ant-card {
     @apply rounded-lg overflow-hidden;
@@ -286,7 +283,8 @@ a {
 }
 
 @keyframes bounce {
-    0%, 100% {
+    0%,
+    100% {
         transform: translateY(0);
     }
     50% {
@@ -338,59 +336,10 @@ a {
     animation: shimmer 1.5s infinite;
 }
 
-/* Custom Utility Classes */
-@layer utilities {
-    .text-truncate {
-        @apply overflow-hidden text-ellipsis whitespace-nowrap;
-    }
-
-    .hover-scale {
-        @apply transition-transform duration-200 hover:scale-105;
-    }
-
-    .hover-lift {
-        @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
-    }
-
-    .hover-glow {
-        @apply transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/20;
-    }
-
-    .hover-bright {
-        @apply transition-all duration-200 hover:brightness-110;
-    }
-
-    .glass-effect {
-        @apply bg-white/80 backdrop-blur-sm border border-white/20;
-    }
-
-    .text-gradient {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400;
-    }
-
-    .border-gradient {
-        @apply border-2 border-transparent bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-border;
-    }
-
-    .animate-float {
-        @apply transition-all duration-300 ease-in-out hover:-translate-y-1;
-    }
-
-    .animate-rotate {
-        @apply transition-transform duration-300 ease-in-out hover:rotate-12;
-    }
-
-    .animate-grow {
-        @apply transition-all duration-300 ease-in-out hover:scale-110;
-    }
-
-    .animate-shake {
-        animation: shake 0.5s ease-in-out;
-    }
-}
 
 @keyframes shake {
-    0%, 100% {
+    0%,
+    100% {
         transform: translateX(0);
     }
     25% {

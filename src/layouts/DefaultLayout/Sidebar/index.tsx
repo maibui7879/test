@@ -54,7 +54,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             width={256}
         >
             <div className="flex items-center justify-center p-4 border-b border-gray-700 h-16">
-                <div className="text-white text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+                <div
+                    className="text-xl font-bold whitespace-nowrap"
+                    style={{
+                        background: 'linear-gradient(to right, #3b82f6, #9333ea)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                    }}
+                >
                     {collapsed ? 'TM' : 'Task Manager'}
                 </div>
             </div>

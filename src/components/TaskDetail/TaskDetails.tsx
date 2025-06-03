@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Tabs, Modal, Form, message } from 'antd';
+import { Tabs, Modal, Form } from 'antd';
 import dayjs from 'dayjs';
 import { TaskNotesAndAttachments, TaskComment, TaskPayload } from '@services/types/types';
 import { getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment } from '@services/teamServices';
@@ -28,7 +28,6 @@ function TaskDetails({ task: initialTask, onEditTask, onDeleteTask, onReload }: 
 
     const memoizedNotification = useMemo(() => useMessageMessage, []);
 
-    // Cập nhật task khi initialTask thay đổi
     useEffect(() => {
         setTask(initialTask);
     }, [initialTask]);
