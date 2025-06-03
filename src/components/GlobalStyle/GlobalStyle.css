@@ -336,7 +336,6 @@ a {
     animation: shimmer 1.5s infinite;
 }
 
-
 @keyframes shake {
     0%,
     100% {

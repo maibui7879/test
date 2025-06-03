@@ -3,10 +3,10 @@ export interface LoginResponse {
 }
 //=============================
 export interface UserProfile {
-    id: number;
-    email: string;
-    role: string;
-    status: string;
+    id?: number;
+    email?: string;
+    role?: string;
+    status?: string;
     full_name?: string;
     phone_number?: string;
     avatar_url: string;
@@ -17,13 +17,9 @@ export interface UserProfile {
 }
 
 export interface UpdateUserProfile {
-    id: number;
-    email: string;
-    role: string;
-    status: string;
     full_name?: string;
     phone_number?: string;
-    avatar_url: string | File;
+    avatar: string | File;
     gender?: string;
     date_of_birth?: string | null;
     address?: string | null;

@@ -47,7 +47,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             const userInfo = await getMeProfile();
 
             const allowedRoles = ['admin', 'member'];
-            if (!allowedRoles.includes(userInfo.role)) {
+            if (!userInfo.role || !allowedRoles.includes(userInfo.role)) {
                 logout();
                 throw new Error('Bạn không có quyền truy cập');
             }

@@ -32,7 +32,6 @@ const NotesAndAttachments: React.FC<NotesAndAttachmentsProps> = ({
     onRemoveFile,
     onFileSizeError,
 }) => {
-    // Helper function to format file size
     const formatFileSize = (bytes: number | null | undefined): string => {
         if (!bytes) return '0 B';
         const k = 1024;
