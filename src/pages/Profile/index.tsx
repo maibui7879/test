@@ -12,15 +12,13 @@ import { useUser } from '@/contexts/useAuth/userContext';
 import { getMeProfile, updateMeProfile, changePassMe } from '@/services/userServices';
 import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
-import { UpdateUserProfile } from '@services/types/types';
+import { ChangePasswordPayload, UpdateUserProfile } from '@services/types/types';
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface ChangePasswordPayload {
-    currentPassword: string;
-    newPassword: string;
+interface ChangePassword extends ChangePasswordPayload {
     confirmPassword: string;
 }
 
@@ -95,45 +93,39 @@ const Profile: React.FC = () => {
 
             try {
                 const payload: Partial<UpdateUserProfile> = {
-                    ...values,
+                    full_name: values.full_name?.trim(),
+                    phone_number: values.phone_number?.trim(),
+                    gender: values.gender,
+                    address: values.address?.trim(),
+                    bio: values.bio?.trim(),
                 };
 
                 if (values.date_of_birth) {
                     const date = values.date_of_birth as any;
-                    if (date && date.format) {
-                        payload.date_of_birth = date.format('YYYY-MM-DD');
-                    }
+                    payload.date_of_birth = date?.format?.('YYYY-MM-DD') || null;
                 }
 
-                if (avatarFile instanceof File) {
-                    payload.avatar = avatarFile;
-                } else if (user.avatar_url) {
-                    payload.avatar = user.avatar_url;
-                }
+                payload.avatar = avatarFile instanceof File ? avatarFile : user.avatar_url;
 
-                console.log('Update payload:', payload);
                 const res = await updateMeProfile(payload);
-                console.log('Update response:', res);
+                if (!res) return;
 
-                if (res) {
-                    if (res.avatar_url) {
-                        setAvatarUrl(res.avatar_url);
-                        setAvatarFile(null);
-                    }
-
-                    // Update form with new values
-                    form.setFieldsValue({
-                        full_name: res.full_name,
-                        email: res.email,
-                        phone_number: res.phone_number || '',
-                        gender: res.gender || 'other',
-                        address: res.address || '',
-                        bio: res.bio || '',
-                        date_of_birth: res.date_of_birth ? dayjs(res.date_of_birth) : null,
-                    });
-
-                    message.success({ key: loadingKey, content: 'Profile updated successfully!' });
+                if (res.avatar_url) {
+                    setAvatarUrl(res.avatar_url);
+                    setAvatarFile(null);
                 }
+
+                form.setFieldsValue({
+                    full_name: res.full_name,
+                    email: res.email,
+                    phone_number: res.phone_number || '',
+                    gender: res.gender || 'other',
+                    address: res.address || '',
+                    bio: res.bio || '',
+                    date_of_birth: res.date_of_birth ? dayjs(res.date_of_birth) : null,
+                });
+
+                message.success({ key: loadingKey, content: 'Profile updated successfully!' });
             } catch (error) {
                 console.error('Update error:', error);
                 handleError(error, 'Failed to update profile', loadingKey);
@@ -145,7 +137,7 @@ const Profile: React.FC = () => {
     );
 
     const handlePasswordChange = useCallback(
-        async (values: ChangePasswordPayload) => {
+        async (values: ChangePassword) => {
             if (!user?.id) return;
 
             const loadingKey = 'change-password-loading';
@@ -153,7 +145,8 @@ const Profile: React.FC = () => {
             message.loading({ key: loadingKey, content: 'Changing password...' });
 
             try {
-                await changePassMe(values);
+                const { confirmPassword, ...passwordData } = values;
+                await changePassMe(passwordData);
                 message.success({ key: loadingKey, content: 'Password changed successfully!' });
                 passwordForm.resetFields();
             } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Layout } from 'antd';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -14,8 +14,21 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = React.memo(({ children }) =>
         setCollapsed((prev) => !prev);
     }, []);
 
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth <= 768) {
+                setCollapsed(true);
+            } else {
+                setCollapsed(false);
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const renderContent = useCallback(() => {
-        return <Content className=" bg-white shadow-sm">{children}</Content>;
+        return <Content className="bg-white shadow-sm">{children}</Content>;
     }, [children]);
 
     return (
@@ -23,7 +36,7 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = React.memo(({ children }) =>
             <Sidebar collapsed={collapsed} />
             <Layout className="transition-all duration-300 bg-white">
                 <Header collapsed={collapsed} onCollapse={handleCollapse} />
-                <div className=" overflow-auto" style={{ height: 'calc(100vh - 64px)' }}>
+                <div className="overflow-auto" style={{ height: 'calc(100vh - 64px)' }}>
                     {renderContent()}
                 </div>
                 <Footer />

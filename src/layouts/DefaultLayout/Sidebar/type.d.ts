@@ -12,4 +12,8 @@ export interface SidebarProps {
     className?: string;
     header?: React.ReactNode;
     footer?: React.ReactNode;
+    collapsed: boolean;
+    isMobile?: boolean;
 }
+
+export default SidebarProps;
