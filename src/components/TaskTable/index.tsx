@@ -26,7 +26,8 @@ function TaskTable({
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
-    const [editingKey, setEditingKey] = useState<string | number>('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingTask, setEditingTask] = useState<TaskPayload | null>(null);
     const [form] = Form.useForm();
     const [localTasks, setLocalTasks] = useState<TaskPayload[]>(tasks);
 
@@ -36,24 +37,19 @@ function TaskTable({
 
     const debouncedSearchText = useDebounce(searchText, 300);
 
-    const isEditing = (record: TaskPayload) => {
-        const recordId = record.id?.toString() || record._id?.toString();
-        const editingId = editingKey.toString();
-        return recordId === editingId;
-    };
-
     const edit = (record: TaskPayload) => {
         form.setFieldsValue({
             ...record,
             start_time: dayjs(record.start_time),
             end_time: dayjs(record.end_time),
         });
-        const recordId = record.id?.toString() || record._id?.toString() || '';
-        setEditingKey(recordId);
+        setEditingTask(record);
+        setIsEditing(true);
     };
 
     const cancel = () => {
-        setEditingKey('');
+        setIsEditing(false);
+        setEditingTask(null);
     };
 
     const save = async (id: string | number | undefined) => {
@@ -61,7 +57,7 @@ function TaskTable({
         try {
             const row = await form.validateFields();
             const taskToUpdate = localTasks.find((item) => {
-                const itemId = item.id?.toString() || item._id?.toString();
+                const itemId = item.id?.toString();
                 return itemId === id.toString();
             });
 
@@ -75,7 +71,8 @@ function TaskTable({
             };
 
             await onEditTask(updatedTask);
-            setEditingKey('');
+            setIsEditing(false);
+            setEditingTask(null);
         } catch (errInfo) {
             console.log('Validate Failed:', errInfo);
         }
@@ -91,7 +88,7 @@ function TaskTable({
             await onDeleteTask(taskId);
             setLocalTasks((prevTasks) =>
                 prevTasks.filter((task) => {
-                    const id = task.id || task._id;
+                    const id = task.id;
                     return id !== taskId;
                 }),
             );
@@ -108,17 +105,17 @@ function TaskTable({
             key: 'title',
             width: '35%',
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing(record);
+                const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
                     <Form.Item
                         name="title"
                         style={{ margin: 0 }}
                         rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}
                     >
-                        <Input className="hover:border-blue-400 focus:border-blue-400 transition-all duration-200" />
+                        <Input className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200" />
                     </Form.Item>
                 ) : (
-                    <span className="font-medium hover:text-blue-500 transition-colors duration-200 cursor-pointer">
+                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer">
                         {record.title}
                     </span>
                 );
@@ -137,7 +134,7 @@ function TaskTable({
             ],
             onFilter: (value, record) => record.status === value,
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing(record);
+                const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
                     <Form.Item
                         name="status"
@@ -173,7 +170,7 @@ function TaskTable({
             ],
             onFilter: (value, record) => record.priority === value,
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing(record);
+                const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
                     <Form.Item
                         name="priority"
@@ -204,7 +201,7 @@ function TaskTable({
             align: 'center',
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing(record);
+                const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
                     <Form.Item
                         name="start_time"
@@ -232,7 +229,7 @@ function TaskTable({
             align: 'center',
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing(record);
+                const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
                     <Form.Item
                         name="end_time"
@@ -258,43 +255,43 @@ function TaskTable({
             width: '15%',
             align: 'center',
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing(record);
+                const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
-                    <Space>
+                    <Space className="animate-fade-in">
                         <Button
                             type="primary"
-                            onClick={() => save(record.id || record._id)}
+                            onClick={() => save(record.id)}
                             icon={<FontAwesomeIcon icon={faSave} />}
-                            className="bg-green-500 hover:bg-green-600 transition-colors duration-200"
+                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200"
                         >
                             Lưu
                         </Button>
                         <Button
                             onClick={cancel}
                             icon={<FontAwesomeIcon icon={faTimes} />}
-                            className="hover:border-red-400 hover:text-red-500 transition-colors duration-200"
+                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200"
                         ></Button>
                     </Space>
                 ) : (
-                    <Space>
+                    <Space className="animate-fade-in">
                         <Button
                             type="primary"
-                            disabled={editingKey !== ''}
+                            disabled={isEditing}
                             onClick={() => edit(record)}
                             icon={<FontAwesomeIcon icon={faEdit} />}
-                            className="bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
+                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200"
                         ></Button>
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
                             icon={<FontAwesomeIcon icon={faEye} />}
-                            className="bg-purple-500 hover:bg-purple-600 transition-colors duration-200"
+                            className="!bg-purple-500 hover:!bg-purple-600 transition-all duration-200"
                         ></Button>
                         <Popconfirm
                             title="Xóa công việc"
                             description="Bạn có chắc chắn muốn xóa công việc này?"
                             onConfirm={() => {
-                                const taskId = record.id || record._id;
+                                const taskId = record.id;
                                 if (taskId) {
                                     handleDeleteTask(taskId);
                                 }
@@ -305,9 +302,8 @@ function TaskTable({
                         >
                             <Button
                                 type="primary"
-                                danger
                                 icon={<FontAwesomeIcon icon={faTrash} />}
-                                className="bg-red-500 hover:bg-red-600 transition-colors duration-200"
+                                className="!bg-red-500 hover:!bg-red-600 transition-all duration-200"
                             ></Button>
                         </Popconfirm>
                     </Space>

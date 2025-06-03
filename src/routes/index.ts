@@ -4,8 +4,9 @@ import PersonalTask from '@pages/PersonalTask';
 import Profile from '@pages/Profile';
 import Route from './type';
 import { faCalendarAlt, faClipboard, faTasks, faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
-import TeamPage from '@pages/TeamPage';
 import CalenderPerson from '@pages/PersonalTask/calendar';
+import CreatedTeamsPage from '@pages/TeamPage/CreatedTeamsPage';
+import JoinedTeamsPage from '@pages/TeamPage/JoinedTeamsPage';
 
 export const publicRoutes: Route[] = [
     {
@@ -24,24 +25,37 @@ export const sidebarRoutes: Route[] = [
         children: [],
     },
     {
-        path: '/doi-nhom',
+        path: '/teams',
         name: 'Nhóm của bạn',
-        component: TeamPage,
         icon: faUsers,
+        children: [
+            {
+                path: 'created',
+                name: 'Nhóm của bạn',
+                component: CreatedTeamsPage,
+                icon: faUsers,
+            },
+            {
+                path: 'joined',
+                name: 'Nhóm tham gia',
+                component: JoinedTeamsPage,
+                icon: faUsers,
+            },
+        ],
     },
     {
-        path: '/nhiem-vu-ca-nhan',
+        path: '/personal-task',
         name: 'Công việc cá nhân',
         icon: faTasks,
         children: [
             {
-                path: 'lich',
+                path: 'calendar',
                 name: 'Lịch cá nhân',
                 component: CalenderPerson,
                 icon: faCalendarAlt,
             },
             {
-                path: 'nhiem-vu',
+                path: 'task',
                 name: 'Công việc của bạn',
                 component: PersonalTask,
                 icon: faTasks,
@@ -57,9 +71,7 @@ export const sidebarRoutes: Route[] = [
 ];
 export const privateRoutes: Route[] = [
     {
-        path: '/doi-nhom',
-        component: TeamPage,
-
+        path: '/teams',
         children: [
             {
                 path: ':id',
@@ -67,7 +79,7 @@ export const privateRoutes: Route[] = [
                 layout: null,
             },
             {
-                path: 'nhiem-vu',
+                path: 'tasks',
                 component: PersonalTask,
                 layout: null,
             },

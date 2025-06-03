@@ -1,18 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import {
-    Card,
-    Button,
-    Modal,
-    List,
-    Spin,
-    Tag,
-    ConfigProvider,
-    Calendar,
-    Avatar,
-    Tooltip,
-    Typography,
-    Space,
-} from 'antd';
+import { useState, useCallback, useMemo } from 'react';
+import { Card, Button, Modal, List, Spin, Tag, ConfigProvider, Calendar, Avatar, Tooltip } from 'antd';
 import type { CalendarProps } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -21,8 +8,6 @@ import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import TaskForm from '@/components/TaskForm';
 import { TaskPayload } from '@services/types/types';
-
-const { Text } = Typography;
 
 const EVENT_COLORS = {
     done: '#059669',
@@ -85,14 +70,12 @@ const CalendarComponent = ({ tasks, loading = false, onTaskCreated }: CalendarCo
     const handleTaskSubmit = useCallback(
         (taskData: TaskPayload) => {
             if (selectedTask) {
-                // Update existing task
                 const updatedTask = {
                     ...selectedTask,
                     ...taskData,
                 };
                 onTaskCreated?.(updatedTask);
             } else {
-                // Create new task
                 onTaskCreated?.(taskData);
             }
             setIsModalOpen(false);
@@ -128,7 +111,7 @@ const CalendarComponent = ({ tasks, loading = false, onTaskCreated }: CalendarCo
             return (
                 <>
                     <div className="absolute top-1 left-1">
-                        <span className="text-xl font-semibold text-gray-600">{dayTasks.length} công việc</span>
+                        <span className="text-sx font-semibold text-gray-600">{dayTasks.length} công việc</span>
                     </div>
                     <div className="absolute bottom-1 left-1 right-1 flex items-center justify-center space-x-1">
                         {displayTasks.map((task, index) => (

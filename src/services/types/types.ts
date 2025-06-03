@@ -114,8 +114,14 @@ export interface Team {
     created_at: string;
     creator_name: string;
 }
-export interface TeamListResponse {
-    items: Team[];
+export interface GetTeamsResponseData {
+    data: Team[];
+    pagination: {
+        currentPage: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
 }
 
 // ======================

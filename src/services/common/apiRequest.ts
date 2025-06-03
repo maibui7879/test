@@ -1,6 +1,6 @@
 import { getToken } from '../../utils/auth/authUtils';
 
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
     success: boolean;
     data?: T;
     message?: string;
@@ -15,7 +15,6 @@ async function apiRequest<T = any>(
     try {
         const headers: HeadersInit = {};
 
-        // Add Authorization header if required
         if (requiresAuth) {
             const token = getToken();
             if (!token) {
@@ -29,11 +28,9 @@ async function apiRequest<T = any>(
             headers,
         };
 
-        // Xử lý body: nếu là FormData thì không set Content-Type
         if (body) {
             if (body instanceof FormData) {
                 options.body = body;
-                // FormData: không cần set Content-Type, browser sẽ tự set boundary
             } else {
                 headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(body);
