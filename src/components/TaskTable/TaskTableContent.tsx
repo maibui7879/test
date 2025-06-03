@@ -42,7 +42,7 @@ function TaskTableContent({
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white  p-6">
             <div className="flex justify-between items-center mb-6">
                 <Input.Search
                     placeholder="Tìm kiếm theo tiêu đề"

@@ -1,36 +1,80 @@
-import React from 'react';
-import SidebarItem from './SidebarItem';
+import React, { useMemo, useCallback } from 'react';
+import { Layout, Menu } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { sidebarRoutes } from '@/routes';
 import SidebarFooter from './SidebarFooter';
-import { SidebarProps } from './type';
+import Route from '@/routes/type';
 
-function Sidebar({ children, items, className = '', header, footer }: SidebarProps) {
-    const renderContent = () => {
-        if (items) {
-            return (
-                <div className="flex-1 overflow-y-auto px-1.5 py-2 space-y-0.5">
-                    {items.map((item, index) => (
-                        <SidebarItem
-                            key={index}
-                            icon={item.icon}
-                            path={item.path}
-                            label={item.label}
-                            subItems={item.subItems}
-                        />
-                    ))}
-                </div>
-            );
-        }
-        return children;
-    };
+const { Sider } = Layout;
+
+interface SidebarProps {
+    collapsed: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const menuItems = useMemo(() => {
+        return sidebarRoutes.map((route) => {
+            if (route.children?.length) {
+                return {
+                    key: route.path,
+                    icon: route.icon && <FontAwesomeIcon icon={route.icon} className="text-lg" />,
+                    label: route.name,
+                    children: route.children.map((child: Route) => ({
+                        key: `${route.path}/${child.path}`,
+                        icon: child.icon && <FontAwesomeIcon icon={child.icon} className="text-lg" />,
+                        label: child.name,
+                    })),
+                };
+            }
+            return {
+                key: route.path,
+                icon: route.icon && <FontAwesomeIcon icon={route.icon} className="text-lg" />,
+                label: route.name,
+            };
+        });
+    }, []);
+
+    const handleMenuClick = useCallback(
+        ({ key }: { key: string }) => {
+            navigate(key);
+        },
+        [navigate],
+    );
 
     return (
-        <nav
-            className={`relative bg-gray-900 min-h-screen py-4 w-16 xl:w-[240px] transition-all duration-300 shadow-xl border-r border-gray-800 ${className}`}
+        <Sider
+            trigger={null}
+            collapsible
+            collapsed={collapsed}
+            className="min-h-screen bg-gray-800 shadow-lg"
+            width={256}
         >
-            <div className="mt-4">{renderContent()}</div>
-            {footer || <SidebarFooter />}
-        </nav>
+            <div className="flex items-center justify-center p-4 border-b border-gray-700 h-16">
+                <div className="text-white text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+                    {collapsed ? 'TM' : 'Task Manager'}
+                </div>
+            </div>
+            <>
+                <Menu
+                    theme="dark"
+                    mode="inline"
+                    selectedKeys={[location.pathname]}
+                    items={menuItems}
+                    onClick={handleMenuClick}
+                    className="bg-gray-800 border-r-0"
+                    style={{
+                        padding: '8px 0',
+                        fontSize: '14px',
+                    }}
+                />
+            </>
+            <SidebarFooter collapsed={collapsed} />
+        </Sider>
     );
-}
+};
 
 export default Sidebar;

@@ -34,7 +34,7 @@ const CalenderPerson = () => {
     };
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="mx-auto p-4">
             <Calendar tasks={tasks} loading={loading} onTaskCreated={handleTaskCreated} />
         </div>
     );

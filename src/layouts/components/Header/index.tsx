@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
 import { useUser } from '@contexts/useAuth/userContext';
 import { Avatar, Dropdown, Button, Badge, Space, Typography } from 'antd';
-import { BellOutlined, UserOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import {
+    BellOutlined,
+    UserOutlined,
+    SettingOutlined,
+    LogoutOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+} from '@ant-design/icons';
 import { useMessage } from '@/hooks/useMessage';
 
 const { Text } = Typography;
 
-function Header() {
+interface HeaderProps {
+    collapsed: boolean;
+    onCollapse: () => void;
+}
+
+function Header({ collapsed, onCollapse }: HeaderProps) {
     const { user, logout } = useUser();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const { message, contextHolder } = useMessage();
@@ -44,14 +56,20 @@ function Header() {
             <nav className="bg-gradient-to-r from-gray-800 to-gray-900 shadow-lg">
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="relative flex h-16 items-center justify-between">
-                        {/* Left side - Logo */}
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <img className="h-8 w-auto" src="/logo.png" alt="Logo" />
-                            </div>
+                        <div className="flex items-start">
+                            <Button
+                                type="text"
+                                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                onClick={onCollapse}
+                                className="!text-gray-300 hover:!text-white transition-colors duration-300"
+                                style={{
+                                    fontSize: '16px',
+                                    width: 64,
+                                    height: 64,
+                                }}
+                            />
                         </div>
 
-                        {/* Right side - User info and actions */}
                         <div className="flex items-center">
                             <Space size="middle" className="mr-4">
                                 <Badge
