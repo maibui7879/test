@@ -5,4 +5,5 @@ export interface TaskDetailsProps {
     onEditTask: (taskData: TaskPayload) => Promise<void>;
     onDeleteTask: (taskId: string | number) => Promise<void>;
     onReload?: () => void;
+    teamId?: string | null;
 }

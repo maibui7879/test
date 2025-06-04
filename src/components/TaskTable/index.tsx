@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-import { TaskPayload } from '@services/types/types';
+import { TaskPayload, UserProfile } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import TaskTableContent from './TaskTableContent';
@@ -11,7 +11,33 @@ import { getPriorityColor, getPriorityText, getStatusColor, getStatusText } from
 import { TaskTableProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
 
-function TaskTable({
+const getRoleColor = (role: string | undefined) => {
+    switch (role) {
+        case 'creator':
+            return 'purple';
+        case 'admin':
+            return 'blue';
+        case 'member':
+            return 'green';
+        default:
+            return 'default';
+    }
+};
+
+const getRoleText = (role: string | undefined) => {
+    switch (role) {
+        case 'creator':
+            return 'Người tạo';
+        case 'admin':
+            return 'Quản trị viên';
+        case 'member':
+            return 'Thành viên';
+        default:
+            return role || 'Không xác định';
+    }
+};
+
+const TaskTable: React.FC<TaskTableProps> = ({
     tasks,
     loading,
     error,
@@ -21,8 +47,9 @@ function TaskTable({
     currentPage,
     totalTasks,
     onPageChange,
-    setTotalTasks,
-}: TaskTableProps) {
+    teamId,
+    teamMembers = [],
+}) => {
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
@@ -92,7 +119,6 @@ function TaskTable({
                     return id !== taskId;
                 }),
             );
-            setTotalTasks(totalTasks - 1);
         } catch (error) {
             console.error('Error deleting task:', error);
         }
@@ -103,7 +129,8 @@ function TaskTable({
             title: 'Tiêu đề',
             dataIndex: 'title',
             key: 'title',
-            width: '35%',
+            width: '25%',
+            ellipsis: true,
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
@@ -115,7 +142,7 @@ function TaskTable({
                         <Input className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200" />
                     </Form.Item>
                 ) : (
-                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer">
+                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block">
                         {record.title}
                     </span>
                 );
@@ -127,6 +154,7 @@ function TaskTable({
             key: 'status',
             width: '12%',
             align: 'center',
+            responsive: ['lg'],
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
                 { text: 'Đang thực hiện', value: 'in_progress' },
@@ -163,6 +191,7 @@ function TaskTable({
             key: 'priority',
             width: '12%',
             align: 'center',
+            responsive: ['lg'],
             filters: [
                 { text: 'Thấp', value: 'low' },
                 { text: 'Trung bình', value: 'medium' },
@@ -193,12 +222,84 @@ function TaskTable({
                 );
             },
         },
+        ...(teamId
+            ? [
+                  {
+                      title: 'Người thực hiện',
+                      dataIndex: 'assigned_user_id',
+                      key: 'assigned_user_id',
+                      width: '20%',
+                      ellipsis: true,
+                      render: (_: any, record: TaskPayload) => {
+                          const editable = isEditing && editingTask?.id === record.id;
+                          const assignedUser = teamMembers.find(
+                              (user: UserProfile) => user.id === record.assigned_user_id,
+                          );
+
+                          return editable ? (
+                              <Form.Item
+                                  name="assigned_user_id"
+                                  style={{ margin: 0 }}
+                                  rules={[{ required: true, message: 'Vui lòng chọn người thực hiện!' }]}
+                              >
+                                  <Select
+                                      showSearch
+                                      placeholder="Chọn người thực hiện"
+                                      defaultValue={record.assigned_user_id}
+                                      value={record.assigned_user_id}
+                                      onChange={(value) => {
+                                          const updatedTask = {
+                                              ...record,
+                                              assigned_user_id: value,
+                                          };
+                                          onEditTask(updatedTask);
+                                      }}
+                                      filterOption={(input, option) =>
+                                          (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                                      }
+                                      className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                                  >
+                                      {teamMembers.map((user: UserProfile) => (
+                                          <Select.Option
+                                              key={user.id}
+                                              value={user.id}
+                                              label={`${user.full_name} (${getRoleText(user.role)})`}
+                                          >
+                                              <div className="flex items-center justify-between">
+                                                  <span className="font-medium">{user.full_name}</span>
+                                                  <Tag color={getRoleColor(user.role)} className="ml-2">
+                                                      {getRoleText(user.role)}
+                                                  </Tag>
+                                              </div>
+                                          </Select.Option>
+                                      ))}
+                                  </Select>
+                              </Form.Item>
+                          ) : (
+                              <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                                  {assignedUser ? (
+                                      <div className="flex items-center">
+                                          <span className="truncate">{assignedUser.full_name}</span>
+                                          <Tag color={getRoleColor(assignedUser.role)} className="ml-2 flex-shrink-0">
+                                              {getRoleText(assignedUser.role)}
+                                          </Tag>
+                                      </div>
+                                  ) : (
+                                      'Chưa giao'
+                                  )}
+                              </span>
+                          );
+                      },
+                  },
+              ]
+            : []),
         {
             title: 'Thời gian bắt đầu',
             dataIndex: 'start_time',
             key: 'start_time',
             width: '13%',
             align: 'center',
+            responsive: ['lg'],
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
@@ -325,6 +426,7 @@ function TaskTable({
                 onEditTask={onEditTask}
                 onDeleteTask={handleDeleteTask}
                 onReload={onReload}
+                teamId={teamId}
             />
         );
     };
@@ -343,6 +445,10 @@ function TaskTable({
                     currentPage={currentPage}
                     totalTasks={totalTasks}
                     onPageChange={onPageChange}
+                    teamId={teamId}
+                    onEditTask={onEditTask}
+                    onDeleteTask={handleDeleteTask}
+                    teamMembers={teamMembers}
                 />
             </Form>
 
@@ -359,6 +465,6 @@ function TaskTable({
             </Drawer>
         </div>
     );
-}
+};
 
 export default TaskTable;

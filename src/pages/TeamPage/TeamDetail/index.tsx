@@ -38,45 +38,43 @@ const TeamDetail = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-6">
-                    <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="flex items-center">
-                        Quay lại
-                    </Button>
-                </div>
-
-                <Card className="shadow-lg">
-                    <Tabs
-                        activeKey={activeTab}
-                        onChange={handleTabChange}
-                        className="team-detail-tabs"
-                        items={[
-                            {
-                                key: 'overview',
-                                label: 'Tổng quan',
-                                children: <Overview teamId={teamId} />,
-                            },
-                            {
-                                key: 'tasks',
-                                label: 'Nhiệm vụ',
-                                children: <Tasks teamId={teamId} />,
-                            },
-                            {
-                                key: 'members',
-                                label: 'Thành viên',
-                                children: <Members teamId={teamId} />,
-                            },
-                            {
-                                key: 'settings',
-                                label: 'Cài đặt',
-                                children: <Settings teamId={teamId} />,
-                            },
-                        ]}
-                    />
-                </Card>
+        <>
+            <div className="mb-6">
+                <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="flex items-center">
+                    Quay lại
+                </Button>
             </div>
-        </div>
+
+            <div>
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={handleTabChange}
+                    className="team-detail-tabs"
+                    items={[
+                        {
+                            key: 'overview',
+                            label: 'Tổng quan',
+                            children: <Overview teamId={teamId} />,
+                        },
+                        {
+                            key: 'tasks',
+                            label: 'Nhiệm vụ',
+                            children: <Tasks teamId={teamId} />,
+                        },
+                        {
+                            key: 'members',
+                            label: 'Thành viên',
+                            children: <Members teamId={teamId} />,
+                        },
+                        {
+                            key: 'settings',
+                            label: 'Cài đặt',
+                            children: <Settings teamId={teamId} />,
+                        },
+                    ]}
+                />
+            </div>
+        </>
     );
 };
 

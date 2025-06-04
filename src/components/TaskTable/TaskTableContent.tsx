@@ -1,9 +1,8 @@
-import { Table, Input, Button, Spin, Pagination } from 'antd';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRotate, faSearch } from '@fortawesome/free-solid-svg-icons';
+import React from 'react';
+import { Table, Input, Button } from 'antd';
 import { TaskTableContentProps } from './types';
 
-function TaskTableContent({
+const TaskTableContent: React.FC<TaskTableContentProps> = ({
     loading,
     error,
     onReload,
@@ -14,58 +13,52 @@ function TaskTableContent({
     currentPage,
     totalTasks,
     onPageChange,
-}: TaskTableContentProps) {
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[300px] bg-white rounded-lg shadow-sm">
-                <Spin size="large" className="text-blue-500" />
-                <p className="mt-4 text-gray-600 font-medium">Đang tải danh sách công việc...</p>
-            </div>
-        );
-    }
+}) => {
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchText(e.target.value);
+    };
 
-    if (error) {
-        return (
-            <div className="p-8 bg-red-50 border border-red-200 rounded-lg my-5">
-                <h2 className="text-red-600 text-xl font-semibold mb-4">Lỗi</h2>
-                <p className="text-red-500 mb-6 text-base">{error}</p>
-                <Button
-                    type="primary"
-                    onClick={onReload}
-                    icon={<FontAwesomeIcon icon={faRotate} />}
-                    className="bg-red-500 hover:bg-red-600"
-                >
-                    Thử lại
-                </Button>
-            </div>
-        );
-    }
+    const handleReload = () => {
+        onReload();
+    };
 
     return (
-        <div className="bg-white ">
-            <div className="flex justify-between items-center mb-6">
-                <Input.Search
-                    placeholder="Tìm kiếm theo tiêu đề"
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <Input
+                    placeholder="Tìm kiếm công việc..."
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    className="w-80"
-                    prefix={<FontAwesomeIcon icon={faSearch} className="text-gray-400" />}
-                    allowClear
+                    onChange={handleSearch}
+                    className="w-64 hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
                 />
+                <Button
+                    type="primary"
+                    onClick={handleReload}
+                    className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200"
+                >
+                    Tải lại
+                </Button>
             </div>
+
+            {error && <div className="text-red-500">{error}</div>}
+
             <Table
-                dataSource={filteredTasks}
                 columns={columns}
-                rowKey={(record) => (record.id ? String(record.id) : String(record._id))}
-                pagination={false}
-                className="task-table"
-                scroll={{ x: 'max-content' }}
+                dataSource={filteredTasks}
+                rowKey="id"
+                loading={loading}
+                pagination={{
+                    current: currentPage,
+                    total: totalTasks,
+                    pageSize: 10,
+                    onChange: onPageChange,
+                    showSizeChanger: false,
+                    position: ['bottomCenter'],
+                }}
+                className="animate-fade-in"
             />
-            <div className="flex justify-center mt-4">
-                <Pagination current={currentPage} pageSize={10} total={totalTasks} onChange={onPageChange} />
-            </div>
         </div>
     );
-}
+};
 
 export default TaskTableContent;

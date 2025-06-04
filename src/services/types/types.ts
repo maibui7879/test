@@ -33,7 +33,6 @@ export interface ChangePasswordPayload {
 //=========================
 export interface TaskPayload {
     id?: string;
-    _id?: string;
     title: string;
     team_id?: string | null;
     start_time: string;
@@ -41,6 +40,9 @@ export interface TaskPayload {
     description?: string;
     status: 'todo' | 'in_progress' | 'done';
     priority: 'low' | 'medium' | 'high';
+    assigned_user_id?: string | number | null;
+    creator_name?: string;
+    created_at?: string;
 }
 
 // ====================
@@ -144,4 +146,12 @@ export interface Reminder {
     is_sent?: boolean;
     is_read?: boolean;
     created_at?: string;
+}
+
+export interface TeamTasksResponse {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+    tasksTeam: TaskPayload[];
 }
