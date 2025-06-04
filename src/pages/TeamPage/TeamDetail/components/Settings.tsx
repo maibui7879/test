@@ -4,10 +4,10 @@ import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 
 interface SettingsProps {
-    teamId?: string;
+    teamId: string | undefined;
 }
 
-const Settings: React.FC<SettingsProps> = ({ teamId }) => {
+const Settings = ({ teamId }: SettingsProps) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
 

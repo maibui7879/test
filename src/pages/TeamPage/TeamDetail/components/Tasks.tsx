@@ -13,10 +13,10 @@ interface Task {
 }
 
 interface TasksProps {
-    teamId?: string;
+    teamId: string | undefined;
 }
 
-const Tasks: React.FC<TasksProps> = ({ teamId }) => {
+const Tasks = ({ teamId }: TasksProps) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
 

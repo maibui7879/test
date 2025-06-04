@@ -12,10 +12,10 @@ interface Member {
 }
 
 interface MembersProps {
-    teamId?: string;
+    teamId: string | undefined;
 }
 
-const Members: React.FC<MembersProps> = ({ teamId }) => {
+const Members = ({ teamId }: MembersProps) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
 

@@ -3,10 +3,10 @@ import { Card, Row, Col, Statistic, Progress } from 'antd';
 import { TeamOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 
 interface OverviewProps {
-    teamId?: string;
+    teamId: string | undefined;
 }
 
-const Overview: React.FC<OverviewProps> = ({ teamId }) => {
+const Overview = ({ teamId }: OverviewProps) => {
     const [teamStats, setTeamStats] = useState({
         totalMembers: 0,
         completedTasks: 0,

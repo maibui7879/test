@@ -7,7 +7,7 @@ import Tasks from './components/Tasks';
 import Members from './components/Members';
 import Settings from './components/Settings';
 
-const TeamDetail: React.FC = () => {
+const TeamDetail = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { teamId } = useParams();
