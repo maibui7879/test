@@ -142,7 +142,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                         <Input className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200" />
                     </Form.Item>
                 ) : (
-                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block">
+                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block max-w-[200px]">
                         {record.title}
                     </span>
                 );
@@ -237,11 +237,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                           );
 
                           return editable ? (
-                              <Form.Item
-                                  name="assigned_user_id"
-                                  style={{ margin: 0 }}
-                                  rules={[{ required: true, message: 'Vui lòng chọn người thực hiện!' }]}
-                              >
+                              <Form.Item name="assigned_user_id" style={{ margin: 0 }}>
                                   <Select
                                       showSearch
                                       placeholder="Chọn người thực hiện"
@@ -303,6 +299,10 @@ const TaskTable: React.FC<TaskTableProps> = ({
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
+                const date = dayjs(record.start_time);
+                const currentYear = dayjs().year();
+                const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
+
                 return editable ? (
                     <Form.Item
                         name="start_time"
@@ -317,7 +317,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                     </Form.Item>
                 ) : (
                     <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
-                        {dayjs(record.start_time).format('DD/MM/YYYY HH:mm')}
+                        {date.format(format)}
                     </span>
                 );
             },
@@ -331,6 +331,10 @@ const TaskTable: React.FC<TaskTableProps> = ({
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
+                const date = dayjs(record.end_time);
+                const currentYear = dayjs().year();
+                const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
+
                 return editable ? (
                     <Form.Item
                         name="end_time"
@@ -345,7 +349,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                     </Form.Item>
                 ) : (
                     <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
-                        {dayjs(record.end_time).format('DD/MM/YYYY HH:mm')}
+                        {date.format(format)}
                     </span>
                 );
             },
@@ -355,26 +359,25 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'action',
             width: '15%',
             align: 'center',
+            className: '!w-[120px] sm:!w-[15%]',
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
-                    <Space className="animate-fade-in">
+                    <Space className="animate-fade-in w-full justify-center">
                         <Button
                             type="primary"
                             onClick={() => save(record.id)}
                             icon={<FontAwesomeIcon icon={faSave} className="text-sm sm:text-base" />}
-                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200 !w-6 !h-6 sm:!w-auto sm:!h-auto sm:px-3 sm:py-1 !p-0 flex items-center justify-center"
-                        >
-                            <span className="hidden sm:inline">Lưu</span>
-                        </Button>
+                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        ></Button>
                         <Button
                             onClick={cancel}
                             icon={<FontAwesomeIcon icon={faTimes} className="text-sm sm:text-base" />}
-                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200 !w-6 !h-6 sm:!w-auto sm:!h-auto sm:px-3 sm:py-1 !p-0 flex items-center justify-center"
+                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
                         />
                     </Space>
                 ) : (
-                    <Space className="animate-fade-in" size="small">
+                    <Space className="animate-fade-in w-full justify-center" size="small">
                         <Button
                             type="primary"
                             disabled={isEditing}
