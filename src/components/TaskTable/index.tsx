@@ -362,32 +362,32 @@ const TaskTable: React.FC<TaskTableProps> = ({
                         <Button
                             type="primary"
                             onClick={() => save(record.id)}
-                            icon={<FontAwesomeIcon icon={faSave} />}
-                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200"
+                            icon={<FontAwesomeIcon icon={faSave} className="text-sm sm:text-base" />}
+                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200 !w-6 !h-6 sm:!w-auto sm:!h-auto sm:px-3 sm:py-1 !p-0 flex items-center justify-center"
                         >
-                            Lưu
+                            <span className="hidden sm:inline">Lưu</span>
                         </Button>
                         <Button
                             onClick={cancel}
-                            icon={<FontAwesomeIcon icon={faTimes} />}
-                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200"
-                        ></Button>
+                            icon={<FontAwesomeIcon icon={faTimes} className="text-sm sm:text-base" />}
+                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200 !w-6 !h-6 sm:!w-auto sm:!h-auto sm:px-3 sm:py-1 !p-0 flex items-center justify-center"
+                        />
                     </Space>
                 ) : (
-                    <Space className="animate-fade-in">
+                    <Space className="animate-fade-in" size="small">
                         <Button
                             type="primary"
                             disabled={isEditing}
                             onClick={() => edit(record)}
-                            icon={<FontAwesomeIcon icon={faEdit} />}
-                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200"
-                        ></Button>
+                            icon={<FontAwesomeIcon icon={faEdit} className="text-sm sm:text-base" />}
+                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        />
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
-                            icon={<FontAwesomeIcon icon={faEye} />}
-                            className="!bg-purple-500 hover:!bg-purple-600 transition-all duration-200"
-                        ></Button>
+                            icon={<FontAwesomeIcon icon={faEye} className="text-sm sm:text-base" />}
+                            className="!bg-purple-500 hover:!bg-purple-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        />
                         <Popconfirm
                             title="Xóa công việc"
                             description="Bạn có chắc chắn muốn xóa công việc này?"
@@ -403,9 +403,9 @@ const TaskTable: React.FC<TaskTableProps> = ({
                         >
                             <Button
                                 type="primary"
-                                icon={<FontAwesomeIcon icon={faTrash} />}
-                                className="!bg-red-500 hover:!bg-red-600 transition-all duration-200"
-                            ></Button>
+                                icon={<FontAwesomeIcon icon={faTrash} className="text-sm sm:text-base" />}
+                                className="!bg-red-500 hover:!bg-red-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                            />
                         </Popconfirm>
                     </Space>
                 );
