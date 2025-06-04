@@ -1,0 +1,83 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { Card, Tabs, Button } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import Overview from './components/Overview';
+import Tasks from './components/Tasks';
+import Members from './components/Members';
+import Settings from './components/Settings';
+
+const TeamDetail: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { teamId } = useParams();
+    const [searchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState('overview');
+
+    const getTeamType = () => {
+        const pathParts = location.pathname.split('/');
+        const typeIndex = pathParts.indexOf('teams') + 1;
+        return pathParts[typeIndex] || 'created';
+    };
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && ['overview', 'tasks', 'members', 'settings'].includes(tab)) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
+
+    const handleBack = () => {
+        navigate(-1);
+    };
+
+    const handleTabChange = (key: string) => {
+        setActiveTab(key);
+        const teamType = getTeamType();
+        navigate(`/teams/${teamType}/${teamId}?tab=${key}`, { replace: true });
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 p-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-6">
+                    <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="flex items-center">
+                        Quay lại
+                    </Button>
+                </div>
+
+                <Card className="shadow-lg">
+                    <Tabs
+                        activeKey={activeTab}
+                        onChange={handleTabChange}
+                        className="team-detail-tabs"
+                        items={[
+                            {
+                                key: 'overview',
+                                label: 'Tổng quan',
+                                children: <Overview teamId={teamId} />,
+                            },
+                            {
+                                key: 'tasks',
+                                label: 'Nhiệm vụ',
+                                children: <Tasks teamId={teamId} />,
+                            },
+                            {
+                                key: 'members',
+                                label: 'Thành viên',
+                                children: <Members teamId={teamId} />,
+                            },
+                            {
+                                key: 'settings',
+                                label: 'Cài đặt',
+                                children: <Settings teamId={teamId} />,
+                            },
+                        ]}
+                    />
+                </Card>
+            </div>
+        </div>
+    );
+};
+
+export default TeamDetail;

@@ -23,7 +23,7 @@ const Login: React.FC = () => {
                 if (user?.role === 'admin') {
                     navigate('/admin');
                 } else {
-                    navigate('/');
+                    navigate('/dashboard');
                 }
             }, 1000);
         } catch (err: any) {

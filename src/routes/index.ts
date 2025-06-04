@@ -7,10 +7,11 @@ import { faCalendarAlt, faClipboard, faTasks, faUser, faUsers } from '@fortaweso
 import CalenderPerson from '@pages/PersonalTask/calendar';
 import CreatedTeamsPage from '@pages/TeamPage/CreatedTeamsPage';
 import JoinedTeamsPage from '@pages/TeamPage/JoinedTeamsPage';
+import TeamDetail from '@pages/TeamPage/TeamDetail';
 
 export const publicRoutes: Route[] = [
     {
-        path: '/auth',
+        path: '/',
         component: AuthForm,
         layout: null,
     },
@@ -18,7 +19,7 @@ export const publicRoutes: Route[] = [
 
 export const sidebarRoutes: Route[] = [
     {
-        path: '/',
+        path: '/dashboard',
         name: 'DashBoard',
         component: Dashboard,
         icon: faClipboard,
@@ -69,19 +70,18 @@ export const sidebarRoutes: Route[] = [
         component: Profile,
     },
 ];
+
 export const privateRoutes: Route[] = [
     {
         path: '/teams',
         children: [
             {
-                path: ':id',
-                component: AuthForm,
-                layout: null,
+                path: 'created/:teamId',
+                component: TeamDetail,
             },
             {
-                path: 'tasks',
-                component: PersonalTask,
-                layout: null,
+                path: 'joined/:teamId',
+                component: TeamDetail,
             },
         ],
     },
