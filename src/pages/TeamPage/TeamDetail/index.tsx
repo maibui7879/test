@@ -13,6 +13,7 @@ const TeamDetail = () => {
     const { teamId } = useParams();
     const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('overview');
+    const [overviewTabChange, setOverviewTabChange] = useState(false);
 
     const getTeamType = () => {
         const pathParts = location.pathname.split('/');
@@ -35,7 +36,19 @@ const TeamDetail = () => {
         setActiveTab(key);
         const teamType = getTeamType();
         navigate(`/teams/${teamType}/${teamId}?tab=${key}`, { replace: true });
+
+        // Set overviewTabChange to true when switching to overview tab
+        if (key === 'overview') {
+            setOverviewTabChange(true);
+        }
     };
+
+    // Reset overviewTabChange after it's been used
+    useEffect(() => {
+        if (overviewTabChange) {
+            setOverviewTabChange(false);
+        }
+    }, [overviewTabChange]);
 
     return (
         <div className="p-6">
@@ -54,7 +67,7 @@ const TeamDetail = () => {
                         {
                             key: 'overview',
                             label: 'Tổng quan',
-                            children: <Overview teamId={teamId} />,
+                            children: <Overview teamId={teamId} onTabChange={overviewTabChange} />,
                         },
                         {
                             key: 'tasks',

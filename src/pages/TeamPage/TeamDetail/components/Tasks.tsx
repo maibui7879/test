@@ -9,14 +9,12 @@ import { updateTask, deleteTask } from '@services/taskServices';
 import { getMembersTeam } from '@services/teamServices';
 import { useMessage } from '@hooks/useMessage';
 import { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
-import { TeamStatistics } from '@services/teamServices/getTeamStatistics';
 
 interface TasksProps {
     teamId: string | undefined;
-    onTaskChange?: () => void;
 }
 
-const Tasks: React.FC<TasksProps> = ({ teamId, onTaskChange }) => {
+const Tasks: React.FC<TasksProps> = ({ teamId }) => {
     const { message, contextHolder } = useMessage();
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,7 +40,6 @@ const Tasks: React.FC<TasksProps> = ({ teamId, onTaskChange }) => {
                 throw new Error('Dữ liệu thành viên không hợp lệ');
             }
         } catch (error) {
-            console.error('Error fetching team members:', error);
             message.error({ key: 'fetch-team-members-error', content: 'Không thể lấy danh sách thành viên' });
         }
     }, [teamId, message]);
@@ -63,21 +60,17 @@ const Tasks: React.FC<TasksProps> = ({ teamId, onTaskChange }) => {
                 );
                 setTasks(sortedTasks);
                 setTotalTasks(response.totalItems || response.tasksTeam.length);
-                if (onTaskChange) {
-                    onTaskChange();
-                }
             } else {
                 throw new Error('Dữ liệu không hợp lệ');
             }
         } catch (err: any) {
-            console.error('Error fetching tasks:', err);
             const errorMessage = err.message || 'Không thể tải danh sách công việc';
             setError(errorMessage);
             message.error({ key, content: errorMessage });
         } finally {
             setLoading(false);
         }
-    }, [teamId, currentPage, message, onTaskChange]);
+    }, [teamId, currentPage, message]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -114,15 +107,11 @@ const Tasks: React.FC<TasksProps> = ({ teamId, onTaskChange }) => {
                 await updateTask(numericId, updatedTaskData);
                 setTasks((prevTasks) => prevTasks.map((task) => (task.id === taskId ? updatedTaskData : task)));
                 message.success({ key, content: 'Cập nhật công việc thành công!' });
-                if (onTaskChange) {
-                    onTaskChange();
-                }
             } catch (err: any) {
-                console.error('Error updating task:', err);
                 message.error({ key, content: err.message || 'Không thể cập nhật công việc' });
             }
         },
-        [teamId, message, onTaskChange],
+        [teamId, message],
     );
 
     const handleDeleteTask = useCallback(
@@ -143,15 +132,11 @@ const Tasks: React.FC<TasksProps> = ({ teamId, onTaskChange }) => {
                 );
                 setTotalTasks((prev) => prev - 1);
                 message.success({ key, content: 'Xóa công việc thành công!' });
-                if (onTaskChange) {
-                    onTaskChange();
-                }
             } catch (err: any) {
-                console.error('Error deleting task:', err);
                 message.error({ key, content: err.message || 'Không thể xóa công việc' });
             }
         },
-        [message, onTaskChange],
+        [message],
     );
 
     useEffect(() => {

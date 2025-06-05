@@ -24,7 +24,6 @@ const { Title, Text } = Typography;
 
 interface SettingsProps {
     teamId: string | undefined;
-    onSettingsChange?: () => void;
 }
 
 const getBase64 = (img: File, callback: (url: string) => void) => {
@@ -33,7 +32,7 @@ const getBase64 = (img: File, callback: (url: string) => void) => {
     reader.readAsDataURL(img);
 };
 
-const Settings = ({ teamId, onSettingsChange }: SettingsProps) => {
+const Settings = ({ teamId }: SettingsProps) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [fetchingTeam, setFetchingTeam] = useState(true);
@@ -119,54 +118,44 @@ const Settings = ({ teamId, onSettingsChange }: SettingsProps) => {
 
     const handleSubmit = async (values: any) => {
         if (!teamId || !teamData) {
-            message.error({ key: 'update-team', content: 'Không tìm thấy thông tin nhóm' });
+            message.error({
+                key: 'submit-error',
+                content: 'Không tìm thấy thông tin nhóm!',
+            });
             return;
         }
 
-        try {
-            setLoading(true);
-            message.loading({ key: 'update-team', content: 'Đang cập nhật thông tin nhóm...' });
+        setLoading(true);
+        const loadingKey = 'update-team-loading';
+        message.loading({
+            key: loadingKey,
+            content: 'Đang cập nhật thông tin nhóm...',
+        });
 
+        try {
             const payload: UpdateTeamPayload = {
                 name: values.name.trim(),
                 description: values.description.trim(),
-                avatar: values.avatar_url?.[0]?.originFileObj || null,
+                avatar: avatarFile || null,
             };
 
-            const response = await updateTeam(Number(teamId), payload);
-            if (response) {
-                setTeamData((prev) => {
-                    if (!prev) return prev;
-                    return {
-                        ...prev,
-                        name: values.name.trim(),
-                        description: values.description.trim(),
-                        avatar_url: values.avatar_url?.[0]?.originFileObj
-                            ? URL.createObjectURL(values.avatar_url[0].originFileObj)
-                            : prev.avatar_url,
-                    };
-                });
-                setIsEditing(false);
-                message.success({ key: 'update-team', content: 'Cập nhật thông tin nhóm thành công!' });
-                if (onSettingsChange) {
-                    onSettingsChange();
-                }
-            }
+            const res = await updateTeam(Number(teamId), payload);
+            setTeamData(res.data);
+            setAvatarFile(null);
+            message.success({
+                key: loadingKey,
+                content: 'Cập nhật thông tin nhóm thành công!',
+            });
+            setIsEditing(false);
         } catch (error: any) {
-            message.error({ key: 'update-team', content: error.message || 'Không thể cập nhật thông tin nhóm' });
+            console.error('Update error:', error);
+            message.error({
+                key: loadingKey,
+                content: error.message || 'Có lỗi xảy ra khi cập nhật thông tin nhóm!',
+            });
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        setAvatarFile(null);
-        setAvatarUrl(teamData?.avatar_url || '');
-        form.setFieldsValue({
-            name: teamData?.name,
-            description: teamData?.description,
-        });
     };
 
     const onStart = (_event: DraggableEvent, uiData: DraggableData) => {
@@ -307,7 +296,15 @@ const Settings = ({ teamId, onSettingsChange }: SettingsProps) => {
                                         <Button type="primary" htmlType="submit" loading={loading}>
                                             Lưu thay đổi
                                         </Button>
-                                        <Button onClick={handleCancel}>Hủy</Button>
+                                        <Button
+                                            onClick={() => {
+                                                setIsEditing(false);
+                                                setAvatarFile(null);
+                                                setAvatarUrl(teamData?.avatar_url || '');
+                                            }}
+                                        >
+                                            Hủy
+                                        </Button>
                                     </div>
                                 </Form.Item>
                             </Form>

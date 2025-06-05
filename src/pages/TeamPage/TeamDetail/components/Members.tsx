@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Avatar, Button, Space, Modal, Form, Select, Popconfirm } from 'antd';
 import { UserAddOutlined, UserDeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -28,64 +28,49 @@ interface MembersProps {
     onMemberChange?: () => void;
 }
 
-const useMembers = (teamId: string | undefined, onMemberChange?: () => void) => {
+const Members = ({ teamId, onMemberChange }: MembersProps) => {
+    const [form] = Form.useForm();
     const [members, setMembers] = useState<TeamMemberInfo[]>([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const { message } = useMessage();
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [editingKey, setEditingKey] = useState<number | null>(null);
+    const [editingRole, setEditingRole] = useState<RoleType>(ROLES.MEMBER);
+    const [searchValue, setSearchValue] = useState('');
+    const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const { message, contextHolder } = useMessage();
 
     const fetchMembers = useCallback(async () => {
         if (!teamId) return;
         try {
             setLoading(true);
-            setError(null);
             const response = await getMembersTeam(parseInt(teamId));
             setMembers(response);
-            if (onMemberChange) {
-                onMemberChange();
-            }
+            onMemberChange?.();
         } catch (error) {
-            console.error('Error fetching members:', error);
-            setError(MESSAGES.FETCH_ERROR);
             message.error({ key: 'fetch-members', content: MESSAGES.FETCH_ERROR });
         } finally {
             setLoading(false);
         }
     }, [teamId, message, onMemberChange]);
 
-    useEffect(() => {
-        fetchMembers();
-    }, [fetchMembers]);
-
-    return { members, loading, error, fetchMembers };
-};
-
-const useUserSearch = () => {
-    const [searchValue, setSearchValue] = useState('');
-    const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
-    const [searchLoading, setSearchLoading] = useState(false);
-    const { message } = useMessage();
-
-    const searchUsersDebounced = useMemo(
-        () =>
-            debounce(async (value: string) => {
-                if (!value.trim()) {
-                    setSearchResults([]);
-                    return;
-                }
-                try {
-                    setSearchLoading(true);
-                    const users = await searchUsers(value);
-                    setSearchResults(users);
-                } catch (error) {
-                    console.error('Error searching users:', error);
-                    setSearchResults([]);
-                    message.error({ key: 'search-users', content: 'Không tìm thấy người dùng' });
-                } finally {
-                    setSearchLoading(false);
-                }
-            }, 500),
-        [message],
+    const searchUsersDebounced = useCallback(
+        debounce(async (value: string) => {
+            if (!value.trim()) {
+                setSearchResults([]);
+                return;
+            }
+            try {
+                setSearchLoading(true);
+                const users = await searchUsers(value);
+                setSearchResults(users);
+            } catch (error) {
+                setSearchResults([]);
+            } finally {
+                setSearchLoading(false);
+            }
+        }, 500),
+        [],
     );
 
     const handleSearch = useCallback(
@@ -95,21 +80,6 @@ const useUserSearch = () => {
         },
         [searchUsersDebounced],
     );
-
-    return { searchValue, searchResults, searchLoading, handleSearch, setSearchValue, setSearchResults };
-};
-
-const Members = ({ teamId, onMemberChange }: MembersProps) => {
-    const [form] = Form.useForm();
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingKey, setEditingKey] = useState<number | null>(null);
-    const [editingRole, setEditingRole] = useState<RoleType>(ROLES.MEMBER);
-    const { members, loading, error, fetchMembers } = useMembers(teamId, onMemberChange);
-    const { searchValue, searchResults, searchLoading, handleSearch, setSearchValue, setSearchResults } =
-        useUserSearch();
-    const { message, contextHolder } = useMessage();
-
-    const isEditing = useCallback((record: TeamMemberInfo) => record.id === editingKey, [editingKey]);
 
     const handleEdit = useCallback((record: TeamMemberInfo) => {
         setEditingKey(record.id);
@@ -133,7 +103,6 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 setEditingRole(ROLES.MEMBER);
                 fetchMembers();
             } catch (error) {
-                console.error('Error updating role:', error);
                 message.error({ key: loadingKey, content: MESSAGES.UPDATE_ERROR });
             }
         },
@@ -150,7 +119,6 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 message.success({ key: loadingKey, content: MESSAGES.DELETE_SUCCESS });
                 fetchMembers();
             } catch (error) {
-                console.error('Error deleting member:', error);
                 message.error({ key: loadingKey, content: MESSAGES.DELETE_ERROR });
             }
         },
@@ -175,131 +143,132 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 setSearchResults([]);
                 fetchMembers();
             } catch (error) {
-                console.error('Error adding member:', error);
                 message.error({ key: loadingKey, content: MESSAGES.ADD_ERROR });
             }
         });
-    }, [form, teamId, fetchMembers, setSearchValue, setSearchResults, message]);
+    }, [form, teamId, fetchMembers, message]);
 
     const handleModalCancel = useCallback(() => {
         setIsModalVisible(false);
         form.resetFields();
         setSearchValue('');
         setSearchResults([]);
-    }, [form, setSearchValue, setSearchResults]);
+    }, [form]);
 
-    const columns: ColumnsType<TeamMemberInfo> = useMemo(
-        () => [
-            {
-                title: 'Thành viên',
-                dataIndex: 'full_name',
-                key: 'full_name',
-                render: (text: string, record: TeamMemberInfo) => (
+    const isEditing = useCallback((record: TeamMemberInfo) => record.id === editingKey, [editingKey]);
+
+    const columns: ColumnsType<TeamMemberInfo> = [
+        {
+            title: 'Thành viên',
+            dataIndex: 'full_name',
+            key: 'full_name',
+            render: (text: string, record: TeamMemberInfo) => (
+                <Space>
+                    <Avatar src={record.avatar_url}>{text[0]}</Avatar>
+                    <span className="font-medium">{text}</span>
+                </Space>
+            ),
+        },
+        {
+            title: 'Vai trò',
+            dataIndex: 'role',
+            key: 'role',
+            render: (_: any, record: TeamMemberInfo) => {
+                const editable = isEditing(record);
+                return editable ? (
+                    <Select
+                        value={editingRole}
+                        onChange={(value) => setEditingRole(value as RoleType)}
+                        className="w-full"
+                    >
+                        <Select.Option value={ROLES.ADMIN}>Quản trị viên</Select.Option>
+                        <Select.Option value={ROLES.MEMBER}>Thành viên</Select.Option>
+                    </Select>
+                ) : (
                     <Space>
-                        <Avatar src={record.avatar_url}>{text[0]}</Avatar>
-                        <span className="font-medium">{text}</span>
-                    </Space>
-                ),
-            },
-            {
-                title: 'Vai trò',
-                dataIndex: 'role',
-                key: 'role',
-                render: (_: any, record: TeamMemberInfo) => {
-                    const editable = isEditing(record);
-                    return editable ? (
-                        <Select
-                            value={editingRole}
-                            onChange={(value) => setEditingRole(value as RoleType)}
-                            className="w-full"
-                        >
-                            <Select.Option value={ROLES.ADMIN}>Quản trị viên</Select.Option>
-                            <Select.Option value={ROLES.MEMBER}>Thành viên</Select.Option>
-                        </Select>
-                    ) : (
-                        <Space>
-                            <span
-                                className={`px-2 py-1 rounded-full text-sm ${
-                                    record.role === ROLES.CREATOR
-                                        ? 'bg-purple-100 text-purple-800'
-                                        : record.role === ROLES.ADMIN
-                                          ? 'bg-blue-100 text-blue-800'
-                                          : 'bg-green-100 text-green-800'
-                                }`}
-                            >
-                                {record.role === ROLES.CREATOR
-                                    ? 'Người tạo'
+                        <span
+                            className={`px-2 py-1 rounded-full text-sm ${
+                                record.role === ROLES.CREATOR
+                                    ? 'bg-purple-100 text-purple-800'
                                     : record.role === ROLES.ADMIN
-                                      ? 'Quản trị viên'
-                                      : 'Thành viên'}
-                            </span>
-                            {record.role !== ROLES.CREATOR && (
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-green-100 text-green-800'
+                            }`}
+                        >
+                            {record.role === ROLES.CREATOR
+                                ? 'Người tạo'
+                                : record.role === ROLES.ADMIN
+                                  ? 'Quản trị viên'
+                                  : 'Thành viên'}
+                        </span>
+                        {record.role !== ROLES.CREATOR && (
+                            <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={() => handleEdit(record)}
+                                aria-label={`Chỉnh sửa vai trò của ${record.full_name}`}
+                            />
+                        )}
+                    </Space>
+                );
+            },
+        },
+        {
+            title: 'Thao tác',
+            key: 'action',
+            render: (_: any, record: TeamMemberInfo) => {
+                const editable = isEditing(record);
+                return editable ? (
+                    <Space>
+                        <Button
+                            type="text"
+                            icon={<CheckOutlined />}
+                            onClick={() => handleSaveRole(record.id)}
+                            className="text-green-500"
+                            aria-label="Lưu vai trò"
+                        />
+                        <Button
+                            type="text"
+                            icon={<CloseOutlined />}
+                            onClick={handleCancelEdit}
+                            className="text-red-500"
+                            aria-label="Hủy chỉnh sửa"
+                        />
+                    </Space>
+                ) : (
+                    <Space>
+                        {record.role !== ROLES.CREATOR && (
+                            <Popconfirm
+                                title="Xác nhận xóa"
+                                description={MESSAGES.DELETE_CONFIRM(record.full_name)}
+                                onConfirm={() => handleDeleteMember(record)}
+                                okText="Xóa"
+                                cancelText="Hủy"
+                                okButtonProps={{ danger: true }}
+                            >
                                 <Button
                                     type="text"
-                                    icon={<EditOutlined />}
-                                    onClick={() => handleEdit(record)}
-                                    aria-label={`Chỉnh sửa vai trò của ${record.full_name}`}
-                                />
-                            )}
-                        </Space>
-                    );
-                },
-            },
-            {
-                title: 'Thao tác',
-                key: 'action',
-                render: (_: any, record: TeamMemberInfo) => {
-                    const editable = isEditing(record);
-                    return editable ? (
-                        <Space>
-                            <Button
-                                type="text"
-                                icon={<CheckOutlined />}
-                                onClick={() => handleSaveRole(record.id)}
-                                className="text-green-500"
-                                aria-label="Lưu vai trò"
-                            />
-                            <Button
-                                type="text"
-                                icon={<CloseOutlined />}
-                                onClick={handleCancelEdit}
-                                className="text-red-500"
-                                aria-label="Hủy chỉnh sửa"
-                            />
-                        </Space>
-                    ) : (
-                        <Space>
-                            {record.role !== ROLES.CREATOR && (
-                                <Popconfirm
-                                    title="Xác nhận xóa"
-                                    description={MESSAGES.DELETE_CONFIRM(record.full_name)}
-                                    onConfirm={() => handleDeleteMember(record)}
-                                    okText="Xóa"
-                                    cancelText="Hủy"
-                                    okButtonProps={{ danger: true }}
+                                    danger
+                                    icon={<UserDeleteOutlined />}
+                                    aria-label={`Xóa thành viên ${record.full_name}`}
                                 >
-                                    <Button
-                                        type="text"
-                                        danger
-                                        icon={<UserDeleteOutlined />}
-                                        aria-label={`Xóa thành viên ${record.full_name}`}
-                                    >
-                                        Xóa
-                                    </Button>
-                                </Popconfirm>
-                            )}
-                        </Space>
-                    );
-                },
+                                    Xóa
+                                </Button>
+                            </Popconfirm>
+                        )}
+                    </Space>
+                );
             },
-        ],
-        [isEditing, handleEdit, handleSaveRole, handleCancelEdit, handleDeleteMember, editingRole],
-    );
+        },
+    ];
+
+    useEffect(() => {
+        fetchMembers();
+    }, [fetchMembers]);
 
     return (
         <div className="p-6">
             {contextHolder}
-            {error && <div className="text-red-500 mb-4">{error}</div>}
             <div className="mb-4">
                 <Button
                     type="primary"

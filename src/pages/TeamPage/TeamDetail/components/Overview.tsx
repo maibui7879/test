@@ -3,7 +3,6 @@ import { Card, Row, Col, Statistic, Progress } from 'antd';
 import {
     UserOutlined,
     FileTextOutlined,
-    TeamOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
     CommentOutlined,
@@ -14,13 +13,14 @@ import { getTeamStatistics } from '@/services/teamServices';
 import { useMessage } from '@/hooks/useMessage';
 import { TeamStatistics } from '@services/teamServices/getTeamStatistics';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 interface OverviewProps {
     teamId: string | undefined;
     onStatsChange?: (stats: TeamStatistics) => void;
+    onTabChange?: boolean;
 }
 
 const useTeamStatistics = (teamId: string | undefined) => {
@@ -50,7 +50,7 @@ const useTeamStatistics = (teamId: string | undefined) => {
     return { teamStats, fetchTeamStats };
 };
 
-const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
+const Overview = ({ teamId, onStatsChange, onTabChange }: OverviewProps) => {
     const { teamStats, fetchTeamStats } = useTeamStatistics(teamId);
 
     useEffect(() => {
@@ -59,9 +59,14 @@ const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
         }
     }, [teamStats, onStatsChange]);
 
+    useEffect(() => {
+        if (onTabChange) {
+            fetchTeamStats();
+        }
+    }, [onTabChange, fetchTeamStats]);
+
     if (!teamStats) return null;
 
-    // Data for task status pie chart
     const taskStatusData = {
         labels: ['Todo', 'In Progress', 'Completed'],
         datasets: [
@@ -73,7 +78,6 @@ const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
         ],
     };
 
-    // Data for priority pie chart
     const priorityData = {
         labels: ['High', 'Medium', 'Low'],
         datasets: [
@@ -107,7 +111,6 @@ const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
 
     return (
         <div className="space-y-6">
-            {/* Basic Statistics */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} md={6}>
                     <Card>
@@ -146,7 +149,6 @@ const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
                 </Col>
             </Row>
 
-            {/* Charts Row */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={12}>
                     <Card title="Trạng thái nhiệm vụ">
@@ -164,7 +166,6 @@ const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
                 </Col>
             </Row>
 
-            {/* Interaction Statistics */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={8}>
                     <Card>
@@ -196,7 +197,6 @@ const Overview = ({ teamId, onStatsChange }: OverviewProps) => {
                 </Col>
             </Row>
 
-            {/* Progress Indicators */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={12}>
                     <Card title="Tỷ lệ hoàn thành">

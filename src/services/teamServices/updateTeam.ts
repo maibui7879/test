@@ -22,15 +22,14 @@ const updateTeam = async (teamId: number, payload: UpdateTeamPayload): Promise<A
             formData.append('avatar', '');
         }
 
-        const res = await apiRequest<Team>(`/teams/${teamId}`, 'PUT', formData, true);
+        const response = await apiRequest<Team>(`/teams/${teamId}`, 'PUT', formData, true);
 
-        if (!res.success) {
-            throw new Error(res.message || 'Không thể cập nhật thông tin nhóm');
+        if (!response.success) {
+            throw new Error(response.message || 'Không thể cập nhật thông tin nhóm');
         }
 
-        return res;
+        return response;
     } catch (error: any) {
-        console.error('Error updating team:', error);
         throw new Error(error.message || 'Có lỗi xảy ra khi cập nhật thông tin nhóm');
     }
 };
