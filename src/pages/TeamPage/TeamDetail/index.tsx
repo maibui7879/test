@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
-import { Card, Tabs, Button } from 'antd';
+import { Tabs, Button } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Overview from './components/Overview';
 import Tasks from './components/Tasks';

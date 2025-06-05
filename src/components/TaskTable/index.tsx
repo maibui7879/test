@@ -7,35 +7,16 @@ import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid
 import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
-import { getPriorityColor, getPriorityText, getStatusColor, getStatusText } from './tableState';
+import {
+    getPriorityColor,
+    getPriorityText,
+    getRoleColor,
+    getRoleText,
+    getStatusColor,
+    getStatusText,
+} from './tableState';
 import { TaskTableProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
-
-const getRoleColor = (role: string | undefined) => {
-    switch (role) {
-        case 'creator':
-            return 'purple';
-        case 'admin':
-            return 'blue';
-        case 'member':
-            return 'green';
-        default:
-            return 'default';
-    }
-};
-
-const getRoleText = (role: string | undefined) => {
-    switch (role) {
-        case 'creator':
-            return 'Người tạo';
-        case 'admin':
-            return 'Quản trị viên';
-        case 'member':
-            return 'Thành viên';
-        default:
-            return role || 'Không xác định';
-    }
-};
 
 const TaskTable: React.FC<TaskTableProps> = ({
     tasks,
@@ -130,6 +111,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             dataIndex: 'title',
             key: 'title',
             width: '25%',
+            align: 'center' as const,
             ellipsis: true,
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
@@ -153,7 +135,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             dataIndex: 'status',
             key: 'status',
             width: '12%',
-            align: 'center',
+            align: 'center' as const,
             responsive: ['lg'],
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
@@ -190,7 +172,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             dataIndex: 'priority',
             key: 'priority',
             width: '12%',
-            align: 'center',
+            align: 'center' as const,
             responsive: ['lg'],
             filters: [
                 { text: 'Thấp', value: 'low' },
@@ -229,6 +211,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                       dataIndex: 'assigned_user_id',
                       key: 'assigned_user_id',
                       width: '20%',
+                      align: 'center' as const,
                       ellipsis: true,
                       render: (_: any, record: TaskPayload) => {
                           const editable = isEditing && editingTask?.id === record.id;
@@ -294,7 +277,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             dataIndex: 'start_time',
             key: 'start_time',
             width: '13%',
-            align: 'center',
+            align: 'center' as const,
             responsive: ['lg'],
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
@@ -327,7 +310,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             dataIndex: 'end_time',
             key: 'end_time',
             width: '13%',
-            align: 'center',
+            align: 'center' as const,
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
@@ -358,7 +341,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             title: 'Thao tác',
             key: 'action',
             width: '15%',
-            align: 'center',
+            align: 'center' as const,
             className: '!w-[120px] sm:!w-[15%]',
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;

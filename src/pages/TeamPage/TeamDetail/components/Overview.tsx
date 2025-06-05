@@ -15,8 +15,6 @@ const Overview = ({ teamId }: OverviewProps) => {
     });
 
     useEffect(() => {
-        // TODO: Fetch team statistics
-        // This is mock data for now
         setTeamStats({
             totalMembers: 5,
             completedTasks: 12,

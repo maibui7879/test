@@ -102,7 +102,7 @@ export interface CreateTeamPayload {
 export interface UpdateTeamPayload {
     name?: string;
     description?: string;
-    avatar_url?: File | null;
+    avatar?: File | null;
 }
 export interface Team {
     id: number;
@@ -110,7 +110,9 @@ export interface Team {
     description: string;
     avatar_url: string | null;
     created_at: string;
+    creator_id: number;
     creator_name: string;
+    creator_email: string;
 }
 export interface GetTeamsResponseData {
     data: Team[];

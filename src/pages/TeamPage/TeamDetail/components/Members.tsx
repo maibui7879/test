@@ -8,8 +8,8 @@ import searchUsers from '@services/userServices/searchUsers';
 import { UserProfile } from '@services/types/types';
 import debounce from 'lodash/debounce';
 import { useMessage } from '@hooks/useMessage';
+import { ROLES } from '@common/constant';
 
-// Constants
 const MESSAGES = {
     FETCH_ERROR: 'Có lỗi xảy ra khi tải danh sách thành viên',
     UPDATE_SUCCESS: 'Cập nhật vai trò thành công!',
@@ -20,12 +20,6 @@ const MESSAGES = {
     DELETE_ERROR: 'Xóa thành viên thất bại',
     DELETE_CONFIRM: (name: string) => `Bạn có chắc chắn muốn xóa thành viên ${name} khỏi nhóm?`,
 };
-
-const ROLES = {
-    CREATOR: 'creator',
-    ADMIN: 'admin',
-    MEMBER: 'member',
-} as const;
 
 type RoleType = typeof ROLES.ADMIN | typeof ROLES.MEMBER;
 
