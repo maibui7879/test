@@ -9,12 +9,14 @@ import { updateTask, deleteTask } from '@services/taskServices';
 import { getMembersTeam } from '@services/teamServices';
 import { useMessage } from '@hooks/useMessage';
 import { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
+import { TeamStatistics } from '@services/teamServices/getTeamStatistics';
 
 interface TasksProps {
     teamId: string | undefined;
+    onTaskChange?: () => void;
 }
 
-const Tasks: React.FC<TasksProps> = ({ teamId }) => {
+const Tasks: React.FC<TasksProps> = ({ teamId, onTaskChange }) => {
     const { message, contextHolder } = useMessage();
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,19 +29,14 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
     const fetchTeamMembers = useCallback(async () => {
         try {
             const response = await getMembersTeam(Number(teamId));
-            console.log('Team members response:', response);
             if (Array.isArray(response)) {
-                const convertedMembers: UserProfile[] = response.map((member: TeamMemberInfo) => {
-                    console.log('Converting member:', member);
-                    return {
-                        id: member.id,
-                        full_name: member.full_name,
-                        role: member.role,
-                        avatar_url: '',
-                        email: member.full_name.toLowerCase().replace(/\s+/g, '') + '@example.com',
-                    };
-                });
-                console.log('Converted members:', convertedMembers);
+                const convertedMembers: UserProfile[] = response.map((member: TeamMemberInfo) => ({
+                    id: member.id,
+                    full_name: member.full_name,
+                    role: member.role,
+                    avatar_url: '',
+                    email: member.full_name.toLowerCase().replace(/\s+/g, '') + '@example.com',
+                }));
                 setTeamMembers(convertedMembers);
             } else {
                 throw new Error('Dữ liệu thành viên không hợp lệ');
@@ -66,6 +63,9 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
                 );
                 setTasks(sortedTasks);
                 setTotalTasks(response.totalItems || response.tasksTeam.length);
+                if (onTaskChange) {
+                    onTaskChange();
+                }
             } else {
                 throw new Error('Dữ liệu không hợp lệ');
             }
@@ -77,7 +77,7 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
         } finally {
             setLoading(false);
         }
-    }, [teamId, currentPage, message]);
+    }, [teamId, currentPage, message, onTaskChange]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -114,12 +114,15 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
                 await updateTask(numericId, updatedTaskData);
                 setTasks((prevTasks) => prevTasks.map((task) => (task.id === taskId ? updatedTaskData : task)));
                 message.success({ key, content: 'Cập nhật công việc thành công!' });
+                if (onTaskChange) {
+                    onTaskChange();
+                }
             } catch (err: any) {
                 console.error('Error updating task:', err);
                 message.error({ key, content: err.message || 'Không thể cập nhật công việc' });
             }
         },
-        [teamId, message],
+        [teamId, message, onTaskChange],
     );
 
     const handleDeleteTask = useCallback(
@@ -140,12 +143,15 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
                 );
                 setTotalTasks((prev) => prev - 1);
                 message.success({ key, content: 'Xóa công việc thành công!' });
+                if (onTaskChange) {
+                    onTaskChange();
+                }
             } catch (err: any) {
                 console.error('Error deleting task:', err);
                 message.error({ key, content: err.message || 'Không thể xóa công việc' });
             }
         },
-        [message],
+        [message, onTaskChange],
     );
 
     useEffect(() => {
@@ -195,7 +201,14 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
                 width={700}
                 className="task-modal"
             >
-                <TaskForm onTaskCreated={fetchTasks} onClose={() => setIsModalVisible(false)} teamId={teamId} />
+                <TaskForm
+                    onTaskCreated={() => {
+                        fetchTasks();
+                        setIsModalVisible(false);
+                    }}
+                    onClose={() => setIsModalVisible(false)}
+                    teamId={teamId}
+                />
             </Modal>
         </div>
     );

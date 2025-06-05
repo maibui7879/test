@@ -21,7 +21,7 @@ export interface TeamStatistics {
     high_priority_rate: string;
 }
 
-const getTeamStatistics = async (teamId: number): Promise<ApiResponse<TeamStatistics>> => {
+const getTeamStatistics = async (teamId: number): Promise<TeamStatistics> => {
     try {
         if (!teamId) {
             throw new Error('ID nhóm không hợp lệ');
@@ -29,11 +29,11 @@ const getTeamStatistics = async (teamId: number): Promise<ApiResponse<TeamStatis
 
         const res = await apiRequest<TeamStatistics>(`/teams/${teamId}/statistics`, 'GET');
 
-        if (!res.success) {
+        if (!res.success || !res.data) {
             throw new Error(res.message || 'Không thể lấy thống kê nhóm');
         }
 
-        return res;
+        return res.data;
     } catch (error: any) {
         console.error('Error getting team statistics:', error);
         throw new Error(error.message || 'Có lỗi xảy ra khi lấy thống kê nhóm');

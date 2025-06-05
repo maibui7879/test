@@ -25,9 +25,10 @@ type RoleType = typeof ROLES.ADMIN | typeof ROLES.MEMBER;
 
 interface MembersProps {
     teamId: string | undefined;
+    onMemberChange?: () => void;
 }
 
-const useMembers = (teamId: string | undefined) => {
+const useMembers = (teamId: string | undefined, onMemberChange?: () => void) => {
     const [members, setMembers] = useState<TeamMemberInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -40,6 +41,9 @@ const useMembers = (teamId: string | undefined) => {
             setError(null);
             const response = await getMembersTeam(parseInt(teamId));
             setMembers(response);
+            if (onMemberChange) {
+                onMemberChange();
+            }
         } catch (error) {
             console.error('Error fetching members:', error);
             setError(MESSAGES.FETCH_ERROR);
@@ -47,7 +51,7 @@ const useMembers = (teamId: string | undefined) => {
         } finally {
             setLoading(false);
         }
-    }, [teamId, message]);
+    }, [teamId, message, onMemberChange]);
 
     useEffect(() => {
         fetchMembers();
@@ -95,12 +99,12 @@ const useUserSearch = () => {
     return { searchValue, searchResults, searchLoading, handleSearch, setSearchValue, setSearchResults };
 };
 
-const Members = ({ teamId }: MembersProps) => {
+const Members = ({ teamId, onMemberChange }: MembersProps) => {
     const [form] = Form.useForm();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingKey, setEditingKey] = useState<number | null>(null);
     const [editingRole, setEditingRole] = useState<RoleType>(ROLES.MEMBER);
-    const { members, loading, error, fetchMembers } = useMembers(teamId);
+    const { members, loading, error, fetchMembers } = useMembers(teamId, onMemberChange);
     const { searchValue, searchResults, searchLoading, handleSearch, setSearchValue, setSearchResults } =
         useUserSearch();
     const { message, contextHolder } = useMessage();

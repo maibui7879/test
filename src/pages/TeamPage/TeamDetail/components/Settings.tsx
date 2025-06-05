@@ -24,6 +24,7 @@ const { Title, Text } = Typography;
 
 interface SettingsProps {
     teamId: string | undefined;
+    onSettingsChange?: () => void;
 }
 
 const getBase64 = (img: File, callback: (url: string) => void) => {
@@ -32,7 +33,7 @@ const getBase64 = (img: File, callback: (url: string) => void) => {
     reader.readAsDataURL(img);
 };
 
-const Settings = ({ teamId }: SettingsProps) => {
+const Settings = ({ teamId, onSettingsChange }: SettingsProps) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [fetchingTeam, setFetchingTeam] = useState(true);
@@ -118,52 +119,41 @@ const Settings = ({ teamId }: SettingsProps) => {
 
     const handleSubmit = async (values: any) => {
         if (!teamId || !teamData) {
-            message.error({
-                key: 'submit-error',
-                content: 'Không tìm thấy thông tin nhóm!',
-            });
+            message.error({ key: 'update-team', content: 'Không tìm thấy thông tin nhóm' });
             return;
         }
 
-        setLoading(true);
-        const loadingKey = 'update-team-loading';
-        message.loading({
-            key: loadingKey,
-            content: 'Đang cập nhật thông tin nhóm...',
-        });
-
         try {
+            setLoading(true);
+            message.loading({ key: 'update-team', content: 'Đang cập nhật thông tin nhóm...' });
+
             const payload: UpdateTeamPayload = {
                 name: values.name.trim(),
                 description: values.description.trim(),
-                avatar: avatarFile || null,
+                avatar: values.avatar_url?.[0]?.originFileObj || null,
             };
 
-            const res = await updateTeam(Number(teamId), payload);
-
-            // Cập nhật state ngay lập tức với dữ liệu mới
-            setTeamData((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    name: values.name.trim(),
-                    description: values.description.trim(),
-                    avatar_url: avatarFile ? URL.createObjectURL(avatarFile) : prev.avatar_url,
-                };
-            });
-
-            setAvatarFile(null);
-            message.success({
-                key: loadingKey,
-                content: 'Cập nhật thông tin nhóm thành công!',
-            });
-            setIsEditing(false);
+            const response = await updateTeam(Number(teamId), payload);
+            if (response) {
+                setTeamData((prev) => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        name: values.name.trim(),
+                        description: values.description.trim(),
+                        avatar_url: values.avatar_url?.[0]?.originFileObj
+                            ? URL.createObjectURL(values.avatar_url[0].originFileObj)
+                            : prev.avatar_url,
+                    };
+                });
+                setIsEditing(false);
+                message.success({ key: 'update-team', content: 'Cập nhật thông tin nhóm thành công!' });
+                if (onSettingsChange) {
+                    onSettingsChange();
+                }
+            }
         } catch (error: any) {
-            console.error('Update error:', error);
-            message.error({
-                key: loadingKey,
-                content: error.message || 'Có lỗi xảy ra khi cập nhật thông tin nhóm!',
-            });
+            message.error({ key: 'update-team', content: error.message || 'Không thể cập nhật thông tin nhóm' });
         } finally {
             setLoading(false);
         }
