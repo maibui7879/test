@@ -3,6 +3,7 @@ import { getMeProfile } from '../../services/userServices';
 import loginApi from '../../services/authServices/login';
 import { UserProfile } from '../../services/types/types';
 import { clearToken, getToken, saveToken } from '../../utils/auth/authUtils';
+import { useMessage } from '@/hooks/useMessage';
 
 interface UserContextType {
     user: UserProfile | null;
@@ -18,23 +19,34 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(getToken());
     const [user, setUser] = useState<UserProfile | null>(null);
+    const { message } = useMessage();
 
     const logout = useCallback(() => {
         clearToken();
         setToken(null);
         setUser(null);
+        window.location.href = '/';
     }, []);
+
+    const handleSessionExpired = useCallback(() => {
+        message.error({ key: 'session-expired', content: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.' });
+        logout();
+    }, [logout, message]);
 
     const fetchUserInfo = useCallback(async () => {
         if (!token) return;
         try {
             const userInfo = await getMeProfile();
             setUser(userInfo);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Lỗi khi lấy user info:', error);
-            logout();
+            if (error?.response?.status === 401) {
+                handleSessionExpired();
+            } else {
+                logout();
+            }
         }
-    }, [token, logout]);
+    }, [token, logout, handleSessionExpired]);
 
     const login = async (email: string, password: string) => {
         try {
@@ -62,6 +74,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (token) fetchUserInfo();
     }, [token, fetchUserInfo]);
+
+    // Kiểm tra phiên làm việc định kỳ
+    useEffect(() => {
+        const checkSessionInterval = setInterval(
+            () => {
+                if (token) {
+                    fetchUserInfo().catch(() => {
+                        handleSessionExpired();
+                    });
+                }
+            },
+            30 * 60 * 1000,
+        ); // Kiểm tra mỗi 30 phút
+
+        return () => clearInterval(checkSessionInterval);
+    }, [token, fetchUserInfo, handleSessionExpired]);
 
     return (
         <UserContext.Provider value={{ user, token, login, logout, fetchUserInfo, isAuthenticated: !!user && !!token }}>

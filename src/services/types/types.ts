@@ -9,7 +9,7 @@ export interface UserProfile {
     status?: string;
     full_name?: string;
     phone_number?: string;
-    avatar_url: string;
+    avatar_url?: string;
     gender?: string;
     date_of_birth?: string | null;
     address?: string | null;
