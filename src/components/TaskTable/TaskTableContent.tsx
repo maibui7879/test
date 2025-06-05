@@ -13,6 +13,11 @@ const TaskTableContent: React.FC<TaskTableContentProps> = ({
     currentPage,
     totalTasks,
     onPageChange,
+    onEditTask,
+    onDeleteTask,
+    onAssignTask,
+    teamId,
+    teamMembers,
 }) => {
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { TaskPayload, UserProfile } from '@services/types/types';
+import { TaskPayload, UserProfile, UpdateAssignmentPayload } from '@services/types/types';
 import TaskForm from '@components/TaskForm';
 import TaskTable from '@components/TaskTable';
 import getAllTaskTeam from '@services/taskServices/getAllTaskTeam';
 import { updateTask, deleteTask } from '@services/taskServices';
-import { getMembersTeam } from '@services/teamServices';
+import { getMembersTeam, updateAssignment } from '@services/teamServices';
 import { useMessage } from '@hooks/useMessage';
 import { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
 
@@ -14,7 +14,7 @@ interface TasksProps {
     teamId: string | undefined;
 }
 
-const Tasks: React.FC<TasksProps> = ({ teamId }) => {
+const Tasks = ({ teamId }: TasksProps) => {
     const { message, contextHolder } = useMessage();
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,6 +25,8 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
     const [teamMembers, setTeamMembers] = useState<UserProfile[]>([]);
 
     const fetchTeamMembers = useCallback(async () => {
+        if (!teamId) return;
+
         try {
             const response = await getMembersTeam(Number(teamId));
             if (Array.isArray(response)) {
@@ -39,13 +41,17 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
             } else {
                 throw new Error('Dữ liệu thành viên không hợp lệ');
             }
-        } catch (error) {
-            message.error({ key: 'fetch-team-members-error', content: 'Không thể lấy danh sách thành viên' });
+        } catch (error: any) {
+            message.error({
+                key: 'fetch-team-members-error',
+                content: error.message || 'Không thể lấy danh sách thành viên',
+            });
         }
     }, [teamId, message]);
 
     const fetchTasks = useCallback(async () => {
         if (!teamId) return;
+
         const key = 'fetchTasks';
         try {
             setLoading(true);
@@ -78,14 +84,16 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
 
     const handleUpdateTask = useCallback(
         async (taskData: TaskPayload) => {
+            if (!taskData.id) {
+                message.error({ key: 'updateTask', content: 'Không tìm thấy ID công việc' });
+                return;
+            }
+
             const key = 'updateTask';
             try {
-                if (!taskData.id) {
-                    throw new Error('Không tìm thấy ID công việc');
-                }
                 const taskId = taskData.id;
-
                 let numericId: number;
+
                 if (typeof taskId === 'string') {
                     numericId = parseInt(taskId, 10);
                     if (isNaN(numericId)) {
@@ -122,14 +130,10 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
                 if (isNaN(numericId)) {
                     throw new Error('ID công việc không hợp lệ');
                 }
+
                 message.loading({ key, content: 'Đang xóa công việc...' });
                 await deleteTask(numericId);
-                setTasks((prevTasks) =>
-                    prevTasks.filter((task) => {
-                        const id = task.id;
-                        return id !== taskId;
-                    }),
-                );
+                setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
                 setTotalTasks((prev) => prev - 1);
                 message.success({ key, content: 'Xóa công việc thành công!' });
             } catch (err: any) {
@@ -137,6 +141,30 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
             }
         },
         [message],
+    );
+
+    const handleAssignTask = useCallback(
+        async (taskId: number, memberId: number) => {
+            if (!teamId) return;
+
+            const key = 'assignTask';
+            try {
+                message.loading({ key, content: 'Đang phân công công việc...' });
+
+                const payload: UpdateAssignmentPayload = {
+                    taskId,
+                    userId: memberId,
+                };
+
+                await updateAssignment(payload);
+
+                await fetchTasks();
+                message.success({ key, content: 'Phân công công việc thành công!' });
+            } catch (err: any) {
+                message.error({ key, content: err.message || 'Không thể phân công công việc' });
+            }
+        },
+        [teamId, fetchTasks, message],
     );
 
     useEffect(() => {
@@ -166,6 +194,7 @@ const Tasks: React.FC<TasksProps> = ({ teamId }) => {
                 onReload={fetchTasks}
                 onEditTask={handleUpdateTask}
                 onDeleteTask={handleDeleteTask}
+                onAssignTask={handleAssignTask}
                 currentPage={currentPage}
                 totalTasks={totalTasks}
                 onPageChange={handlePageChange}

@@ -11,6 +11,7 @@ interface BaseTaskProps {
     teamId?: string | null;
     onEditTask: (task: TaskPayload) => Promise<void>;
     onDeleteTask: (taskId: string | number) => Promise<void>;
+    onAssignTask?: ((taskId: number, memberId: number) => Promise<void>) | undefined;
     teamMembers?: UserProfile[];
 }
 

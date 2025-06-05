@@ -30,6 +30,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
     onPageChange,
     teamId,
     teamMembers = [],
+    onAssignTask,
 }) => {
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
@@ -224,14 +225,23 @@ const TaskTable: React.FC<TaskTableProps> = ({
                                   <Select
                                       showSearch
                                       placeholder="Chọn người thực hiện"
-                                      defaultValue={record.assigned_user_id}
-                                      value={record.assigned_user_id}
-                                      onChange={(value) => {
-                                          const updatedTask = {
-                                              ...record,
-                                              assigned_user_id: value,
-                                          };
-                                          onEditTask(updatedTask);
+                                      defaultValue={
+                                          record.assigned_user_id ? Number(record.assigned_user_id) : undefined
+                                      }
+                                      value={record.assigned_user_id ? Number(record.assigned_user_id) : undefined}
+                                      onChange={async (value: number) => {
+                                          if (record.id && onAssignTask) {
+                                              try {
+                                                  await onAssignTask(Number(record.id), value);
+                                                  const updatedTask = {
+                                                      ...record,
+                                                      assigned_user_id: value,
+                                                  };
+                                                  await onEditTask(updatedTask);
+                                              } catch (error) {
+                                                  console.error('Error assigning task:', error);
+                                              }
+                                          }
                                       }}
                                       filterOption={(input, option) =>
                                           (option?.label as string).toLowerCase().includes(input.toLowerCase())
@@ -435,6 +445,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                     onEditTask={onEditTask}
                     onDeleteTask={handleDeleteTask}
                     teamMembers={teamMembers}
+                    onAssignTask={onAssignTask}
                 />
             </Form>
 
