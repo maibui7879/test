@@ -227,6 +227,132 @@ a {
     @apply bg-red-50 border-red-200;
 }
 
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .ant-table {
+        @apply text-sm;
+    }
+
+    .ant-table-thead > tr > th {
+        @apply px-2 py-2 text-xs;
+    }
+
+    .ant-table-tbody > tr > td {
+        @apply px-2 py-2 text-xs;
+    }
+
+    .ant-btn {
+        @apply text-xs px-2 py-1;
+    }
+
+    .ant-tag {
+        @apply text-xs px-1.5 py-0.5;
+    }
+
+    .ant-select {
+        @apply text-xs;
+    }
+
+    .ant-select-selector {
+        @apply px-2 py-1;
+    }
+
+    .ant-drawer-content-wrapper {
+        @apply w-full !important;
+    }
+
+    .ant-drawer-body {
+        @apply p-4;
+    }
+
+    .ant-form-item {
+        @apply mb-2;
+    }
+
+    .ant-input {
+        @apply text-sm px-2 py-1;
+    }
+
+    .ant-modal {
+        @apply w-full max-w-full mx-0;
+    }
+
+    .ant-modal-content {
+        @apply p-4;
+    }
+
+    .ant-modal-header {
+        @apply p-4;
+    }
+
+    .ant-modal-footer {
+        @apply p-4;
+    }
+}
+
+@media (min-width: 769px) {
+    /* Desktop Styles */
+    .ant-table {
+        @apply text-base;
+    }
+
+    .ant-table-thead > tr > th {
+        @apply px-4 py-3;
+    }
+
+    .ant-table-tbody > tr > td {
+        @apply px-4 py-3;
+    }
+
+    .ant-btn {
+        @apply text-sm px-4 py-2;
+    }
+
+    .ant-tag {
+        @apply text-sm px-2 py-1;
+    }
+
+    .ant-select {
+        @apply text-sm;
+    }
+
+    .ant-select-selector {
+        @apply px-3 py-2;
+    }
+
+    .ant-drawer-content-wrapper {
+        @apply w-1/2 !important;
+    }
+
+    .ant-drawer-body {
+        @apply p-6;
+    }
+
+    .ant-form-item {
+        @apply mb-4;
+    }
+
+    .ant-input {
+        @apply text-base px-3 py-2;
+    }
+
+    .ant-modal {
+        @apply w-3/4 max-w-4xl;
+    }
+
+    .ant-modal-content {
+        @apply p-6;
+    }
+
+    .ant-modal-header {
+        @apply p-6;
+    }
+
+    .ant-modal-footer {
+        @apply p-6;
+    }
+}
+
 /* Custom Animations */
 @keyframes fadeIn {
     from {

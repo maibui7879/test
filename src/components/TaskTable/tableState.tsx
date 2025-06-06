@@ -49,3 +49,28 @@ export const getStatusText = (status: string) => {
             return status;
     }
 };
+export const getRoleColor = (role: string | undefined) => {
+    switch (role) {
+        case 'creator':
+            return 'purple';
+        case 'admin':
+            return 'blue';
+        case 'member':
+            return 'green';
+        default:
+            return 'default';
+    }
+};
+
+export const getRoleText = (role: string | undefined) => {
+    switch (role) {
+        case 'creator':
+            return 'Người tạo';
+        case 'admin':
+            return 'Quản trị viên';
+        case 'member':
+            return 'Thành viên';
+        default:
+            return role || 'Không xác định';
+    }
+};

@@ -1,17 +1,24 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-import { TaskPayload } from '@services/types/types';
+import { TaskPayload, UserProfile } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
-import { getPriorityColor, getPriorityText, getStatusColor, getStatusText } from './tableState';
+import {
+    getPriorityColor,
+    getPriorityText,
+    getRoleColor,
+    getRoleText,
+    getStatusColor,
+    getStatusText,
+} from './tableState';
 import { TaskTableProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
 
-function TaskTable({
+const TaskTable: React.FC<TaskTableProps> = ({
     tasks,
     loading,
     error,
@@ -21,8 +28,10 @@ function TaskTable({
     currentPage,
     totalTasks,
     onPageChange,
-    setTotalTasks,
-}: TaskTableProps) {
+    teamId,
+    teamMembers = [],
+    onAssignTask,
+}) => {
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
@@ -92,7 +101,6 @@ function TaskTable({
                     return id !== taskId;
                 }),
             );
-            setTotalTasks(totalTasks - 1);
         } catch (error) {
             console.error('Error deleting task:', error);
         }
@@ -103,7 +111,9 @@ function TaskTable({
             title: 'Tiêu đề',
             dataIndex: 'title',
             key: 'title',
-            width: '35%',
+            width: '25%',
+            align: 'center' as const,
+            ellipsis: true,
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
@@ -115,7 +125,7 @@ function TaskTable({
                         <Input className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200" />
                     </Form.Item>
                 ) : (
-                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer">
+                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block max-w-[200px]">
                         {record.title}
                     </span>
                 );
@@ -126,7 +136,8 @@ function TaskTable({
             dataIndex: 'status',
             key: 'status',
             width: '12%',
-            align: 'center',
+            align: 'center' as const,
+            responsive: ['lg'],
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
                 { text: 'Đang thực hiện', value: 'in_progress' },
@@ -162,7 +173,8 @@ function TaskTable({
             dataIndex: 'priority',
             key: 'priority',
             width: '12%',
-            align: 'center',
+            align: 'center' as const,
+            responsive: ['lg'],
             filters: [
                 { text: 'Thấp', value: 'low' },
                 { text: 'Trung bình', value: 'medium' },
@@ -193,15 +205,97 @@ function TaskTable({
                 );
             },
         },
+        ...(teamId
+            ? [
+                  {
+                      title: 'Người thực hiện',
+                      dataIndex: 'assigned_user_id',
+                      key: 'assigned_user_id',
+                      width: '20%',
+                      align: 'center' as const,
+                      ellipsis: true,
+                      render: (_: any, record: TaskPayload) => {
+                          const editable = isEditing && editingTask?.id === record.id;
+                          const assignedUser = teamMembers.find(
+                              (user: UserProfile) => user.id === record.assigned_user_id,
+                          );
+
+                          return editable ? (
+                              <Form.Item name="assigned_user_id" style={{ margin: 0 }}>
+                                  <Select
+                                      showSearch
+                                      placeholder="Chọn người thực hiện"
+                                      defaultValue={
+                                          record.assigned_user_id ? Number(record.assigned_user_id) : undefined
+                                      }
+                                      value={record.assigned_user_id ? Number(record.assigned_user_id) : undefined}
+                                      onChange={async (value: number) => {
+                                          if (record.id && onAssignTask) {
+                                              try {
+                                                  await onAssignTask(Number(record.id), value);
+                                                  const updatedTask = {
+                                                      ...record,
+                                                      assigned_user_id: value,
+                                                  };
+                                                  await onEditTask(updatedTask);
+                                              } catch (error) {
+                                                  console.error('Error assigning task:', error);
+                                              }
+                                          }
+                                      }}
+                                      filterOption={(input, option) =>
+                                          (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                                      }
+                                      className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                                  >
+                                      {teamMembers.map((user: UserProfile) => (
+                                          <Select.Option
+                                              key={user.id}
+                                              value={user.id}
+                                              label={`${user.full_name} (${getRoleText(user.role)})`}
+                                          >
+                                              <div className="flex items-center justify-between">
+                                                  <span className="font-medium">{user.full_name}</span>
+                                                  <Tag color={getRoleColor(user.role)} className="ml-2">
+                                                      {getRoleText(user.role)}
+                                                  </Tag>
+                                              </div>
+                                          </Select.Option>
+                                      ))}
+                                  </Select>
+                              </Form.Item>
+                          ) : (
+                              <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                                  {assignedUser ? (
+                                      <div className="flex items-center">
+                                          <span className="truncate">{assignedUser.full_name}</span>
+                                          <Tag color={getRoleColor(assignedUser.role)} className="ml-2 flex-shrink-0">
+                                              {getRoleText(assignedUser.role)}
+                                          </Tag>
+                                      </div>
+                                  ) : (
+                                      'Chưa giao'
+                                  )}
+                              </span>
+                          );
+                      },
+                  },
+              ]
+            : []),
         {
             title: 'Thời gian bắt đầu',
             dataIndex: 'start_time',
             key: 'start_time',
             width: '13%',
-            align: 'center',
+            align: 'center' as const,
+            responsive: ['lg'],
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
+                const date = dayjs(record.start_time);
+                const currentYear = dayjs().year();
+                const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
+
                 return editable ? (
                     <Form.Item
                         name="start_time"
@@ -216,7 +310,7 @@ function TaskTable({
                     </Form.Item>
                 ) : (
                     <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
-                        {dayjs(record.start_time).format('DD/MM/YYYY HH:mm')}
+                        {date.format(format)}
                     </span>
                 );
             },
@@ -226,10 +320,14 @@ function TaskTable({
             dataIndex: 'end_time',
             key: 'end_time',
             width: '13%',
-            align: 'center',
+            align: 'center' as const,
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
+                const date = dayjs(record.end_time);
+                const currentYear = dayjs().year();
+                const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
+
                 return editable ? (
                     <Form.Item
                         name="end_time"
@@ -244,7 +342,7 @@ function TaskTable({
                     </Form.Item>
                 ) : (
                     <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
-                        {dayjs(record.end_time).format('DD/MM/YYYY HH:mm')}
+                        {date.format(format)}
                     </span>
                 );
             },
@@ -253,40 +351,39 @@ function TaskTable({
             title: 'Thao tác',
             key: 'action',
             width: '15%',
-            align: 'center',
+            align: 'center' as const,
+            className: '!w-[120px] sm:!w-[15%]',
             render: (_: any, record: TaskPayload) => {
                 const editable = isEditing && editingTask?.id === record.id;
                 return editable ? (
-                    <Space className="animate-fade-in">
+                    <Space className="animate-fade-in w-full justify-center">
                         <Button
                             type="primary"
                             onClick={() => save(record.id)}
-                            icon={<FontAwesomeIcon icon={faSave} />}
-                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200"
-                        >
-                            Lưu
-                        </Button>
+                            icon={<FontAwesomeIcon icon={faSave} className="text-sm sm:text-base" />}
+                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        ></Button>
                         <Button
                             onClick={cancel}
-                            icon={<FontAwesomeIcon icon={faTimes} />}
-                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200"
-                        ></Button>
+                            icon={<FontAwesomeIcon icon={faTimes} className="text-sm sm:text-base" />}
+                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        />
                     </Space>
                 ) : (
-                    <Space className="animate-fade-in">
+                    <Space className="animate-fade-in w-full justify-center" size="small">
                         <Button
                             type="primary"
                             disabled={isEditing}
                             onClick={() => edit(record)}
-                            icon={<FontAwesomeIcon icon={faEdit} />}
-                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200"
-                        ></Button>
+                            icon={<FontAwesomeIcon icon={faEdit} className="text-sm sm:text-base" />}
+                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        />
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
-                            icon={<FontAwesomeIcon icon={faEye} />}
-                            className="!bg-purple-500 hover:!bg-purple-600 transition-all duration-200"
-                        ></Button>
+                            icon={<FontAwesomeIcon icon={faEye} className="text-sm sm:text-base" />}
+                            className="!bg-purple-500 hover:!bg-purple-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                        />
                         <Popconfirm
                             title="Xóa công việc"
                             description="Bạn có chắc chắn muốn xóa công việc này?"
@@ -302,9 +399,9 @@ function TaskTable({
                         >
                             <Button
                                 type="primary"
-                                icon={<FontAwesomeIcon icon={faTrash} />}
-                                className="!bg-red-500 hover:!bg-red-600 transition-all duration-200"
-                            ></Button>
+                                icon={<FontAwesomeIcon icon={faTrash} className="text-sm sm:text-base" />}
+                                className="!bg-red-500 hover:!bg-red-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
+                            />
                         </Popconfirm>
                     </Space>
                 );
@@ -325,6 +422,7 @@ function TaskTable({
                 onEditTask={onEditTask}
                 onDeleteTask={handleDeleteTask}
                 onReload={onReload}
+                teamId={teamId}
             />
         );
     };
@@ -343,6 +441,11 @@ function TaskTable({
                     currentPage={currentPage}
                     totalTasks={totalTasks}
                     onPageChange={onPageChange}
+                    teamId={teamId}
+                    onEditTask={onEditTask}
+                    onDeleteTask={handleDeleteTask}
+                    teamMembers={teamMembers}
+                    onAssignTask={onAssignTask}
                 />
             </Form>
 
@@ -359,6 +462,6 @@ function TaskTable({
             </Drawer>
         </div>
     );
-}
+};
 
 export default TaskTable;

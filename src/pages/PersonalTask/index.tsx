@@ -57,10 +57,10 @@ function PersonalTask() {
     const handleUpdateTask = useCallback(async (taskData: TaskPayload) => {
         const key = 'updateTask';
         try {
-            if (!taskData.id && !taskData._id) {
+            if (!taskData.id) {
                 throw new Error('Không tìm thấy ID công việc');
             }
-            const taskId = taskData.id || taskData._id;
+            const taskId = taskData.id;
 
             let numericId: number;
             if (typeof taskId === 'string') {
@@ -76,9 +76,7 @@ function PersonalTask() {
 
             messageRef.current.loading({ key, content: 'Đang cập nhật công việc...' });
             await updateTask(numericId, taskData);
-            setTasks((prevTasks) =>
-                prevTasks.map((task) => (task.id === taskId || task._id === taskId ? taskData : task)),
-            );
+            setTasks((prevTasks) => prevTasks.map((task) => (task.id === taskId ? taskData : task)));
             messageRef.current.success({ key, content: 'Cập nhật công việc thành công!' });
         } catch (err: any) {
             console.error('Error updating task:', err);
@@ -97,7 +95,7 @@ function PersonalTask() {
             await deleteTask(numericId);
             setTasks((prevTasks) =>
                 prevTasks.filter((task) => {
-                    const id = task.id || task._id;
+                    const id = task.id;
                     return id !== taskId;
                 }),
             );
@@ -138,7 +136,6 @@ function PersonalTask() {
                 currentPage={currentPage}
                 totalTasks={totalTasks}
                 onPageChange={handlePageChange}
-                setTotalTasks={setTotalTasks}
             />
 
             <Modal

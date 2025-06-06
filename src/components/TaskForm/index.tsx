@@ -20,9 +20,10 @@ interface TaskFormProps {
         date?: [dayjs.Dayjs, dayjs.Dayjs];
     };
     taskId?: number | string;
+    teamId?: string | null;
 }
 
-function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormProps) {
+function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: TaskFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const isEditing = !!taskId;
@@ -55,6 +56,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId }: TaskFormPro
                     : dayjs().add(1, 'day').format('YYYY-MM-DD HH:mm:ss'),
                 status: values.status || 'todo',
                 priority: values.priority || 'medium',
+                team_id: teamId || null,
             };
 
             if (isEditing && taskId) {

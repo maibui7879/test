@@ -2,28 +2,36 @@ import apiRequest, { ApiResponse } from '../common/apiRequest';
 import { UpdateTeamPayload, Team } from '../types/types';
 
 const updateTeam = async (teamId: number, payload: UpdateTeamPayload): Promise<ApiResponse<Team>> => {
-    const formData = new FormData();
+    try {
+        if (!teamId) {
+            throw new Error('ID nhóm không hợp lệ');
+        }
 
-    if (payload.name !== undefined) {
-        formData.append('name', payload.name);
+        const formData = new FormData();
+
+        if (payload.name) {
+            formData.append('name', payload.name.trim());
+        }
+        if (payload.description) {
+            formData.append('description', payload.description.trim());
+        }
+
+        if (payload.avatar instanceof File) {
+            formData.append('avatar', payload.avatar);
+        } else if (payload.avatar === null) {
+            formData.append('avatar', '');
+        }
+
+        const response = await apiRequest<Team>(`/teams/${teamId}`, 'PUT', formData, true);
+
+        if (!response.success) {
+            throw new Error(response.message || 'Không thể cập nhật thông tin nhóm');
+        }
+
+        return response;
+    } catch (error: any) {
+        throw new Error(error.message || 'Có lỗi xảy ra khi cập nhật thông tin nhóm');
     }
-
-    if (payload.description !== undefined) {
-        formData.append('description', payload.description);
-    }
-
-    if (payload.avatar_url && payload.avatar_url instanceof File) {
-        formData.append('avatar_url', payload.avatar_url);
-    } else if (payload.avatar_url === null) {
-        formData.append('avatar_url', '');
-    }
-
-    const res = await apiRequest(`/teams/${teamId}`, 'PUT', formData, true);
-
-    if (!res.success) {
-        console.error('Error updating team:', res.message);
-    }
-
-    return res;
 };
+
 export default updateTeam;

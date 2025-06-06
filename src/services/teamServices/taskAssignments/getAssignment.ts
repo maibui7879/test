@@ -5,7 +5,7 @@ import { TaskAssignment } from '../../types/types';
 const getAssignment = async (teamId: string): Promise<TaskAssignment[]> => {
     const res = await apiRequest<TaskAssignment[]>(`/teams/${teamId}/task/assign`, 'GET', null, true);
     if (!res.success || !res.data) {
-        throw new Error(res.message || 'Không thể lấy danh sách phân công');
+        throw new Error(res.message || 'Không thể lấy danh sách phân công công việc');
     }
     return res.data;
 };

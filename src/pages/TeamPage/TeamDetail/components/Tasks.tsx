@@ -1,200 +1,228 @@
-import React, { useState } from 'react';
-import { Table, Tag, Button, Space, Modal, Form, Input, Select, DatePicker } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-
-interface Task {
-    id: string;
-    title: string;
-    status: 'pending' | 'in_progress' | 'completed';
-    priority: 'low' | 'medium' | 'high';
-    assignee: string;
-    dueDate: string;
-}
+import { TaskPayload, UserProfile, UpdateAssignmentPayload } from '@services/types/types';
+import TaskForm from '@components/TaskForm';
+import TaskTable from '@components/TaskTable';
+import getAllTaskTeam from '@services/taskServices/getAllTaskTeam';
+import { updateTask, deleteTask } from '@services/taskServices';
+import { getMembersTeam, updateAssignment } from '@services/teamServices';
+import { useMessage } from '@hooks/useMessage';
+import { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
 
 interface TasksProps {
-    teamId?: string;
+    teamId: string | undefined;
 }
 
-const Tasks: React.FC<TasksProps> = ({ teamId }) => {
+const Tasks = ({ teamId }: TasksProps) => {
+    const { message, contextHolder } = useMessage();
+    const [tasks, setTasks] = useState<TaskPayload[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [form] = Form.useForm();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalTasks, setTotalTasks] = useState(0);
+    const [teamMembers, setTeamMembers] = useState<UserProfile[]>([]);
 
-    const columns: ColumnsType<Task> = [
-        {
-            title: 'Tiêu đề',
-            dataIndex: 'title',
-            key: 'title',
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status: string) => {
-                const statusColors = {
-                    pending: 'warning',
-                    in_progress: 'processing',
-                    completed: 'success',
-                };
-                const statusLabels = {
-                    pending: 'Chờ thực hiện',
-                    in_progress: 'Đang thực hiện',
-                    completed: 'Hoàn thành',
-                };
-                return (
-                    <Tag color={statusColors[status as keyof typeof statusColors]}>
-                        {statusLabels[status as keyof typeof statusLabels]}
-                    </Tag>
+    const fetchTeamMembers = useCallback(async () => {
+        if (!teamId) return;
+
+        try {
+            const response = await getMembersTeam(Number(teamId));
+            if (Array.isArray(response)) {
+                const convertedMembers: UserProfile[] = response.map((member: TeamMemberInfo) => ({
+                    id: member.id,
+                    full_name: member.full_name,
+                    role: member.role,
+                    avatar_url: '',
+                    email: member.full_name.toLowerCase().replace(/\s+/g, '') + '@example.com',
+                }));
+                setTeamMembers(convertedMembers);
+            } else {
+                throw new Error('Dữ liệu thành viên không hợp lệ');
+            }
+        } catch (error: any) {
+            message.error({
+                key: 'fetch-team-members-error',
+                content: error.message || 'Không thể lấy danh sách thành viên',
+            });
+        }
+    }, [teamId, message]);
+
+    const fetchTasks = useCallback(async () => {
+        if (!teamId) return;
+
+        const key = 'fetchTasks';
+        try {
+            setLoading(true);
+            const response = await getAllTaskTeam(teamId, {
+                page: currentPage,
+                limit: 10,
+            });
+
+            if (response?.tasksTeam) {
+                const sortedTasks = [...response.tasksTeam].sort(
+                    (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
                 );
-            },
-        },
-        {
-            title: 'Độ ưu tiên',
-            dataIndex: 'priority',
-            key: 'priority',
-            render: (priority: string) => {
-                const priorityColors = {
-                    low: 'blue',
-                    medium: 'orange',
-                    high: 'red',
-                };
-                const priorityLabels = {
-                    low: 'Thấp',
-                    medium: 'Trung bình',
-                    high: 'Cao',
-                };
-                return (
-                    <Tag color={priorityColors[priority as keyof typeof priorityColors]}>
-                        {priorityLabels[priority as keyof typeof priorityLabels]}
-                    </Tag>
-                );
-            },
-        },
-        {
-            title: 'Người thực hiện',
-            dataIndex: 'assignee',
-            key: 'assignee',
-        },
-        {
-            title: 'Hạn hoàn thành',
-            dataIndex: 'dueDate',
-            key: 'dueDate',
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_, record) => (
-                <Space size="middle">
-                    <Button type="link">Chỉnh sửa</Button>
-                    <Button type="link" danger>
-                        Xóa
-                    </Button>
-                </Space>
-            ),
-        },
-    ];
+                setTasks(sortedTasks);
+                setTotalTasks(response.totalItems || response.tasksTeam.length);
+            } else {
+                throw new Error('Dữ liệu không hợp lệ');
+            }
+        } catch (err: any) {
+            const errorMessage = err.message || 'Không thể tải danh sách công việc';
+            setError(errorMessage);
+            message.error({ key, content: errorMessage });
+        } finally {
+            setLoading(false);
+        }
+    }, [teamId, currentPage, message]);
 
-    // Mock data
-    const data: Task[] = [
-        {
-            id: '1',
-            title: 'Thiết kế giao diện',
-            status: 'in_progress',
-            priority: 'high',
-            assignee: 'Nguyễn Văn A',
-            dueDate: '2024-03-20',
-        },
-        {
-            id: '2',
-            title: 'Phát triển API',
-            status: 'pending',
-            priority: 'medium',
-            assignee: 'Trần Thị B',
-            dueDate: '2024-03-25',
-        },
-    ];
-
-    const handleAddTask = () => {
-        setIsModalVisible(true);
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
     };
 
-    const handleModalOk = () => {
-        form.validateFields().then((values) => {
-            console.log('Form values:', values);
-            setIsModalVisible(false);
-            form.resetFields();
-        });
-    };
+    const handleUpdateTask = useCallback(
+        async (taskData: TaskPayload) => {
+            if (!taskData.id) {
+                message.error({ key: 'updateTask', content: 'Không tìm thấy ID công việc' });
+                return;
+            }
+
+            const key = 'updateTask';
+            try {
+                const taskId = taskData.id;
+                let numericId: number;
+
+                if (typeof taskId === 'string') {
+                    numericId = parseInt(taskId, 10);
+                    if (isNaN(numericId)) {
+                        throw new Error('ID công việc không hợp lệ');
+                    }
+                } else if (typeof taskId === 'number') {
+                    numericId = taskId;
+                } else {
+                    throw new Error('ID công việc không hợp lệ');
+                }
+
+                message.loading({ key, content: 'Đang cập nhật công việc...' });
+
+                const updatedTaskData: TaskPayload = {
+                    ...taskData,
+                    team_id: teamId || '',
+                };
+
+                await updateTask(numericId, updatedTaskData);
+                setTasks((prevTasks) => prevTasks.map((task) => (task.id === taskId ? updatedTaskData : task)));
+                message.success({ key, content: 'Cập nhật công việc thành công!' });
+            } catch (err: any) {
+                message.error({ key, content: err.message || 'Không thể cập nhật công việc' });
+            }
+        },
+        [teamId, message],
+    );
+
+    const handleDeleteTask = useCallback(
+        async (taskId: string | number) => {
+            const key = 'deleteTask';
+            try {
+                const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
+                if (isNaN(numericId)) {
+                    throw new Error('ID công việc không hợp lệ');
+                }
+
+                message.loading({ key, content: 'Đang xóa công việc...' });
+                await deleteTask(numericId);
+                setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+                setTotalTasks((prev) => prev - 1);
+                message.success({ key, content: 'Xóa công việc thành công!' });
+            } catch (err: any) {
+                message.error({ key, content: err.message || 'Không thể xóa công việc' });
+            }
+        },
+        [message],
+    );
+
+    const handleAssignTask = useCallback(
+        async (taskId: number, memberId: number) => {
+            if (!teamId) return;
+
+            const key = 'assignTask';
+            try {
+                message.loading({ key, content: 'Đang phân công công việc...' });
+
+                const payload: UpdateAssignmentPayload = {
+                    taskId,
+                    userId: memberId,
+                };
+
+                await updateAssignment(payload);
+
+                await fetchTasks();
+                message.success({ key, content: 'Phân công công việc thành công!' });
+            } catch (err: any) {
+                message.error({ key, content: err.message || 'Không thể phân công công việc' });
+            }
+        },
+        [teamId, fetchTasks, message],
+    );
+
+    useEffect(() => {
+        fetchTasks();
+        fetchTeamMembers();
+    }, [fetchTasks, fetchTeamMembers]);
 
     return (
-        <div>
-            <div className="mb-4">
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTask}>
-                    Thêm nhiệm vụ
+        <div className="h-full p-6">
+            {contextHolder}
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setIsModalVisible(true)}
+                    className="flex items-center"
+                >
+                    Thêm công việc
                 </Button>
             </div>
 
-            <Table columns={columns} dataSource={data} rowKey="id" />
+            <TaskTable
+                tasks={tasks}
+                loading={loading}
+                error={error}
+                onReload={fetchTasks}
+                onEditTask={handleUpdateTask}
+                onDeleteTask={handleDeleteTask}
+                onAssignTask={handleAssignTask}
+                currentPage={currentPage}
+                totalTasks={totalTasks}
+                onPageChange={handlePageChange}
+                teamId={teamId}
+                teamMembers={teamMembers}
+            />
 
             <Modal
-                title="Thêm nhiệm vụ mới"
+                title={
+                    <div className="flex items-center">
+                        <PlusOutlined className="mr-2" />
+                        Thêm công việc
+                    </div>
+                }
                 open={isModalVisible}
-                onOk={handleModalOk}
                 onCancel={() => setIsModalVisible(false)}
-                width={600}
+                footer={null}
+                width={700}
+                className="task-modal"
             >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        name="title"
-                        label="Tiêu đề"
-                        rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
-                    >
-                        <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="status"
-                        label="Trạng thái"
-                        rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-                    >
-                        <Select>
-                            <Select.Option value="pending">Chờ thực hiện</Select.Option>
-                            <Select.Option value="in_progress">Đang thực hiện</Select.Option>
-                            <Select.Option value="completed">Hoàn thành</Select.Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="priority"
-                        label="Độ ưu tiên"
-                        rules={[{ required: true, message: 'Vui lòng chọn độ ưu tiên' }]}
-                    >
-                        <Select>
-                            <Select.Option value="low">Thấp</Select.Option>
-                            <Select.Option value="medium">Trung bình</Select.Option>
-                            <Select.Option value="high">Cao</Select.Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="assignee"
-                        label="Người thực hiện"
-                        rules={[{ required: true, message: 'Vui lòng chọn người thực hiện' }]}
-                    >
-                        <Select>
-                            <Select.Option value="Nguyễn Văn A">Nguyễn Văn A</Select.Option>
-                            <Select.Option value="Trần Thị B">Trần Thị B</Select.Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="dueDate"
-                        label="Hạn hoàn thành"
-                        rules={[{ required: true, message: 'Vui lòng chọn hạn hoàn thành' }]}
-                    >
-                        <DatePicker className="w-full" />
-                    </Form.Item>
-                </Form>
+                <TaskForm
+                    onTaskCreated={() => {
+                        fetchTasks();
+                        setIsModalVisible(false);
+                    }}
+                    onClose={() => setIsModalVisible(false)}
+                    teamId={teamId}
+                />
             </Modal>
         </div>
     );

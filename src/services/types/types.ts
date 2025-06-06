@@ -9,7 +9,7 @@ export interface UserProfile {
     status?: string;
     full_name?: string;
     phone_number?: string;
-    avatar_url: string;
+    avatar_url?: string;
     gender?: string;
     date_of_birth?: string | null;
     address?: string | null;
@@ -33,7 +33,6 @@ export interface ChangePasswordPayload {
 //=========================
 export interface TaskPayload {
     id?: string;
-    _id?: string;
     title: string;
     team_id?: string | null;
     start_time: string;
@@ -41,6 +40,9 @@ export interface TaskPayload {
     description?: string;
     status: 'todo' | 'in_progress' | 'done';
     priority: 'low' | 'medium' | 'high';
+    assigned_user_id?: string | number | null;
+    creator_name?: string;
+    created_at?: string;
 }
 
 // ====================
@@ -100,7 +102,7 @@ export interface CreateTeamPayload {
 export interface UpdateTeamPayload {
     name?: string;
     description?: string;
-    avatar_url?: File | null;
+    avatar?: File | null;
 }
 export interface Team {
     id: number;
@@ -108,7 +110,9 @@ export interface Team {
     description: string;
     avatar_url: string | null;
     created_at: string;
+    creator_id: number;
     creator_name: string;
+    creator_email: string;
 }
 export interface GetTeamsResponseData {
     data: Team[];
@@ -144,4 +148,12 @@ export interface Reminder {
     is_sent?: boolean;
     is_read?: boolean;
     created_at?: string;
+}
+
+export interface TeamTasksResponse {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+    tasksTeam: TaskPayload[];
 }

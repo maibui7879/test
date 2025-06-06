@@ -11,7 +11,7 @@ import NotesAndAttachments from './TabsTask/NotesAndAttachments';
 import Comments from './TabsTask/Comments';
 import { useMessage } from '@/hooks/useMessage';
 
-function TaskDetails({ task: initialTask, onEditTask, onDeleteTask, onReload }: TaskDetailsProps) {
+function TaskDetails({ task: initialTask, onEditTask, onDeleteTask, onReload, teamId }: TaskDetailsProps) {
     const [task, setTask] = useState<TaskPayload>(initialTask);
     const [notesAndAttachments, setNotesAndAttachments] = useState<TaskNotesAndAttachments[]>([]);
     const [comments, setComments] = useState<TaskComment[]>([]);
@@ -309,34 +309,42 @@ function TaskDetails({ task: initialTask, onEditTask, onDeleteTask, onReload }: 
                 <Comments
                     comments={comments}
                     newComment={newComment}
-                    loading={loading}
                     editingCommentId={editingCommentId}
                     editCommentText={editCommentText}
                     onCommentChange={setNewComment}
+                    onEditCommentTextChange={setEditCommentText}
                     onAddComment={handleAddComment}
                     onEditComment={handleEditComment}
+                    onDeleteComment={handleDeleteComment}
                     onCancelEdit={handleCancelEdit}
                     onSaveEdit={handleSaveEdit}
-                    onDeleteComment={handleDeleteComment}
-                    onEditCommentTextChange={setEditCommentText}
+                    loading={loading}
                 />
             ),
         },
     ];
 
     return (
-        <>
+        <div className="space-y-6">
             {contextHolder}
-            <Tabs items={items} />
+
+            <Tabs defaultActiveKey="notes" items={items} />
+
             <Modal
                 title="Chỉnh sửa công việc"
                 open={isEditModalVisible}
                 onCancel={() => setIsEditModalVisible(false)}
                 footer={null}
                 width={700}
+                className="task-modal"
             >
                 <TaskForm
-                    taskId={task.id || ''}
+                    onTaskCreated={(updatedTask) => {
+                        setTask(updatedTask);
+                        setIsEditModalVisible(false);
+                        onReload?.();
+                    }}
+                    onClose={() => setIsEditModalVisible(false)}
                     initialValues={{
                         title: task.title,
                         description: task.description,
@@ -344,11 +352,11 @@ function TaskDetails({ task: initialTask, onEditTask, onDeleteTask, onReload }: 
                         priority: task.priority,
                         date: [dayjs(task.start_time), dayjs(task.end_time)],
                     }}
-                    onTaskCreated={handleEditTask}
-                    onClose={() => setIsEditModalVisible(false)}
+                    taskId={task.id}
+                    teamId={teamId}
                 />
             </Modal>
-        </>
+        </div>
     );
 }
 
