@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { Layout, Menu } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -15,43 +15,56 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [dimensions, setDimensions] = useState({
+        width: window.innerWidth <= 768 ? 200 : 256,
+        collapsedWidth: window.innerWidth <= 768 ? 0 : 60,
+    });
 
-    const menuItems = useMemo(() => {
-        return sidebarRoutes.map((route) => {
-            if (route.children?.length) {
-                return {
-                    key: route.path,
-                    icon: route.icon && (
+    useEffect(() => {
+        const handleResize = () => {
+            setDimensions({
+                width: window.innerWidth <= 768 ? 200 : 256,
+                collapsedWidth: window.innerWidth <= 768 ? 0 : 60,
+            });
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const getMenuItem = useCallback((route: Route) => {
+        const icon = route.icon && (
+            <FontAwesomeIcon icon={route.icon} className="text-lg transition-transform duration-300 hover:scale-110" />
+        );
+
+        if (route.children?.length) {
+            return {
+                key: route.path,
+                icon,
+                label: route.name,
+                children: route.children.map((child) => ({
+                    key: `${route.path}/${child.path}`,
+                    icon: child.icon && (
                         <FontAwesomeIcon
-                            icon={route.icon}
+                            icon={child.icon}
                             className="text-lg transition-transform duration-300 hover:scale-110"
                         />
                     ),
-                    label: route.name,
-                    children: route.children.map((child: Route) => ({
-                        key: `${route.path}/${child.path}`,
-                        icon: child.icon && (
-                            <FontAwesomeIcon
-                                icon={child.icon}
-                                className="text-lg transition-transform duration-300 hover:scale-110"
-                            />
-                        ),
-                        label: child.name,
-                    })),
-                };
-            }
-            return {
-                key: route.path,
-                icon: route.icon && (
-                    <FontAwesomeIcon
-                        icon={route.icon}
-                        className="text-lg transition-transform duration-300 hover:scale-110"
-                    />
-                ),
-                label: route.name,
+                    label: child.name,
+                })),
             };
-        });
+        }
+
+        return {
+            key: route.path,
+            icon,
+            label: route.name,
+        };
     }, []);
+
+    const menuItems = useMemo(() => {
+        return sidebarRoutes.map((route) => getMenuItem(route));
+    }, [getMenuItem]);
 
     const handleMenuClick = useCallback(
         ({ key }: { key: string }) => {
@@ -65,8 +78,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             trigger={null}
             collapsible
             collapsed={collapsed}
+            // theme="light"
             className="min-h-screen bg-gradient-to-b from-gray-800 to-gray-900 shadow-xl transition-all duration-300"
-            width={256}
+            width={dimensions.width}
+            breakpoint="lg"
+            collapsedWidth={dimensions.collapsedWidth}
         >
             <div className="flex items-center justify-center p-4 border-b border-gray-700/50 h-16 backdrop-blur-sm">
                 <div
@@ -81,20 +97,19 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
                     {collapsed ? 'TM' : 'Task Manager'}
                 </div>
             </div>
-            <>
-                <Menu
-                    theme="dark"
-                    mode="inline"
-                    selectedKeys={[location.pathname]}
-                    items={menuItems}
-                    onClick={handleMenuClick}
-                    className="bg-transparent border-r-0"
-                    style={{
-                        padding: '8px 0',
-                        fontSize: '14px',
-                    }}
-                />
-            </>
+            <Menu
+                theme="dark"
+                mode="inline"
+                selectedKeys={[location.pathname]}
+                items={menuItems}
+                onClick={handleMenuClick}
+                className="bg-transparent border-r-0"
+                style={{
+                    padding: '8px 0',
+                    fontSize: '14px',
+                }}
+                inlineCollapsed={collapsed}
+            />
             <SidebarFooter collapsed={collapsed} />
         </Sider>
     );
