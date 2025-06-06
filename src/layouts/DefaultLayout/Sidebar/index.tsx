@@ -17,14 +17,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     const navigate = useNavigate();
     const [dimensions, setDimensions] = useState({
         width: window.innerWidth <= 768 ? 200 : 256,
-        collapsedWidth: window.innerWidth <= 768 ? 0 : 60,
+        collapsedWidth: window.innerWidth <= 768 ? 40 : 60,
     });
 
     useEffect(() => {
         const handleResize = () => {
             setDimensions({
                 width: window.innerWidth <= 768 ? 200 : 256,
-                collapsedWidth: window.innerWidth <= 768 ? 0 : 60,
+                collapsedWidth: window.innerWidth <= 768 ? 40 : 60,
             });
         };
 
