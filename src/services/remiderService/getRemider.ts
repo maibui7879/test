@@ -1,15 +1,53 @@
 import apiRequest from '../common/apiRequest';
 import { Reminder } from '../types/types';
 
-const getReminders = async (onlyUnread?: boolean): Promise<Reminder[]> => {
-    const query = onlyUnread ? '?onlyUnread=true' : '';
-    const res = await apiRequest<Reminder[]>(`/reminders${query}`, 'GET', null, true);
+export interface GetRemindersParams {
+    is_read: string; // "0" = chưa đọc, "1" = đã đọc
+    page?: string;
+    limit?: string;
+}
 
-    if (!res.success || !res.data) {
-        throw new Error(res.message || 'Không thể lấy danh sách nhắc nhở');
+export interface PaginationInfo {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
+export interface ReminderResponse {
+    data: Reminder[];
+    pagination: PaginationInfo;
+}
+
+const getReminders = async (params: GetRemindersParams): Promise<ReminderResponse> => {
+    console.log('getReminders service called with params:', params);
+    const { is_read, page = '1', limit = '10' } = params;
+
+    try {
+        // Build query string
+        const queryParams = new URLSearchParams({
+            is_read,
+            page,
+            limit,
+        }).toString();
+
+        const response = await apiRequest<ReminderResponse>(
+            `/reminders?${queryParams}`,
+            'GET',
+            null, // No body for GET request
+            true,
+        );
+        console.log('API response in service:', response);
+
+        if (!response.success || !response.data) {
+            throw new Error(response.message || 'Không thể lấy danh sách nhắc nhở');
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error in getReminders service:', error);
+        throw error;
     }
-
-    return res.data;
 };
 
 export default getReminders;
