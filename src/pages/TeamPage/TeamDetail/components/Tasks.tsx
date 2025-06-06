@@ -180,7 +180,7 @@ const Tasks = ({ teamId }: TasksProps) => {
     }, [fetchTasks, fetchTeamMembers]);
 
     return (
-        <div className="h-full p-6">
+        <>
             {contextHolder}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>
@@ -231,7 +231,7 @@ const Tasks = ({ teamId }: TasksProps) => {
                     teamId={teamId}
                 />
             </Modal>
-        </div>
+        </>
     );
 };
 

@@ -39,8 +39,6 @@ const TaskTable: React.FC<TaskTableProps> = ({
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingTask, setEditingTask] = useState<TaskPayload | null>(null);
     const [form] = Form.useForm();
     const [localTasks, setLocalTasks] = useState<TaskPayload[]>(tasks);
     const [editingField, setEditingField] = useState<{ id: string | number; field: string } | null>(null);
@@ -51,25 +49,9 @@ const TaskTable: React.FC<TaskTableProps> = ({
 
     const debouncedSearchText = useDebounce(searchText, 300);
 
-    const edit = (record: TaskPayload) => {
-        form.setFieldsValue({
-            ...record,
-            start_time: dayjs(record.start_time),
-            end_time: dayjs(record.end_time),
-        });
-        setEditingTask(record);
-        setIsEditing(true);
-    };
-
-    const cancel = () => {
-        setIsEditing(false);
-        setEditingTask(null);
-    };
-
     const handleDateChange = (record: TaskPayload, field: string, date: dayjs.Dayjs | null) => {
         if (date) {
             try {
-                // Convert to local time and format
                 const formattedDate = date.format('YYYY-MM-DD HH:mm:ss');
                 if (formattedDate !== record[field as keyof TaskPayload]) {
                     const updatedTask = {
@@ -168,13 +150,29 @@ const TaskTable: React.FC<TaskTableProps> = ({
                         <Input
                             className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
                             onPressEnter={() => handleFieldSave(record, 'title')}
-                            onBlur={() => handleFieldSave(record, 'title')}
+                            defaultValue={record.title}
                             autoFocus
+                            suffix={
+                                <Space size="small">
+                                    <Button
+                                        type="text"
+                                        icon={<FontAwesomeIcon icon={faSave} className="text-green-500" />}
+                                        onClick={() => handleFieldSave(record, 'title')}
+                                        className="!p-0 !h-6"
+                                    />
+                                    <Button
+                                        type="text"
+                                        icon={<FontAwesomeIcon icon={faTimes} className="text-red-500" />}
+                                        onClick={() => handleFieldCancel()}
+                                        className="!p-0 !h-6"
+                                    />
+                                </Space>
+                            }
                         />
                     </Form.Item>
                 ) : (
                     <span
-                        className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block max-w-[200px]"
+                        className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block max-w-[120px] sm:max-w-[200px]"
                         onClick={() => handleFieldEdit(record, 'title')}
                     >
                         {record.title}
@@ -188,7 +186,8 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'status',
             width: '12%',
             align: 'center' as const,
-            responsive: ['lg'],
+            className: '!w-[100px] sm:!w-[12%]',
+            responsive: ['sm'], // Hide on xs, show on sm and larger
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
                 { text: 'Đang thực hiện', value: 'in_progress' },
@@ -216,7 +215,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                 ) : (
                     <Tag
                         color={getStatusColor(record.status)}
-                        className="px-3 py-1 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                        className="px-2 py-1 text-xs sm:text-sm hover:opacity-80 transition-opacity duration-200 cursor-pointer"
                         onClick={() => handleFieldEdit(record, 'status')}
                     >
                         {getStatusText(record.status)}
@@ -230,7 +229,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'priority',
             width: '12%',
             align: 'center' as const,
-            responsive: ['lg'],
+            responsive: ['sm'], // Hide on xs, show on sm and larger
             filters: [
                 { text: 'Thấp', value: 'low' },
                 { text: 'Trung bình', value: 'medium' },
@@ -258,7 +257,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                 ) : (
                     <Tag
                         color={getPriorityColor(record.priority)}
-                        className="px-3 py-1 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                        className="px-2 py-1 text-xs sm:text-sm hover:opacity-80 transition-opacity duration-200 cursor-pointer"
                         onClick={() => handleFieldEdit(record, 'priority')}
                     >
                         {getPriorityText(record.priority)}
@@ -335,7 +334,9 @@ const TaskTable: React.FC<TaskTableProps> = ({
                               >
                                   {assignedUser ? (
                                       <div className="flex items-center">
-                                          <span className="truncate">{assignedUser.full_name}</span>
+                                          <span className="truncate max-w-[80px] sm:max-w-[120px]">
+                                              {assignedUser.full_name}
+                                          </span>
                                           <Tag color={getRoleColor(assignedUser.role)} className="ml-2 flex-shrink-0">
                                               {getRoleText(assignedUser.role)}
                                           </Tag>
@@ -355,19 +356,16 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'start_time',
             width: '13%',
             align: 'center' as const,
-            responsive: ['lg'],
+            responsive: ['sm'], // Hide on xs, show on sm and larger
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const isEditing = editingField?.id === record.id && editingField?.field === 'start_time';
                 let date;
                 try {
-                    // Parse the ISO string to local time
                     const timeStr = record.start_time;
                     if (timeStr.includes('T')) {
-                        // If it's an ISO string, parse it correctly
                         date = dayjs(timeStr);
                     } else {
-                        // If it's already in the correct format, use it directly
                         date = dayjs(timeStr);
                     }
                     if (!date.isValid()) {
@@ -396,7 +394,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                     </Form.Item>
                 ) : (
                     <span
-                        className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer"
+                        className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer text-xs sm:text-sm"
                         onClick={() => handleFieldEdit(record, 'start_time')}
                     >
                         {date.format(format)}
@@ -410,18 +408,16 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'end_time',
             width: '13%',
             align: 'center' as const,
+            className: '!w-[100px] sm:!w-[13%]',
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const isEditing = editingField?.id === record.id && editingField?.field === 'end_time';
                 let date;
                 try {
-                    // Parse the ISO string to local time
                     const timeStr = record.end_time;
                     if (timeStr.includes('T')) {
-                        // If it's an ISO string, parse it correctly
                         date = dayjs(timeStr);
                     } else {
-                        // If it's already in the correct format, use it directly
                         date = dayjs(timeStr);
                     }
                     if (!date.isValid()) {
@@ -450,7 +446,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                     </Form.Item>
                 ) : (
                     <span
-                        className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer"
+                        className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer text-xs sm:text-sm"
                         onClick={() => handleFieldEdit(record, 'end_time')}
                     >
                         {date.format(format)}
@@ -517,7 +513,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
     };
 
     return (
-        <div className="h-full">
+        <div>
             <Form form={form} component={false}>
                 <TaskTableContent
                     loading={loading}
