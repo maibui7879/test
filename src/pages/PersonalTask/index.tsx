@@ -7,6 +7,7 @@ import { Button, Modal } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useMessage } from '@/hooks/useMessage';
+import dayjs from 'dayjs';
 
 function PersonalTask() {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
@@ -32,7 +33,13 @@ function PersonalTask() {
             });
 
             if (response?.personalTasks) {
-                const sortedTasks = [...response.personalTasks].sort(
+                const formattedTasks = response.personalTasks.map((task: TaskPayload) => ({
+                    ...task,
+                    start_time: dayjs(task.start_time).format('YYYY-MM-DD HH:mm:ss'),
+                    end_time: dayjs(task.end_time).format('YYYY-MM-DD HH:mm:ss'),
+                }));
+
+                const sortedTasks = [...formattedTasks].sort(
                     (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
                 );
                 setTasks(sortedTasks);

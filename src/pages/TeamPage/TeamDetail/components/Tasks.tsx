@@ -9,6 +9,7 @@ import { updateTask, deleteTask } from '@services/taskServices';
 import { getMembersTeam, updateAssignment } from '@services/teamServices';
 import { useMessage } from '@hooks/useMessage';
 import { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
+import dayjs from 'dayjs';
 
 interface TasksProps {
     teamId: string | undefined;
@@ -61,7 +62,13 @@ const Tasks = ({ teamId }: TasksProps) => {
             });
 
             if (response?.tasksTeam) {
-                const sortedTasks = [...response.tasksTeam].sort(
+                const formattedTasks = response.tasksTeam.map((task: TaskPayload) => ({
+                    ...task,
+                    start_time: dayjs(task.start_time).format('YYYY-MM-DD HH:mm:ss'),
+                    end_time: dayjs(task.end_time).format('YYYY-MM-DD HH:mm:ss'),
+                }));
+
+                const sortedTasks = [...formattedTasks].sort(
                     (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
                 );
                 setTasks(sortedTasks);

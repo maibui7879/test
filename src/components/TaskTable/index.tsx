@@ -7,6 +7,7 @@ import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid
 import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import {
     getPriorityColor,
     getPriorityText,
@@ -17,6 +18,9 @@ import {
 } from './tableState';
 import { TaskTableProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
+
+// Extend dayjs with UTC plugin
+dayjs.extend(utc);
 
 const TaskTable: React.FC<TaskTableProps> = ({
     tasks,
@@ -62,27 +66,53 @@ const TaskTable: React.FC<TaskTableProps> = ({
         setEditingTask(null);
     };
 
-    const save = async (id: string | number | undefined) => {
-        if (!id) return;
+    const handleDateChange = (record: TaskPayload, field: string, date: dayjs.Dayjs | null) => {
+        if (date) {
+            try {
+                // Convert to local time and format
+                const formattedDate = date.format('YYYY-MM-DD HH:mm:ss');
+                if (formattedDate !== record[field as keyof TaskPayload]) {
+                    const updatedTask = {
+                        ...record,
+                        [field]: formattedDate,
+                    } as TaskPayload;
+                    onEditTask(updatedTask);
+                }
+            } catch (error) {
+                console.error('Error formatting date:', error);
+            }
+        }
+        setEditingField(null);
+    };
+
+    const handleFieldSave = async (record: TaskPayload, field: string) => {
         try {
-            const row = await form.validateFields();
-            const taskToUpdate = localTasks.find((item) => {
-                const itemId = item.id?.toString();
-                return itemId === id.toString();
-            });
+            const value = await form.validateFields([field]);
+            let newValue;
 
-            if (!taskToUpdate) return;
+            if (field.includes('time')) {
+                const date = dayjs(value[field]);
+                if (!date.isValid()) {
+                    return;
+                }
+                try {
+                    newValue = date.format('YYYY-MM-DD HH:mm:ss');
+                } catch (error) {
+                    console.error('Error formatting date:', error);
+                    return;
+                }
+            } else {
+                newValue = value[field];
+            }
 
-            const updatedTask = {
-                ...taskToUpdate,
-                ...row,
-                start_time: dayjs(row.start_time).format('YYYY-MM-DD HH:mm:ss'),
-                end_time: dayjs(row.end_time).format('YYYY-MM-DD HH:mm:ss'),
-            };
-
-            await onEditTask(updatedTask);
-            setIsEditing(false);
-            setEditingTask(null);
+            if (newValue !== record[field as keyof TaskPayload]) {
+                const updatedTask = {
+                    ...record,
+                    [field]: newValue,
+                } as TaskPayload;
+                await onEditTask(updatedTask);
+            }
+            setEditingField(null);
         } catch (errInfo) {
             console.log('Validate Failed:', errInfo);
         }
@@ -113,20 +143,6 @@ const TaskTable: React.FC<TaskTableProps> = ({
         form.setFieldsValue({
             [field]: field.includes('time') ? dayjs(value) : value,
         });
-    };
-
-    const handleFieldSave = async (record: TaskPayload, field: string) => {
-        try {
-            const value = await form.validateFields([field]);
-            const updatedTask = {
-                ...record,
-                [field]: field.includes('time') ? dayjs(value[field]).format('YYYY-MM-DD HH:mm:ss') : value[field],
-            } as TaskPayload;
-            await onEditTask(updatedTask);
-            setEditingField(null);
-        } catch (errInfo) {
-            console.log('Validate Failed:', errInfo);
-        }
     };
 
     const handleFieldCancel = () => {
@@ -343,7 +359,23 @@ const TaskTable: React.FC<TaskTableProps> = ({
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const isEditing = editingField?.id === record.id && editingField?.field === 'start_time';
-                const date = dayjs(record.start_time);
+                let date;
+                try {
+                    // Parse the ISO string to local time
+                    const timeStr = record.start_time;
+                    if (timeStr.includes('T')) {
+                        // If it's an ISO string, parse it correctly
+                        date = dayjs(timeStr);
+                    } else {
+                        // If it's already in the correct format, use it directly
+                        date = dayjs(timeStr);
+                    }
+                    if (!date.isValid()) {
+                        date = dayjs();
+                    }
+                } catch (error) {
+                    date = dayjs();
+                }
                 const currentYear = dayjs().year();
                 const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
 
@@ -356,8 +388,9 @@ const TaskTable: React.FC<TaskTableProps> = ({
                         <DatePicker
                             showTime
                             format="YYYY-MM-DD HH:mm"
+                            defaultValue={date}
                             className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
-                            onBlur={() => handleFieldSave(record, 'start_time')}
+                            onOk={(date) => handleDateChange(record, 'start_time', date)}
                             autoFocus
                         />
                     </Form.Item>
@@ -380,7 +413,23 @@ const TaskTable: React.FC<TaskTableProps> = ({
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const isEditing = editingField?.id === record.id && editingField?.field === 'end_time';
-                const date = dayjs(record.end_time);
+                let date;
+                try {
+                    // Parse the ISO string to local time
+                    const timeStr = record.end_time;
+                    if (timeStr.includes('T')) {
+                        // If it's an ISO string, parse it correctly
+                        date = dayjs(timeStr);
+                    } else {
+                        // If it's already in the correct format, use it directly
+                        date = dayjs(timeStr);
+                    }
+                    if (!date.isValid()) {
+                        date = dayjs();
+                    }
+                } catch (error) {
+                    date = dayjs();
+                }
                 const currentYear = dayjs().year();
                 const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
 
@@ -393,8 +442,9 @@ const TaskTable: React.FC<TaskTableProps> = ({
                         <DatePicker
                             showTime
                             format="YYYY-MM-DD HH:mm"
+                            defaultValue={date}
                             className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
-                            onBlur={() => handleFieldSave(record, 'end_time')}
+                            onOk={(date) => handleDateChange(record, 'end_time', date)}
                             autoFocus
                         />
                     </Form.Item>
@@ -415,30 +465,8 @@ const TaskTable: React.FC<TaskTableProps> = ({
             align: 'center' as const,
             className: '!w-[120px] sm:!w-[15%]',
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                return editable ? (
-                    <Space className="animate-fade-in w-full justify-center">
-                        <Button
-                            type="primary"
-                            onClick={() => save(record.id)}
-                            icon={<FontAwesomeIcon icon={faSave} className="text-sm sm:text-base" />}
-                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
-                        ></Button>
-                        <Button
-                            onClick={cancel}
-                            icon={<FontAwesomeIcon icon={faTimes} className="text-sm sm:text-base" />}
-                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
-                        />
-                    </Space>
-                ) : (
+                return (
                     <Space className="animate-fade-in w-full justify-center" size="small">
-                        <Button
-                            type="primary"
-                            disabled={isEditing}
-                            onClick={() => edit(record)}
-                            icon={<FontAwesomeIcon icon={faEdit} className="text-sm sm:text-base" />}
-                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
-                        />
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
