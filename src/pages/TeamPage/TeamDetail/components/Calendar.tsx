@@ -8,7 +8,7 @@ interface TeamCalendarProps {
     teamId: string | undefined;
 }
 
-const TeamCalendar: React.FC<TeamCalendarProps> = ({ teamId }) => {
+const TeamCalendar = ({ teamId }: TeamCalendarProps) => {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
     const [loading, setLoading] = useState(false);
 

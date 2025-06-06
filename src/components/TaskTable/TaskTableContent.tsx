@@ -2,7 +2,7 @@ import React from 'react';
 import { Table, Input, Button } from 'antd';
 import { TaskTableContentProps } from './types';
 
-const TaskTableContent: React.FC<TaskTableContentProps> = ({
+const TaskTableContent = ({
     loading,
     error,
     onReload,
@@ -13,7 +13,7 @@ const TaskTableContent: React.FC<TaskTableContentProps> = ({
     currentPage,
     totalTasks,
     onPageChange,
-}) => {
+}: TaskTableContentProps) => {
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
     };
