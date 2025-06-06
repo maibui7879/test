@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, List, Tag, Button, Empty, Spin, message, Segmented, Pagination } from 'antd';
 import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import { getReminders, markReminderRead } from '@services/remiderService';
@@ -19,24 +19,20 @@ const formatTimeAgo = (date: string): string => {
     const diffInHours = now.diff(reminderDate, 'hour');
     const diffInDays = now.diff(reminderDate, 'day');
 
-    // Nếu thời gian trong tương lai
-    if (diffInMinutes < 0) {
-        return reminderDate.format('DD/MM/YYYY HH:mm');
-    }
-
-    // Trong khoảng 3 ngày
+    if (diffInMinutes < 0) return reminderDate.format('DD/MM/YYYY HH:mm');
     if (diffInDays <= 3) {
-        if (diffInDays > 0) {
-            return `${diffInDays} ngày trước`;
-        }
-        if (diffInHours > 0) {
-            return `${diffInHours} giờ trước`;
-        }
+        if (diffInDays > 0) return `${diffInDays} ngày trước`;
+        if (diffInHours > 0) return `${diffInHours} giờ trước`;
         return `${diffInMinutes} phút trước`;
     }
-
-    // Hơn 3 ngày thì hiển thị ngày tháng năm giờ
     return reminderDate.format('DD/MM/YYYY HH:mm');
+};
+
+const isNewReminder = (date: string): boolean => {
+    const now = dayjs();
+    const reminderDate = dayjs(date);
+    const diffInDays = now.diff(reminderDate, 'day');
+    return diffInDays <= 1;
 };
 
 const ReminderPage = () => {
@@ -50,68 +46,65 @@ const ReminderPage = () => {
         totalPages: 0,
     });
 
-    const fetchReminders = async (page: number = 1) => {
-        console.log('fetchReminders called with page:', page, 'filter:', filter);
-        try {
-            setLoading(true);
-            console.log('Calling API with params:', {
-                is_read: filter === 'read' ? '1' : '0',
-                page: page.toString(),
-                limit: pagination.pageSize.toString(),
-            });
-            const response = await getReminders({
-                is_read: filter === 'read' ? '1' : '0',
-                page: page.toString(),
-                limit: pagination.pageSize.toString(),
-            });
-            console.log('API Response:', response);
+    const fetchReminders = useCallback(
+        async (page: number = 1) => {
+            try {
+                setLoading(true);
+                const response = await getReminders({
+                    is_read: filter === 'read' ? '1' : '0',
+                    page: page.toString(),
+                    limit: pagination.pageSize.toString(),
+                });
 
-            setReminders(response.data);
-            setPagination((prev) => ({
-                ...prev,
-                current: response.pagination.page,
-                total: response.pagination.total,
-                totalPages: response.pagination.totalPages,
-            }));
-        } catch (error: any) {
-            console.error('Error in fetchReminders:', error);
-            message.error(error.message || 'Không thể tải danh sách nhắc nhở');
-        } finally {
-            setLoading(false);
-        }
-    };
+                setReminders(response.data);
+                setPagination((prev) => ({
+                    ...prev,
+                    current: response.pagination.page,
+                    total: response.pagination.total,
+                    totalPages: response.pagination.totalPages,
+                }));
+            } catch (error: any) {
+                message.error(error.message || 'Không thể tải danh sách nhắc nhở');
+            } finally {
+                setLoading(false);
+            }
+        },
+        [filter, pagination.pageSize],
+    );
+
+    const handleMarkAsRead = useCallback(
+        async (id: number) => {
+            try {
+                await markReminderRead(id);
+                setReminders((prev) =>
+                    prev.map((reminder) => (reminder.id === id ? { ...reminder, is_read: true } : reminder)),
+                );
+                message.success('Đã đánh dấu đã đọc');
+                if (filter === 'unread') {
+                    fetchReminders(pagination.current);
+                }
+            } catch (error: any) {
+                message.error(error.message || 'Không thể cập nhật trạng thái');
+            }
+        },
+        [filter, fetchReminders, pagination],
+    );
+
+    const handlePageChange = useCallback(
+        (page: number) => {
+            fetchReminders(page);
+        },
+        [fetchReminders],
+    );
+
+    const handleFilterChange = useCallback((value: 'unread' | 'read') => {
+        setFilter(value);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+    }, []);
 
     useEffect(() => {
-        console.log('useEffect triggered - filter changed to:', filter);
         fetchReminders(1);
-    }, [filter]);
-
-    const handleMarkAsRead = async (id: number) => {
-        console.log('handleMarkAsRead called for reminder ID:', id);
-        try {
-            await markReminderRead(id);
-            console.log('Successfully marked reminder as read, updating UI');
-            setReminders((prev) =>
-                prev.map((reminder) => {
-                    console.log('Checking reminder:', reminder.id, 'against ID:', id);
-                    return reminder.id === id ? { ...reminder, is_read: true } : reminder;
-                }),
-            );
-            message.success('Đã đánh dấu đã đọc');
-            if (filter === 'unread') {
-                console.log('Refreshing reminders after mark as read');
-                fetchReminders(pagination.current);
-            }
-        } catch (error: any) {
-            console.error('Error in handleMarkAsRead:', error);
-            message.error(error.message || 'Không thể cập nhật trạng thái');
-        }
-    };
-
-    const handlePageChange = (page: number) => {
-        console.log('handlePageChange called with page:', page);
-        fetchReminders(page);
-    };
+    }, [filter, fetchReminders]);
 
     return (
         <div className="p-6">
@@ -126,11 +119,7 @@ const ReminderPage = () => {
                 <div className="mb-4">
                     <Segmented
                         value={filter}
-                        onChange={(value) => {
-                            console.log('Tab changed to:', value);
-                            setFilter(value as 'unread' | 'read');
-                            setPagination((prev) => ({ ...prev, current: 1 }));
-                        }}
+                        onChange={handleFilterChange}
                         options={[
                             { value: 'unread', label: 'Chưa đọc' },
                             { value: 'read', label: 'Đã đọc' },
@@ -148,54 +137,47 @@ const ReminderPage = () => {
                         <List
                             itemLayout="horizontal"
                             dataSource={reminders}
-                            renderItem={(reminder) => {
-                                console.log('Rendering reminder:', reminder);
-                                return (
-                                    <List.Item
-                                        key={reminder.id}
-                                        actions={[
-                                            !reminder.is_read && (
-                                                <Button
-                                                    type="text"
-                                                    icon={<CheckOutlined />}
-                                                    onClick={() => {
-                                                        console.log(
-                                                            'Mark as read button clicked for reminder:',
-                                                            reminder,
-                                                        );
-                                                        handleMarkAsRead(reminder.id);
-                                                    }}
-                                                    className="text-green-500 hover:text-green-600"
-                                                >
-                                                    Đánh dấu đã đọc
-                                                </Button>
-                                            ),
-                                        ]}
-                                    >
-                                        <List.Item.Meta
-                                            title={
-                                                <div className="flex items-center">
-                                                    <span className="font-medium">{reminder.mes}</span>
-                                                    {!reminder.is_read && (
+                            renderItem={(reminder) => (
+                                <List.Item
+                                    key={reminder.id}
+                                    actions={[
+                                        !reminder.is_read && (
+                                            <Button
+                                                type="text"
+                                                icon={<CheckOutlined />}
+                                                onClick={() => handleMarkAsRead(reminder.id)}
+                                                className="text-green-500 hover:text-green-600"
+                                            >
+                                                Đánh dấu đã đọc
+                                            </Button>
+                                        ),
+                                    ]}
+                                >
+                                    <List.Item.Meta
+                                        title={
+                                            <div className="flex items-center">
+                                                <span className="font-medium">{reminder.mes}</span>
+                                                {!reminder.is_read &&
+                                                    reminder.start_time &&
+                                                    isNewReminder(reminder.start_time) && (
                                                         <Tag color="blue" className="ml-2">
                                                             Mới
                                                         </Tag>
                                                     )}
-                                                </div>
-                                            }
-                                            description={
-                                                <div className="space-y-2">
-                                                    {reminder.start_time && (
-                                                        <p className="text-gray-600">
-                                                            Thời gian: {formatTimeAgo(reminder.start_time)}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            }
-                                        />
-                                    </List.Item>
-                                );
-                            }}
+                                            </div>
+                                        }
+                                        description={
+                                            <div className="space-y-2">
+                                                {reminder.start_time && (
+                                                    <p className="text-gray-600">
+                                                        Thời gian: {formatTimeAgo(reminder.start_time)}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        }
+                                    />
+                                </List.Item>
+                            )}
                         />
                         <div className="flex justify-center mt-4">
                             <Pagination
