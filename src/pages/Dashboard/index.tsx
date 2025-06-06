@@ -1,19 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Progress, Select } from 'antd';
-import {
-    FileTextOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    BarChartOutlined,
-    LineChartOutlined,
-} from '@ant-design/icons';
+import { FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, BarChartOutlined } from '@ant-design/icons';
 import { getMemberStatistics } from '@/services/statisticsServices';
 import { useMessage } from '@/hooks/useMessage';
 import { StatisticsResponse } from '@services/types/types';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const Dashboard = () => {
     const [stats, setStats] = useState<StatisticsResponse | null>(null);
@@ -39,7 +33,7 @@ const Dashboard = () => {
     if (!stats) return null;
 
     const taskStatusData = {
-        labels: ['Todo', 'In Progress', 'Completed'],
+        labels: ['Chưa thực hiện', 'Đang thực hiện', 'Hoàn thành'],
         datasets: [
             {
                 data: [
@@ -54,7 +48,7 @@ const Dashboard = () => {
     };
 
     const taskDistributionData = {
-        labels: ['Personal', 'Team'],
+        labels: ['Cá nhân', 'Nhóm'],
         datasets: [
             {
                 data: [
@@ -67,32 +61,13 @@ const Dashboard = () => {
         ],
     };
 
-    const timeStatsData = {
-        labels: stats.details.time_stats.map((stat) => stat.date),
-        datasets: [
-            {
-                label: 'Completed',
-                data: stats.details.time_stats.map((stat) => parseInt(stat.completed)),
-                backgroundColor: '#3f8600',
-            },
-            {
-                label: 'In Progress',
-                data: stats.details.time_stats.map((stat) => parseInt(stat.in_progress)),
-                backgroundColor: '#faad14',
-            },
-            {
-                label: 'Todo',
-                data: stats.details.time_stats.map((stat) => parseInt(stat.todo)),
-                backgroundColor: '#1890ff',
-            },
-        ],
-    };
-
     const chartOptions = {
         responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y' as const,
         plugins: {
             legend: {
-                position: 'bottom' as const,
+                display: false,
             },
             tooltip: {
                 callbacks: {
@@ -106,16 +81,44 @@ const Dashboard = () => {
                 },
             },
         },
-    };
-
-    const barOptions = {
-        ...chartOptions,
         scales: {
             x: {
-                stacked: true,
+                beginAtZero: true,
+                grid: {
+                    display: false,
+                },
             },
             y: {
-                stacked: true,
+                grid: {
+                    display: false,
+                },
+            },
+        },
+    };
+
+    const pieOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom' as const,
+                labels: {
+                    font: {
+                        size: 12,
+                    },
+                    padding: 20,
+                },
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context: any) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: ${value} (${percentage}%)`;
+                    },
+                },
             },
         },
     };
@@ -138,7 +141,7 @@ const Dashboard = () => {
 
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
+                    <Card className="h-full">
                         <Statistic
                             title="Tổng nhiệm vụ"
                             value={stats.period_stats.total_tasks}
@@ -148,7 +151,7 @@ const Dashboard = () => {
                     </Card>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
+                    <Card className="h-full">
                         <Statistic
                             title="Đang thực hiện"
                             value={stats.period_stats.task_completion.in_progress}
@@ -158,7 +161,7 @@ const Dashboard = () => {
                     </Card>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
+                    <Card className="h-full">
                         <Statistic
                             title="Hoàn thành"
                             value={stats.period_stats.task_completion.completed}
@@ -168,7 +171,7 @@ const Dashboard = () => {
                     </Card>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
+                    <Card className="h-full">
                         <Statistic
                             title="Tỷ lệ hoàn thành"
                             value={stats.period_stats.task_completion.completion_rate}
@@ -181,26 +184,16 @@ const Dashboard = () => {
 
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={12}>
-                    <Card title="Trạng thái nhiệm vụ">
+                    <Card title="Trạng thái nhiệm vụ" className="h-full">
                         <div className="h-64">
-                            <Pie data={taskStatusData} options={chartOptions} />
+                            <Bar data={taskStatusData} options={chartOptions} />
                         </div>
                     </Card>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Card title="Phân bố nhiệm vụ">
+                    <Card title="Phân bố nhiệm vụ" className="h-full">
                         <div className="h-64">
-                            <Pie data={taskDistributionData} options={chartOptions} />
-                        </div>
-                    </Card>
-                </Col>
-            </Row>
-
-            <Row gutter={[16, 16]}>
-                <Col xs={24}>
-                    <Card title="Thống kê theo thời gian">
-                        <div className="h-80">
-                            <Bar data={timeStatsData} options={barOptions} />
+                            <Pie data={taskDistributionData} options={pieOptions} />
                         </div>
                     </Card>
                 </Col>
@@ -208,7 +201,7 @@ const Dashboard = () => {
 
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={12}>
-                    <Card title="Phân bố nhiệm vụ">
+                    <Card title="Phân bố nhiệm vụ" className="h-full">
                         <Progress
                             percent={parseFloat(stats.period_stats.task_distribution.personal.percentage)}
                             status="active"
@@ -217,10 +210,19 @@ const Dashboard = () => {
                                 '100%': '#13c2c2',
                             }}
                         />
-                        <div className="mt-2 text-sm text-gray-500">
-                            Personal: {stats.period_stats.task_distribution.personal.count} tasks
-                            <br />
-                            Team: {stats.period_stats.task_distribution.team.count} tasks
+                        <div className="mt-4 text-sm text-gray-500">
+                            <div className="flex justify-between items-center">
+                                <span>Cá nhân:</span>
+                                <span className="font-medium">
+                                    {stats.period_stats.task_distribution.personal.count} tasks
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center mt-2">
+                                <span>Nhóm:</span>
+                                <span className="font-medium">
+                                    {stats.period_stats.task_distribution.team.count} tasks
+                                </span>
+                            </div>
                         </div>
                     </Card>
                 </Col>

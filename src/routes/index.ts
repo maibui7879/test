@@ -20,7 +20,7 @@ export const publicRoutes: Route[] = [
 export const sidebarRoutes: Route[] = [
     {
         path: '/dashboard',
-        name: 'DashBoard',
+        name: 'Tổng quan',
         component: Dashboard,
         icon: faClipboard,
         children: [],
