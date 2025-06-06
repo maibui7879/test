@@ -119,6 +119,9 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
         [teamId, editingRole, fetchMembers, message],
     );
 
+    const hasAdminOrCreator = members.some((member) => member.role === ROLES.ADMIN || member.role === ROLES.CREATOR);
+    console.log(hasAdminOrCreator);
+
     const handleDeleteMember = useCallback(
         async (member: TeamMemberInfo) => {
             if (!teamId) return;
@@ -233,61 +236,65 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 );
             },
         },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_: any, record: TeamMemberInfo) => {
-                const editable = isEditing(record);
-                return editable ? (
-                    <Space>
-                        <Button
-                            type="text"
-                            icon={<CheckOutlined />}
-                            onClick={() => handleSaveRole(record.id)}
-                            className="text-green-500"
-                            aria-label="Lưu vai trò"
-                        />
-                        <Button
-                            type="text"
-                            icon={<CloseOutlined />}
-                            onClick={handleCancelEdit}
-                            className="text-red-500"
-                            aria-label="Hủy chỉnh sửa"
-                        />
-                    </Space>
-                ) : (
-                    <Space>
-                        <Button
-                            type="text"
-                            icon={<BarChartOutlined />}
-                            onClick={() => handleViewStatistics(record)}
-                            aria-label={`Xem thống kê của ${record.full_name}`}
-                        >
-                            Thống kê
-                        </Button>
-                        {record.role !== ROLES.CREATOR && (
-                            <Popconfirm
-                                title="Xác nhận xóa"
-                                description={MESSAGES.DELETE_CONFIRM(record.full_name)}
-                                onConfirm={() => handleDeleteMember(record)}
-                                okText="Xóa"
-                                cancelText="Hủy"
-                                okButtonProps={{ danger: true }}
-                            >
-                                <Button
-                                    type="text"
-                                    danger
-                                    icon={<UserDeleteOutlined />}
-                                    aria-label={`Xóa thành viên ${record.full_name}`}
-                                >
-                                    Xóa
-                                </Button>
-                            </Popconfirm>
-                        )}
-                    </Space>
-                );
-            },
-        },
+        ...(hasAdminOrCreator
+            ? [
+                  {
+                      title: 'Thao tác',
+                      key: 'action',
+                      render: (_: any, record: TeamMemberInfo) => {
+                          const editable = isEditing(record);
+                          return editable ? (
+                              <Space>
+                                  <Button
+                                      type="text"
+                                      icon={<CheckOutlined />}
+                                      onClick={() => handleSaveRole(record.id)}
+                                      className="text-green-500"
+                                      aria-label="Lưu vai trò"
+                                  />
+                                  <Button
+                                      type="text"
+                                      icon={<CloseOutlined />}
+                                      onClick={handleCancelEdit}
+                                      className="text-red-500"
+                                      aria-label="Hủy chỉnh sửa"
+                                  />
+                              </Space>
+                          ) : (
+                              <Space>
+                                  <Button
+                                      type="text"
+                                      icon={<BarChartOutlined />}
+                                      onClick={() => handleViewStatistics(record)}
+                                      aria-label={`Xem thống kê của ${record.full_name}`}
+                                  >
+                                      Thống kê
+                                  </Button>
+                                  {record.role !== ROLES.CREATOR && (
+                                      <Popconfirm
+                                          title="Xác nhận xóa"
+                                          description={MESSAGES.DELETE_CONFIRM(record.full_name)}
+                                          onConfirm={() => handleDeleteMember(record)}
+                                          okText="Xóa"
+                                          cancelText="Hủy"
+                                          okButtonProps={{ danger: true }}
+                                      >
+                                          <Button
+                                              type="text"
+                                              danger
+                                              icon={<UserDeleteOutlined />}
+                                              aria-label={`Xóa thành viên ${record.full_name}`}
+                                          >
+                                              Xóa
+                                          </Button>
+                                      </Popconfirm>
+                                  )}
+                              </Space>
+                          );
+                      },
+                  },
+              ]
+            : []),
     ];
 
     useEffect(() => {

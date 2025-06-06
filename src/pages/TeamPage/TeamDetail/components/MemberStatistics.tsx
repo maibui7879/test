@@ -21,8 +21,6 @@ function MemberStatistics({ teamId, userId, onClose }: MemberStatisticsProps) {
                 const response = await getMemberStatistics(teamId, userId);
                 if (response.success && response.data) {
                     setStatistics(response.data);
-                } else {
-                    throw new Error();
                 }
             } catch {
                 message.error({
