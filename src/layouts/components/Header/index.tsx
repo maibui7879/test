@@ -53,7 +53,7 @@ function Header({ collapsed, onCollapse }: HeaderProps) {
     return (
         <>
             {contextHolder}
-            <nav className="bg-gradient-to-r from-[#3b82f6] to-[#9333ea] shadow-lg">
+            <nav className="bg-gradient-to-r from-gray-800 to-gray-900 shadow-lg">
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="relative flex h-16 items-center justify-between">
                         <div className="flex items-start">

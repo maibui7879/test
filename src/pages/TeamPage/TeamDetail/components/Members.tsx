@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Table, Avatar, Button, Space, Modal, Form, Select, Popconfirm, Drawer } from 'antd';
 import {
     UserAddOutlined,
@@ -17,6 +17,7 @@ import debounce from 'lodash/debounce';
 import { useMessage } from '@hooks/useMessage';
 import { ROLES } from '@common/constant';
 import MemberStatistics from './MemberStatistics';
+import { useUser } from '@contexts/useAuth/userContext';
 
 const MESSAGES = {
     FETCH_ERROR: 'Có lỗi xảy ra khi tải danh sách thành viên',
@@ -37,6 +38,7 @@ interface MembersProps {
 }
 
 const Members = ({ teamId, onMemberChange }: MembersProps) => {
+    const { user } = useUser();
     const [form] = Form.useForm();
     const [members, setMembers] = useState<TeamMemberInfo[]>([]);
     const [loading, setLoading] = useState(false);
@@ -64,24 +66,23 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
         }
     }, [teamId, message, onMemberChange]);
 
-    const searchUsersDebounced = useCallback(
-        debounce(async (value: string) => {
-            if (!value.trim()) {
-                setSearchResults([]);
-                return;
-            }
-            try {
-                setSearchLoading(true);
-                const users = await searchUsers(value);
-                setSearchResults(users);
-            } catch (error) {
-                setSearchResults([]);
-            } finally {
-                setSearchLoading(false);
-            }
-        }, 500),
-        [],
-    );
+    const searchUsersFn = useCallback(async (value: string) => {
+        if (!value.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        try {
+            setSearchLoading(true);
+            const users = await searchUsers(value);
+            setSearchResults(users);
+        } catch (error) {
+            setSearchResults([]);
+        } finally {
+            setSearchLoading(false);
+        }
+    }, []);
+
+    const searchUsersDebounced = useMemo(() => debounce(searchUsersFn, 500), [searchUsersFn]);
 
     const handleSearch = useCallback(
         (value: string) => {
@@ -118,9 +119,6 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
         },
         [teamId, editingRole, fetchMembers, message],
     );
-
-    const hasAdminOrCreator = members.some((member) => member.role === ROLES.ADMIN || member.role === ROLES.CREATOR);
-    console.log(hasAdminOrCreator);
 
     const handleDeleteMember = useCallback(
         async (member: TeamMemberInfo) => {
@@ -180,6 +178,8 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
         setSelectedMember(null);
     }, []);
 
+    const currentUserRole = members.find((member) => member.id === user?.id)?.role;
+
     const columns: ColumnsType<TeamMemberInfo> = [
         {
             title: 'Thành viên',
@@ -236,7 +236,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 );
             },
         },
-        ...(hasAdminOrCreator
+        ...(currentUserRole && currentUserRole !== ROLES.MEMBER
             ? [
                   {
                       title: 'Thao tác',
