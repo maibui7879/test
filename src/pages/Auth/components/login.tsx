@@ -11,21 +11,24 @@ const Login: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
+    
+   
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
 
         try {
-            await login(email, password);
-            toast.success('Đăng nhập thành công!');
-            setTimeout(() => {
-                if (user?.role === 'admin') {
-                    navigate('/admin');
-                } else {
-                    navigate('/dashboard');
-                }
-            }, 1000);
+            await login(email, password); 
+            toast.success(
+                user?.role === 'admin' ? 'Chào mừng Admin!' : 'Đăng nhập thành công!'
+            );
+
+            if (user?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             setError(err.message || 'Đăng nhập thất bại');
             toast.error('Đăng nhập thất bại!');
@@ -33,6 +36,9 @@ const Login: React.FC = () => {
             setLoading(false);
         }
     };
+
+   
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

@@ -17,41 +17,61 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     const navigate = useNavigate();
 
     const menuItems = useMemo(() => {
-        return sidebarRoutes.map((route) => {
-            if (route.children?.length) {
-                return {
-                    key: route.path,
-                    icon: route.icon && (
+    return sidebarRoutes.map((route) => {
+        if (route.children?.length) {
+            return {
+                key: route.path,
+                icon: route.icon && (
+                    <div className="w-5 flex justify-center items-center">
                         <FontAwesomeIcon
                             icon={route.icon}
                             className="text-lg transition-transform duration-300 hover:scale-110"
                         />
-                    ),
-                    label: route.name,
-                    children: route.children.map((child: Route) => ({
-                        key: `${route.path}/${child.path}`,
-                        icon: child.icon && (
+                    </div>
+                ),
+                label: (
+                    <div className="flex items-center gap-x-2">
+                        {route.name}
+                    </div>
+                ),
+                children: route.children.map((child: Route) => ({
+                    key: `${route.path}/${child.path}`,
+                    icon: child.icon && (
+                        <div className="w-5 flex justify-center items-center">
                             <FontAwesomeIcon
                                 icon={child.icon}
                                 className="text-lg transition-transform duration-300 hover:scale-110"
                             />
-                        ),
-                        label: child.name,
-                    })),
-                };
-            }
-            return {
-                key: route.path,
-                icon: route.icon && (
+                        </div>
+                    ),
+                    label: (
+                        <div className="flex items-center gap-x-2">
+                            {child.name}
+                        </div>
+                    ),
+                })),
+            };
+        }
+
+        return {
+            key: route.path,
+            icon: route.icon && (
+                <div className="w-5 flex justify-center items-center">
                     <FontAwesomeIcon
                         icon={route.icon}
                         className="text-lg transition-transform duration-300 hover:scale-110"
                     />
-                ),
-                label: route.name,
-            };
-        });
-    }, []);
+                </div>
+            ),
+            label: (
+                <div className="flex items-center gap-x-2">
+                    {route.name}
+                </div>
+            ),
+        };
+    });
+}, []);
+
 
     const handleMenuClick = useCallback(
         ({ key }: { key: string }) => {

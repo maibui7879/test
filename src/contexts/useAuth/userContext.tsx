@@ -71,6 +71,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+
+
     useEffect(() => {
         if (token) fetchUserInfo();
     }, [token, fetchUserInfo]);

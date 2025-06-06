@@ -20,11 +20,33 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess }) => {
         e.preventDefault();
         setError(null);
 
+        // Validate họ và tên
+        if (!fullName.trim() || fullName.trim().length < 2) {
+            setError('Họ và tên phải có ít nhất 2 ký tự');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError('Email không hợp lệ');
+            return;
+        }
+
+        // Validate mật khẩu độ mạnh
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/;
+        if (!passwordRegex.test(password)) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự, gồm chữ cái và số');
+            return;
+        }
+
+        // Validate mật khẩu khớp nhau
         if (password !== confirmPassword) {
             setError('Mật khẩu và xác nhận mật khẩu không khớp');
             return;
         }
 
+        // Nếu mọi validate đều pass thì tiến hành đăng ký
         setLoading(true);
         try {
             await registerApi(email, password, fullName);
@@ -42,6 +64,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess }) => {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
