@@ -51,7 +51,7 @@ const TeamDetail = () => {
     }, [overviewTabChange]);
 
     return (
-        <div className="p-6">
+        <div className="p-2 md:p-6">
             <div className="mb-6">
                 <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="flex items-center">
                     Quay lại
