@@ -109,11 +109,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: Tas
                     />
                 </Form.Item>
 
-                <Form.Item
-                    name="description"
-                    label={<span className="text-gray-700 font-medium">Mô tả</span>}
-                    rules={[{ message: 'Vui lòng nhập mô tả' }]}
-                >
+                <Form.Item name="description" label={<span className="text-gray-700 font-medium">Mô tả</span>}>
                     <TextArea
                         rows={4}
                         placeholder="Nhập mô tả công việc"
@@ -125,7 +121,6 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: Tas
                     <Form.Item
                         name="start_time"
                         label={<span className="text-gray-700 font-medium">Thời gian bắt đầu</span>}
-                        rules={[{ message: 'Vui lòng chọn thời gian bắt đầu' }]}
                     >
                         <DatePicker
                             showTime
@@ -139,7 +134,6 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: Tas
                         name="end_time"
                         label={<span className="text-gray-700 font-medium">Thời gian kết thúc</span>}
                         rules={[
-                            { message: 'Vui lòng chọn thời gian kết thúc' },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                     if (
@@ -164,11 +158,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: Tas
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Form.Item
-                        name="status"
-                        label={<span className="text-gray-700 font-medium">Trạng thái</span>}
-                        rules={[{ message: 'Vui lòng chọn trạng thái' }]}
-                    >
+                    <Form.Item name="status" label={<span className="text-gray-700 font-medium">Trạng thái</span>}>
                         <Select
                             placeholder="Chọn trạng thái"
                             className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"
@@ -179,11 +169,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: Tas
                         </Select>
                     </Form.Item>
 
-                    <Form.Item
-                        name="priority"
-                        label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}
-                        rules={[{ message: 'Vui lòng chọn độ ưu tiên' }]}
-                    >
+                    <Form.Item name="priority" label={<span className="text-gray-700 font-medium">Độ ưu tiên</span>}>
                         <Select
                             placeholder="Chọn độ ưu tiên"
                             className="w-full rounded-md hover:border-blue-400 focus:border-blue-400"

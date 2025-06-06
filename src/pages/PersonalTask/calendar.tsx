@@ -8,7 +8,6 @@ const CalenderPerson = () => {
     const [tasks, setTasks] = useState<TaskPayload[]>([]);
     const [loading, setLoading] = useState(false);
 
-    // Fetch tasks từ API
     useEffect(() => {
         const fetchTasks = async () => {
             try {

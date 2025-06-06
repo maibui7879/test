@@ -213,3 +213,58 @@ export interface MemberStatistics {
         };
     };
 }
+
+// statistics
+export interface TaskCompletion {
+    completed: string;
+    todo: string;
+    in_progress: string;
+    completion_rate: string;
+}
+
+export interface TaskDistribution {
+    personal: {
+        count: string;
+        percentage: string;
+    };
+    team: {
+        count: string;
+        percentage: string;
+    };
+}
+
+export interface TimeStats {
+    date: string;
+    total: number;
+    completed: string;
+    todo: string;
+    in_progress: string;
+    completion_rate: string;
+}
+
+export interface PriorityStats {
+    priority: string;
+    total: number;
+    completed: string;
+    todo: string;
+    in_progress: string;
+    completion_rate: string;
+}
+
+export interface StatisticsResponse {
+    selected_period: string;
+    all_time: {
+        total_tasks: number;
+        task_completion: TaskCompletion;
+        task_distribution: TaskDistribution;
+    };
+    period_stats: {
+        total_tasks: number;
+        task_completion: TaskCompletion;
+        task_distribution: TaskDistribution;
+    };
+    details: {
+        time_stats: TimeStats[];
+        priority_stats: PriorityStats[];
+    };
+}

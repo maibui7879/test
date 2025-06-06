@@ -188,7 +188,6 @@ const CalendarComponent = ({ tasks, loading = false, onTaskCreated }: CalendarCo
                     </Spin>
                 </Card>
 
-                {/* Form Modal */}
                 <Modal
                     open={isModalOpen}
                     onCancel={() => setIsModalOpen(false)}

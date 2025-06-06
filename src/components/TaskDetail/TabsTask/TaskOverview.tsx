@@ -103,10 +103,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEd
                     <div>
                         <p className="text-gray-600 mb-1">Thời gian bắt đầu:</p>
                         {isEditing ? (
-                            <Form.Item
-                                name="start_time"
-                                rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu!' }]}
-                            >
+                            <Form.Item name="start_time">
                                 <DatePicker
                                     showTime
                                     format="YYYY-MM-DD HH:mm"
@@ -120,10 +117,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEd
                     <div>
                         <p className="text-gray-600 mb-1">Thời gian kết thúc:</p>
                         {isEditing ? (
-                            <Form.Item
-                                name="end_time"
-                                rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc!' }]}
-                            >
+                            <Form.Item name="end_time">
                                 <DatePicker
                                     showTime
                                     format="YYYY-MM-DD HH:mm"

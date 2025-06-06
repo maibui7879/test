@@ -3,7 +3,7 @@ import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm
 import { ColumnsType } from 'antd/es/table';
 import { TaskPayload, UserProfile } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
@@ -19,7 +19,6 @@ import {
 import { TaskTableProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
 
-// Extend dayjs with UTC plugin
 dayjs.extend(utc);
 
 const TaskTable: React.FC<TaskTableProps> = ({
@@ -187,7 +186,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             width: '12%',
             align: 'center' as const,
             className: '!w-[100px] sm:!w-[12%]',
-            responsive: ['sm'], // Hide on xs, show on sm and larger
+            responsive: ['sm'],
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
                 { text: 'Đang thực hiện', value: 'in_progress' },
@@ -229,7 +228,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'priority',
             width: '12%',
             align: 'center' as const,
-            responsive: ['sm'], // Hide on xs, show on sm and larger
+            responsive: ['sm'],
             filters: [
                 { text: 'Thấp', value: 'low' },
                 { text: 'Trung bình', value: 'medium' },
@@ -356,7 +355,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'start_time',
             width: '13%',
             align: 'center' as const,
-            responsive: ['sm'], // Hide on xs, show on sm and larger
+            responsive: ['sm'],
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
                 const isEditing = editingField?.id === record.id && editingField?.field === 'start_time';
@@ -378,11 +377,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                 const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
 
                 return isEditing ? (
-                    <Form.Item
-                        name="start_time"
-                        style={{ margin: 0 }}
-                        rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu!' }]}
-                    >
+                    <Form.Item name="start_time" style={{ margin: 0 }}>
                         <DatePicker
                             showTime
                             format="YYYY-MM-DD HH:mm"
@@ -408,6 +403,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'end_time',
             width: '13%',
             align: 'center' as const,
+            ellipsis: true,
             className: '!w-[100px] sm:!w-[13%]',
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
@@ -430,11 +426,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                 const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
 
                 return isEditing ? (
-                    <Form.Item
-                        name="end_time"
-                        style={{ margin: 0 }}
-                        rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc!' }]}
-                    >
+                    <Form.Item name="end_time" style={{ margin: 0 }}>
                         <DatePicker
                             showTime
                             format="YYYY-MM-DD HH:mm"
