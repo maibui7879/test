@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Avatar, Button, Space, Modal, Form, Select, Popconfirm } from 'antd';
-import { UserAddOutlined, UserDeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { Table, Avatar, Button, Space, Modal, Form, Select, Popconfirm, Drawer } from 'antd';
+import {
+    UserAddOutlined,
+    UserDeleteOutlined,
+    EditOutlined,
+    CheckOutlined,
+    CloseOutlined,
+    BarChartOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { getMembersTeam, changeRoleUserTeam, inviteMember, removeMember } from '@services/teamServices';
 import type { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
@@ -9,6 +16,7 @@ import { UserProfile } from '@services/types/types';
 import debounce from 'lodash/debounce';
 import { useMessage } from '@hooks/useMessage';
 import { ROLES } from '@common/constant';
+import MemberStatistics from './MemberStatistics';
 
 const MESSAGES = {
     FETCH_ERROR: 'Có lỗi xảy ra khi tải danh sách thành viên',
@@ -39,6 +47,8 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
     const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const { message, contextHolder } = useMessage();
+    const [selectedMember, setSelectedMember] = useState<{ id: number; name: string } | null>(null);
+    const [isStatisticsVisible, setIsStatisticsVisible] = useState(false);
 
     const fetchMembers = useCallback(async () => {
         if (!teamId) return;
@@ -157,6 +167,16 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
 
     const isEditing = useCallback((record: TeamMemberInfo) => record.id === editingKey, [editingKey]);
 
+    const handleViewStatistics = useCallback((member: TeamMemberInfo) => {
+        setSelectedMember({ id: member.id, name: member.full_name });
+        setIsStatisticsVisible(true);
+    }, []);
+
+    const handleCloseStatistics = useCallback(() => {
+        setIsStatisticsVisible(false);
+        setSelectedMember(null);
+    }, []);
+
     const columns: ColumnsType<TeamMemberInfo> = [
         {
             title: 'Thành viên',
@@ -237,6 +257,14 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                     </Space>
                 ) : (
                     <Space>
+                        <Button
+                            type="text"
+                            icon={<BarChartOutlined />}
+                            onClick={() => handleViewStatistics(record)}
+                            aria-label={`Xem thống kê của ${record.full_name}`}
+                        >
+                            Thống kê
+                        </Button>
                         {record.role !== ROLES.CREATOR && (
                             <Popconfirm
                                 title="Xác nhận xóa"
@@ -334,6 +362,22 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            <Drawer
+                title={`Thống kê thành viên: ${selectedMember?.name}`}
+                placement="right"
+                onClose={handleCloseStatistics}
+                open={isStatisticsVisible}
+                width={800}
+            >
+                {selectedMember && teamId && (
+                    <MemberStatistics
+                        teamId={parseInt(teamId)}
+                        userId={selectedMember.id}
+                        onClose={handleCloseStatistics}
+                    />
+                )}
+            </Drawer>
         </div>
     );
 };

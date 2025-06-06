@@ -5,6 +5,7 @@ export { default as createTeam } from './createTeam';
 export { default as updateTeam } from './updateTeam';
 export { default as deleteTeam } from './deleteTeam';
 export { default as getTeamStatistics } from './getTeamStatistics';
+export { default as getMemberStatistics } from './getMemberStatistics';
 
 // Task Comment Services
 export { default as getTaskComments } from './taskComment/getTaskComments';

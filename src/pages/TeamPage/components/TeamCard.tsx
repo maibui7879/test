@@ -58,16 +58,6 @@ const TeamCard: React.FC<TeamCardProps> = ({ id, name, avatar_url, creator_name,
     };
 
     const items = [
-        ...(onEdit
-            ? [
-                  {
-                      key: 'edit',
-                      label: 'Chỉnh sửa',
-                      icon: <FontAwesomeIcon icon={faPencilAlt} className="mr-2" />,
-                      onClick: onEdit,
-                  },
-              ]
-            : []),
         ...(onDelete
             ? [
                   {
