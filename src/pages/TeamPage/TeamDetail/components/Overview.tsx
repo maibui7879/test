@@ -1,45 +1,129 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Progress } from 'antd';
-import { TeamOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+    UserOutlined,
+    FileTextOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CommentOutlined,
+    BarChartOutlined,
+    LineChartOutlined,
+} from '@ant-design/icons';
+import { getTeamStatistics } from '@/services/teamServices';
+import { useMessage } from '@/hooks/useMessage';
+import { TeamStatistics } from '@services/teamServices/getTeamStatistics';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 interface OverviewProps {
-    teamId?: string;
+    teamId: string | undefined;
+    onStatsChange?: (stats: TeamStatistics) => void;
+    onTabChange?: boolean;
 }
 
-const Overview: React.FC<OverviewProps> = ({ teamId }) => {
-    const [teamStats, setTeamStats] = useState({
-        totalMembers: 0,
-        completedTasks: 0,
-        pendingTasks: 0,
-        progress: 0,
-    });
+const useTeamStatistics = (teamId: string | undefined) => {
+    const [teamStats, setTeamStats] = useState<TeamStatistics | null>(null);
+    const { message } = useMessage();
+
+    const fetchTeamStats = useCallback(async () => {
+        if (!teamId) return;
+
+        try {
+            const stats = await getTeamStatistics(Number(teamId));
+            setTeamStats(stats);
+            return stats;
+        } catch (error: any) {
+            message.error({
+                key: 'fetch-stats-error',
+                content: error.message || 'Không thể tải thống kê nhóm',
+            });
+            return null;
+        }
+    }, [teamId, message]);
 
     useEffect(() => {
-        // TODO: Fetch team statistics
-        // This is mock data for now
-        setTeamStats({
-            totalMembers: 5,
-            completedTasks: 12,
-            pendingTasks: 3,
-            progress: 75,
-        });
-    }, [teamId]);
+        fetchTeamStats();
+    }, [fetchTeamStats]);
+
+    return { teamStats, fetchTeamStats };
+};
+
+const Overview = ({ teamId, onStatsChange, onTabChange }: OverviewProps) => {
+    const { teamStats, fetchTeamStats } = useTeamStatistics(teamId);
+
+    useEffect(() => {
+        if (teamStats && onStatsChange) {
+            onStatsChange(teamStats);
+        }
+    }, [teamStats, onStatsChange]);
+
+    useEffect(() => {
+        if (onTabChange) {
+            fetchTeamStats();
+        }
+    }, [onTabChange, fetchTeamStats]);
+
+    if (!teamStats) return null;
+
+    const taskStatusData = {
+        labels: ['Todo', 'In Progress', 'Completed'],
+        datasets: [
+            {
+                data: [teamStats.todo_tasks, teamStats.in_progress_tasks, teamStats.completed_tasks],
+                backgroundColor: ['#1890ff', '#faad14', '#3f8600'],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const priorityData = {
+        labels: ['High', 'Medium', 'Low'],
+        datasets: [
+            {
+                data: [teamStats.high_priority_tasks, teamStats.medium_priority_tasks, teamStats.low_priority_tasks],
+                backgroundColor: ['#ff4d4f', '#faad14', '#52c41a'],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom' as const,
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context: any) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: ${value} (${percentage}%)`;
+                    },
+                },
+            },
+        },
+    };
 
     return (
         <div className="space-y-6">
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} md={6}>
                     <Card>
-                        <Statistic title="Thành viên" value={teamStats.totalMembers} prefix={<TeamOutlined />} />
+                        <Statistic title="Thành viên" value={teamStats.total_members} prefix={<UserOutlined />} />
                     </Card>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
                     <Card>
                         <Statistic
-                            title="Nhiệm vụ hoàn thành"
-                            value={teamStats.completedTasks}
-                            prefix={<CheckCircleOutlined />}
-                            valueStyle={{ color: '#3f8600' }}
+                            title="Tổng nhiệm vụ"
+                            value={teamStats.total_tasks}
+                            prefix={<FileTextOutlined />}
+                            valueStyle={{ color: '#1890ff' }}
                         />
                     </Card>
                 </Col>
@@ -47,7 +131,7 @@ const Overview: React.FC<OverviewProps> = ({ teamId }) => {
                     <Card>
                         <Statistic
                             title="Nhiệm vụ đang thực hiện"
-                            value={teamStats.pendingTasks}
+                            value={teamStats.in_progress_tasks}
                             prefix={<ClockCircleOutlined />}
                             valueStyle={{ color: '#faad14' }}
                         />
@@ -56,35 +140,89 @@ const Overview: React.FC<OverviewProps> = ({ teamId }) => {
                 <Col xs={24} sm={12} md={6}>
                     <Card>
                         <Statistic
-                            title="Tiến độ"
-                            value={teamStats.progress}
-                            suffix="%"
-                            valueStyle={{ color: '#1890ff' }}
+                            title="Nhiệm vụ hoàn thành"
+                            value={teamStats.completed_tasks}
+                            prefix={<CheckCircleOutlined />}
+                            valueStyle={{ color: '#3f8600' }}
                         />
-                        <Progress percent={teamStats.progress} size="small" />
                     </Card>
                 </Col>
             </Row>
 
-            <Card title="Thông tin nhóm">
-                <div className="space-y-4">
-                    <div>
-                        <h3 className="text-lg font-semibold">Mô tả</h3>
-                        <p className="text-gray-600">
-                            Đây là mô tả về nhóm của bạn. Bạn có thể thêm thông tin chi tiết về mục tiêu và hoạt động
-                            của nhóm ở đây.
-                        </p>
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-semibold">Mục tiêu</h3>
-                        <ul className="list-disc list-inside text-gray-600">
-                            <li>Mục tiêu 1</li>
-                            <li>Mục tiêu 2</li>
-                            <li>Mục tiêu 3</li>
-                        </ul>
-                    </div>
-                </div>
-            </Card>
+            <Row gutter={[16, 16]}>
+                <Col xs={24} md={12}>
+                    <Card title="Trạng thái nhiệm vụ">
+                        <div className="h-64">
+                            <Pie data={taskStatusData} options={chartOptions} />
+                        </div>
+                    </Card>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Card title="Độ ưu tiên nhiệm vụ">
+                        <div className="h-64">
+                            <Pie data={priorityData} options={chartOptions} />
+                        </div>
+                    </Card>
+                </Col>
+            </Row>
+
+            <Row gutter={[16, 16]}>
+                <Col xs={24} md={8}>
+                    <Card>
+                        <Statistic
+                            title="Tổng số bình luận"
+                            value={teamStats.total_comments}
+                            prefix={<CommentOutlined />}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} md={8}>
+                    <Card>
+                        <Statistic
+                            title="Bình quân bình luận/task"
+                            value={teamStats.avg_comments_per_task}
+                            prefix={<BarChartOutlined />}
+                            precision={2}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} md={8}>
+                    <Card>
+                        <Statistic
+                            title="Nhiệm vụ trong 7 ngày"
+                            value={teamStats.recent_tasks}
+                            prefix={<LineChartOutlined />}
+                        />
+                    </Card>
+                </Col>
+            </Row>
+
+            <Row gutter={[16, 16]}>
+                <Col xs={24} md={12}>
+                    <Card title="Tỷ lệ hoàn thành">
+                        <Progress
+                            percent={parseFloat(teamStats.completion_rate)}
+                            status="active"
+                            strokeColor={{
+                                '0%': '#108ee9',
+                                '100%': '#87d068',
+                            }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Card title="Tỷ lệ phân công">
+                        <Progress
+                            percent={parseFloat(teamStats.assignment_rate)}
+                            status="active"
+                            strokeColor={{
+                                '0%': '#108ee9',
+                                '100%': '#87d068',
+                            }}
+                        />
+                    </Card>
+                </Col>
+            </Row>
         </div>
     );
 };
