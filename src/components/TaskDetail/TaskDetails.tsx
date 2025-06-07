@@ -281,6 +281,7 @@ function TaskDetails({ task: initialTask, onEditTask, onDeleteTask, onReload, te
                     onCancel={handleCancel}
                     onSave={handleSave}
                     onDelete={handleDeleteTask}
+                    teamId={teamId}
                 />
             ),
         },
