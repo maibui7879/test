@@ -62,7 +62,12 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEd
                                 <Input className="hover:border-blue-400 focus:border-blue-400" />
                             </Form.Item>
                         ) : (
-                            <p className="font-medium text-gray-800">{task.title}</p>
+                            <p
+                                className="font-medium text-gray-800 truncate max-w-full"
+                                title={task.title} 
+                            >
+                                {task.title}
+                            </p>
                         )}
                     </div>
                     <div>
@@ -103,10 +108,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEd
                     <div>
                         <p className="text-gray-600 mb-1">Thời gian bắt đầu:</p>
                         {isEditing ? (
-                            <Form.Item
-                                name="start_time"
-                                rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu!' }]}
-                            >
+                            <Form.Item name="start_time">
                                 <DatePicker
                                     showTime
                                     format="YYYY-MM-DD HH:mm"
@@ -120,10 +122,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEd
                     <div>
                         <p className="text-gray-600 mb-1">Thời gian kết thúc:</p>
                         {isEditing ? (
-                            <Form.Item
-                                name="end_time"
-                                rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc!' }]}
-                            >
+                            <Form.Item name="end_time">
                                 <DatePicker
                                     showTime
                                     format="YYYY-MM-DD HH:mm"

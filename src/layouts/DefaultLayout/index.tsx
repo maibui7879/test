@@ -18,8 +18,6 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = React.memo(({ children }) =>
         const handleResize = () => {
             if (window.innerWidth <= 768) {
                 setCollapsed(true);
-            } else {
-                setCollapsed(false);
             }
         };
         handleResize();
@@ -28,7 +26,7 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = React.memo(({ children }) =>
     }, []);
 
     const renderContent = useCallback(() => {
-        return <Content className="bg-white shadow-sm">{children}</Content>;
+        return <Content className="bg-white">{children}</Content>;
     }, [children]);
 
     return (

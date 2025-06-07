@@ -6,6 +6,7 @@ import Overview from './components/Overview';
 import Tasks from './components/Tasks';
 import Members from './components/Members';
 import Settings from './components/Settings';
+import TeamCalendar from './components/Calendar';
 
 const TeamDetail = () => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ const TeamDetail = () => {
 
     useEffect(() => {
         const tab = searchParams.get('tab');
-        if (tab && ['overview', 'tasks', 'members', 'settings'].includes(tab)) {
+        if (tab && ['overview', 'tasks', 'members', 'settings', 'calendar'].includes(tab)) {
             setActiveTab(tab);
         }
     }, [searchParams]);
@@ -43,7 +44,6 @@ const TeamDetail = () => {
         }
     };
 
-    // Reset overviewTabChange after it's been used
     useEffect(() => {
         if (overviewTabChange) {
             setOverviewTabChange(false);
@@ -51,7 +51,7 @@ const TeamDetail = () => {
     }, [overviewTabChange]);
 
     return (
-        <div className="p-6">
+        <div className="p-2 md:p-6">
             <div className="mb-6">
                 <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="flex items-center">
                     Quay lại
@@ -73,6 +73,11 @@ const TeamDetail = () => {
                             key: 'tasks',
                             label: 'Nhiệm vụ',
                             children: <Tasks teamId={teamId} />,
+                        },
+                        {
+                            key: 'calendar',
+                            label: 'Lịch',
+                            children: <TeamCalendar teamId={teamId} />,
                         },
                         {
                             key: 'members',

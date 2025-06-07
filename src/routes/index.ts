@@ -3,11 +3,12 @@ import Dashboard from '@pages/Dashboard';
 import PersonalTask from '@pages/PersonalTask';
 import Profile from '@pages/Profile';
 import Route from './type';
-import { faCalendarAlt, faClipboard, faTasks, faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faClipboard, faTasks, faUser, faUsers, faBell } from '@fortawesome/free-solid-svg-icons';
 import CalenderPerson from '@pages/PersonalTask/calendar';
 import CreatedTeamsPage from '@pages/TeamPage/CreatedTeamsPage';
 import JoinedTeamsPage from '@pages/TeamPage/JoinedTeamsPage';
 import TeamDetail from '@pages/TeamPage/TeamDetail';
+import ReminderPage from '@pages/Reminder';
 
 export const publicRoutes: Route[] = [
     {
@@ -20,7 +21,7 @@ export const publicRoutes: Route[] = [
 export const sidebarRoutes: Route[] = [
     {
         path: '/dashboard',
-        name: 'DashBoard',
+        name: 'Tổng quan',
         component: Dashboard,
         icon: faClipboard,
         children: [],
@@ -34,13 +35,11 @@ export const sidebarRoutes: Route[] = [
                 path: 'created',
                 name: 'Nhóm của bạn',
                 component: CreatedTeamsPage,
-                icon: faUsers,
             },
             {
                 path: 'joined',
                 name: 'Nhóm tham gia',
                 component: JoinedTeamsPage,
-                icon: faUsers,
             },
         ],
     },
@@ -53,15 +52,19 @@ export const sidebarRoutes: Route[] = [
                 path: 'calendar',
                 name: 'Lịch cá nhân',
                 component: CalenderPerson,
-                icon: faCalendarAlt,
             },
             {
                 path: 'task',
                 name: 'Công việc của bạn',
                 component: PersonalTask,
-                icon: faTasks,
             },
         ],
+    },
+    {
+        path: '/reminder',
+        name: 'Nhắc nhở',
+        icon: faBell,
+        component: ReminderPage,
     },
     {
         path: '/user',

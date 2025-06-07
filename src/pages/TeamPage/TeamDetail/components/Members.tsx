@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Avatar, Button, Space, Modal, Form, Select, Popconfirm } from 'antd';
-import { UserAddOutlined, UserDeleteOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Table, Avatar, Button, Space, Modal, Form, Select, Popconfirm, Drawer } from 'antd';
+import {
+    UserAddOutlined,
+    UserDeleteOutlined,
+    EditOutlined,
+    CheckOutlined,
+    CloseOutlined,
+    BarChartOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { getMembersTeam, changeRoleUserTeam, inviteMember, removeMember } from '@services/teamServices';
 import type { TeamMemberInfo } from '@services/teamServices/teamMembers/getMembersTeam';
@@ -9,6 +16,8 @@ import { UserProfile } from '@services/types/types';
 import debounce from 'lodash/debounce';
 import { useMessage } from '@hooks/useMessage';
 import { ROLES } from '@common/constant';
+import MemberStatistics from './MemberStatistics';
+import { useUser } from '@contexts/useAuth/userContext';
 
 const MESSAGES = {
     FETCH_ERROR: 'Có lỗi xảy ra khi tải danh sách thành viên',
@@ -29,6 +38,7 @@ interface MembersProps {
 }
 
 const Members = ({ teamId, onMemberChange }: MembersProps) => {
+    const { user } = useUser();
     const [form] = Form.useForm();
     const [members, setMembers] = useState<TeamMemberInfo[]>([]);
     const [loading, setLoading] = useState(false);
@@ -39,6 +49,8 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
     const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const { message, contextHolder } = useMessage();
+    const [selectedMember, setSelectedMember] = useState<{ id: number; name: string } | null>(null);
+    const [isStatisticsVisible, setIsStatisticsVisible] = useState(false);
 
     const fetchMembers = useCallback(async () => {
         if (!teamId) return;
@@ -54,24 +66,23 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
         }
     }, [teamId, message, onMemberChange]);
 
-    const searchUsersDebounced = useCallback(
-        debounce(async (value: string) => {
-            if (!value.trim()) {
-                setSearchResults([]);
-                return;
-            }
-            try {
-                setSearchLoading(true);
-                const users = await searchUsers(value);
-                setSearchResults(users);
-            } catch (error) {
-                setSearchResults([]);
-            } finally {
-                setSearchLoading(false);
-            }
-        }, 500),
-        [],
-    );
+    const searchUsersFn = useCallback(async (value: string) => {
+        if (!value.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        try {
+            setSearchLoading(true);
+            const users = await searchUsers(value);
+            setSearchResults(users);
+        } catch (error) {
+            setSearchResults([]);
+        } finally {
+            setSearchLoading(false);
+        }
+    }, []);
+
+    const searchUsersDebounced = useMemo(() => debounce(searchUsersFn, 500), [searchUsersFn]);
 
     const handleSearch = useCallback(
         (value: string) => {
@@ -157,6 +168,18 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
 
     const isEditing = useCallback((record: TeamMemberInfo) => record.id === editingKey, [editingKey]);
 
+    const handleViewStatistics = useCallback((member: TeamMemberInfo) => {
+        setSelectedMember({ id: member.id, name: member.full_name });
+        setIsStatisticsVisible(true);
+    }, []);
+
+    const handleCloseStatistics = useCallback(() => {
+        setIsStatisticsVisible(false);
+        setSelectedMember(null);
+    }, []);
+
+    const currentUserRole = members.find((member) => member.id === user?.id)?.role;
+
     const columns: ColumnsType<TeamMemberInfo> = [
         {
             title: 'Thành viên',
@@ -213,53 +236,65 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 );
             },
         },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_: any, record: TeamMemberInfo) => {
-                const editable = isEditing(record);
-                return editable ? (
-                    <Space>
-                        <Button
-                            type="text"
-                            icon={<CheckOutlined />}
-                            onClick={() => handleSaveRole(record.id)}
-                            className="text-green-500"
-                            aria-label="Lưu vai trò"
-                        />
-                        <Button
-                            type="text"
-                            icon={<CloseOutlined />}
-                            onClick={handleCancelEdit}
-                            className="text-red-500"
-                            aria-label="Hủy chỉnh sửa"
-                        />
-                    </Space>
-                ) : (
-                    <Space>
-                        {record.role !== ROLES.CREATOR && (
-                            <Popconfirm
-                                title="Xác nhận xóa"
-                                description={MESSAGES.DELETE_CONFIRM(record.full_name)}
-                                onConfirm={() => handleDeleteMember(record)}
-                                okText="Xóa"
-                                cancelText="Hủy"
-                                okButtonProps={{ danger: true }}
-                            >
-                                <Button
-                                    type="text"
-                                    danger
-                                    icon={<UserDeleteOutlined />}
-                                    aria-label={`Xóa thành viên ${record.full_name}`}
-                                >
-                                    Xóa
-                                </Button>
-                            </Popconfirm>
-                        )}
-                    </Space>
-                );
-            },
-        },
+        ...(currentUserRole && currentUserRole !== ROLES.MEMBER
+            ? [
+                  {
+                      title: 'Thao tác',
+                      key: 'action',
+                      render: (_: any, record: TeamMemberInfo) => {
+                          const editable = isEditing(record);
+                          return editable ? (
+                              <Space>
+                                  <Button
+                                      type="text"
+                                      icon={<CheckOutlined />}
+                                      onClick={() => handleSaveRole(record.id)}
+                                      className="text-green-500"
+                                      aria-label="Lưu vai trò"
+                                  />
+                                  <Button
+                                      type="text"
+                                      icon={<CloseOutlined />}
+                                      onClick={handleCancelEdit}
+                                      className="text-red-500"
+                                      aria-label="Hủy chỉnh sửa"
+                                  />
+                              </Space>
+                          ) : (
+                              <Space>
+                                  <Button
+                                      type="text"
+                                      icon={<BarChartOutlined />}
+                                      onClick={() => handleViewStatistics(record)}
+                                      aria-label={`Xem thống kê của ${record.full_name}`}
+                                  >
+                                      Thống kê
+                                  </Button>
+                                  {record.role !== ROLES.CREATOR && (
+                                      <Popconfirm
+                                          title="Xác nhận xóa"
+                                          description={MESSAGES.DELETE_CONFIRM(record.full_name)}
+                                          onConfirm={() => handleDeleteMember(record)}
+                                          okText="Xóa"
+                                          cancelText="Hủy"
+                                          okButtonProps={{ danger: true }}
+                                      >
+                                          <Button
+                                              type="text"
+                                              danger
+                                              icon={<UserDeleteOutlined />}
+                                              aria-label={`Xóa thành viên ${record.full_name}`}
+                                          >
+                                              Xóa
+                                          </Button>
+                                      </Popconfirm>
+                                  )}
+                              </Space>
+                          );
+                      },
+                  },
+              ]
+            : []),
     ];
 
     useEffect(() => {
@@ -334,6 +369,22 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            <Drawer
+                title={`Thống kê thành viên: ${selectedMember?.name}`}
+                placement="right"
+                onClose={handleCloseStatistics}
+                open={isStatisticsVisible}
+                width={800}
+            >
+                {selectedMember && teamId && (
+                    <MemberStatistics
+                        teamId={parseInt(teamId)}
+                        userId={selectedMember.id}
+                        onClose={handleCloseStatistics}
+                    />
+                )}
+            </Drawer>
         </div>
     );
 };

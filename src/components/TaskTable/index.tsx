@@ -3,10 +3,11 @@ import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm
 import { ColumnsType } from 'antd/es/table';
 import { TaskPayload, UserProfile } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import {
     getPriorityColor,
     getPriorityText,
@@ -17,6 +18,8 @@ import {
 } from './tableState';
 import { TaskTableProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
+
+dayjs.extend(utc);
 
 const TaskTable: React.FC<TaskTableProps> = ({
     tasks,
@@ -35,10 +38,9 @@ const TaskTable: React.FC<TaskTableProps> = ({
     const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingTask, setEditingTask] = useState<TaskPayload | null>(null);
     const [form] = Form.useForm();
     const [localTasks, setLocalTasks] = useState<TaskPayload[]>(tasks);
+    const [editingField, setEditingField] = useState<{ id: string | number; field: string } | null>(null);
 
     useEffect(() => {
         setLocalTasks(tasks);
@@ -46,42 +48,52 @@ const TaskTable: React.FC<TaskTableProps> = ({
 
     const debouncedSearchText = useDebounce(searchText, 300);
 
-    const edit = (record: TaskPayload) => {
-        form.setFieldsValue({
-            ...record,
-            start_time: dayjs(record.start_time),
-            end_time: dayjs(record.end_time),
-        });
-        setEditingTask(record);
-        setIsEditing(true);
+    const handleDateChange = (record: TaskPayload, field: string, date: dayjs.Dayjs | null) => {
+        if (date) {
+            try {
+                const formattedDate = date.format('YYYY-MM-DD HH:mm:ss');
+                if (formattedDate !== record[field as keyof TaskPayload]) {
+                    const updatedTask = {
+                        ...record,
+                        [field]: formattedDate,
+                    } as TaskPayload;
+                    onEditTask(updatedTask);
+                }
+            } catch (error) {
+                console.error('Error formatting date:', error);
+            }
+        }
+        setEditingField(null);
     };
 
-    const cancel = () => {
-        setIsEditing(false);
-        setEditingTask(null);
-    };
-
-    const save = async (id: string | number | undefined) => {
-        if (!id) return;
+    const handleFieldSave = async (record: TaskPayload, field: string) => {
         try {
-            const row = await form.validateFields();
-            const taskToUpdate = localTasks.find((item) => {
-                const itemId = item.id?.toString();
-                return itemId === id.toString();
-            });
+            const value = await form.validateFields([field]);
+            let newValue;
 
-            if (!taskToUpdate) return;
+            if (field.includes('time')) {
+                const date = dayjs(value[field]);
+                if (!date.isValid()) {
+                    return;
+                }
+                try {
+                    newValue = date.format('YYYY-MM-DD HH:mm:ss');
+                } catch (error) {
+                    console.error('Error formatting date:', error);
+                    return;
+                }
+            } else {
+                newValue = value[field];
+            }
 
-            const updatedTask = {
-                ...taskToUpdate,
-                ...row,
-                start_time: row.start_time.format('YYYY-MM-DD HH:mm:ss'),
-                end_time: row.end_time.format('YYYY-MM-DD HH:mm:ss'),
-            };
-
-            await onEditTask(updatedTask);
-            setIsEditing(false);
-            setEditingTask(null);
+            if (newValue !== record[field as keyof TaskPayload]) {
+                const updatedTask = {
+                    ...record,
+                    [field]: newValue,
+                } as TaskPayload;
+                await onEditTask(updatedTask);
+            }
+            setEditingField(null);
         } catch (errInfo) {
             console.log('Validate Failed:', errInfo);
         }
@@ -106,6 +118,18 @@ const TaskTable: React.FC<TaskTableProps> = ({
         }
     };
 
+    const handleFieldEdit = (record: TaskPayload, field: string) => {
+        setEditingField({ id: record.id!, field });
+        const value = record[field as keyof TaskPayload];
+        form.setFieldsValue({
+            [field]: field.includes('time') ? dayjs(value) : value,
+        });
+    };
+
+    const handleFieldCancel = () => {
+        setEditingField(null);
+    };
+
     const columns: ColumnsType<TaskPayload> = [
         {
             title: 'Tiêu đề',
@@ -115,17 +139,41 @@ const TaskTable: React.FC<TaskTableProps> = ({
             align: 'center' as const,
             ellipsis: true,
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                return editable ? (
+                const isEditing = editingField?.id === record.id && editingField?.field === 'title';
+                return isEditing ? (
                     <Form.Item
                         name="title"
                         style={{ margin: 0 }}
                         rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}
                     >
-                        <Input className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200" />
+                        <Input
+                            className="animate-fade-in hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                            onPressEnter={() => handleFieldSave(record, 'title')}
+                            defaultValue={record.title}
+                            autoFocus
+                            suffix={
+                                <Space size="small">
+                                    <Button
+                                        type="text"
+                                        icon={<FontAwesomeIcon icon={faSave} className="text-green-500" />}
+                                        onClick={() => handleFieldSave(record, 'title')}
+                                        className="!p-0 !h-6"
+                                    />
+                                    <Button
+                                        type="text"
+                                        icon={<FontAwesomeIcon icon={faTimes} className="text-red-500" />}
+                                        onClick={() => handleFieldCancel()}
+                                        className="!p-0 !h-6"
+                                    />
+                                </Space>
+                            }
+                        />
                     </Form.Item>
                 ) : (
-                    <span className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block max-w-[200px]">
+                    <span
+                        className="font-medium hover:text-blue-500 transition-all duration-200 cursor-pointer truncate block max-w-[120px] sm:max-w-[200px]"
+                        onClick={() => handleFieldEdit(record, 'title')}
+                    >
                         {record.title}
                     </span>
                 );
@@ -137,7 +185,8 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'status',
             width: '12%',
             align: 'center' as const,
-            responsive: ['lg'],
+            className: '!w-[100px] sm:!w-[12%]',
+            responsive: ['sm'],
             filters: [
                 { text: 'Chưa thực hiện', value: 'todo' },
                 { text: 'Đang thực hiện', value: 'in_progress' },
@@ -145,14 +194,18 @@ const TaskTable: React.FC<TaskTableProps> = ({
             ],
             onFilter: (value, record) => record.status === value,
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                return editable ? (
+                const isEditing = editingField?.id === record.id && editingField?.field === 'status';
+                return isEditing ? (
                     <Form.Item
                         name="status"
                         style={{ margin: 0 }}
                         rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
                     >
-                        <Select className="hover:border-blue-400 focus:border-blue-400 transition-all duration-200">
+                        <Select
+                            className="hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                            onBlur={() => handleFieldSave(record, 'status')}
+                            autoFocus
+                        >
                             <Select.Option value="todo">Chưa thực hiện</Select.Option>
                             <Select.Option value="in_progress">Đang thực hiện</Select.Option>
                             <Select.Option value="done">Hoàn thành</Select.Option>
@@ -161,7 +214,8 @@ const TaskTable: React.FC<TaskTableProps> = ({
                 ) : (
                     <Tag
                         color={getStatusColor(record.status)}
-                        className="px-3 py-1 hover:opacity-80 transition-opacity duration-200"
+                        className="px-2 py-1 text-xs sm:text-sm hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                        onClick={() => handleFieldEdit(record, 'status')}
                     >
                         {getStatusText(record.status)}
                     </Tag>
@@ -174,7 +228,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'priority',
             width: '12%',
             align: 'center' as const,
-            responsive: ['lg'],
+            responsive: ['sm'],
             filters: [
                 { text: 'Thấp', value: 'low' },
                 { text: 'Trung bình', value: 'medium' },
@@ -182,14 +236,18 @@ const TaskTable: React.FC<TaskTableProps> = ({
             ],
             onFilter: (value, record) => record.priority === value,
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                return editable ? (
+                const isEditing = editingField?.id === record.id && editingField?.field === 'priority';
+                return isEditing ? (
                     <Form.Item
                         name="priority"
                         style={{ margin: 0 }}
                         rules={[{ required: true, message: 'Vui lòng chọn độ ưu tiên!' }]}
                     >
-                        <Select className="hover:border-blue-400 focus:border-blue-400 transition-all duration-200">
+                        <Select
+                            className="hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                            onBlur={() => handleFieldSave(record, 'priority')}
+                            autoFocus
+                        >
                             <Select.Option value="low">Thấp</Select.Option>
                             <Select.Option value="medium">Trung bình</Select.Option>
                             <Select.Option value="high">Cao</Select.Option>
@@ -198,7 +256,8 @@ const TaskTable: React.FC<TaskTableProps> = ({
                 ) : (
                     <Tag
                         color={getPriorityColor(record.priority)}
-                        className="px-3 py-1 hover:opacity-80 transition-opacity duration-200"
+                        className="px-2 py-1 text-xs sm:text-sm hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                        onClick={() => handleFieldEdit(record, 'priority')}
                     >
                         {getPriorityText(record.priority)}
                     </Tag>
@@ -215,12 +274,13 @@ const TaskTable: React.FC<TaskTableProps> = ({
                       align: 'center' as const,
                       ellipsis: true,
                       render: (_: any, record: TaskPayload) => {
-                          const editable = isEditing && editingTask?.id === record.id;
+                          const isEditing =
+                              editingField?.id === record.id && editingField?.field === 'assigned_user_id';
                           const assignedUser = teamMembers.find(
                               (user: UserProfile) => user.id === record.assigned_user_id,
                           );
 
-                          return editable ? (
+                          return isEditing ? (
                               <Form.Item name="assigned_user_id" style={{ margin: 0 }}>
                                   <Select
                                       showSearch
@@ -238,6 +298,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                                                       assigned_user_id: value,
                                                   };
                                                   await onEditTask(updatedTask);
+                                                  setEditingField(null);
                                               } catch (error) {
                                                   console.error('Error assigning task:', error);
                                               }
@@ -247,6 +308,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
                                           (option?.label as string).toLowerCase().includes(input.toLowerCase())
                                       }
                                       className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                                      autoFocus
                                   >
                                       {teamMembers.map((user: UserProfile) => (
                                           <Select.Option
@@ -265,10 +327,15 @@ const TaskTable: React.FC<TaskTableProps> = ({
                                   </Select>
                               </Form.Item>
                           ) : (
-                              <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                              <span
+                                  className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer"
+                                  onClick={() => handleFieldEdit(record, 'assigned_user_id')}
+                              >
                                   {assignedUser ? (
                                       <div className="flex items-center">
-                                          <span className="truncate">{assignedUser.full_name}</span>
+                                          <span className="truncate max-w-[80px] sm:max-w-[120px]">
+                                              {assignedUser.full_name}
+                                          </span>
                                           <Tag color={getRoleColor(assignedUser.role)} className="ml-2 flex-shrink-0">
                                               {getRoleText(assignedUser.role)}
                                           </Tag>
@@ -288,28 +355,43 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'start_time',
             width: '13%',
             align: 'center' as const,
-            responsive: ['lg'],
+            responsive: ['sm'],
             sorter: (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                const date = dayjs(record.start_time);
+                const isEditing = editingField?.id === record.id && editingField?.field === 'start_time';
+                let date;
+                try {
+                    const timeStr = record.start_time;
+                    if (timeStr.includes('T')) {
+                        date = dayjs(timeStr);
+                    } else {
+                        date = dayjs(timeStr);
+                    }
+                    if (!date.isValid()) {
+                        date = dayjs();
+                    }
+                } catch (error) {
+                    date = dayjs();
+                }
                 const currentYear = dayjs().year();
                 const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
 
-                return editable ? (
-                    <Form.Item
-                        name="start_time"
-                        style={{ margin: 0 }}
-                        rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu!' }]}
-                    >
+                return isEditing ? (
+                    <Form.Item name="start_time" style={{ margin: 0 }}>
                         <DatePicker
                             showTime
                             format="YYYY-MM-DD HH:mm"
+                            defaultValue={date}
                             className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                            onOk={(date) => handleDateChange(record, 'start_time', date)}
+                            autoFocus
                         />
                     </Form.Item>
                 ) : (
-                    <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                    <span
+                        className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer text-xs sm:text-sm"
+                        onClick={() => handleFieldEdit(record, 'start_time')}
+                    >
                         {date.format(format)}
                     </span>
                 );
@@ -321,27 +403,44 @@ const TaskTable: React.FC<TaskTableProps> = ({
             key: 'end_time',
             width: '13%',
             align: 'center' as const,
+            ellipsis: true,
+            className: '!w-[100px] sm:!w-[13%]',
             sorter: (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime(),
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                const date = dayjs(record.end_time);
+                const isEditing = editingField?.id === record.id && editingField?.field === 'end_time';
+                let date;
+                try {
+                    const timeStr = record.end_time;
+                    if (timeStr.includes('T')) {
+                        date = dayjs(timeStr);
+                    } else {
+                        date = dayjs(timeStr);
+                    }
+                    if (!date.isValid()) {
+                        date = dayjs();
+                    }
+                } catch (error) {
+                    date = dayjs();
+                }
                 const currentYear = dayjs().year();
                 const format = date.year() === currentYear ? 'DD/MM' : 'DD/MM/YYYY';
 
-                return editable ? (
-                    <Form.Item
-                        name="end_time"
-                        style={{ margin: 0 }}
-                        rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc!' }]}
-                    >
+                return isEditing ? (
+                    <Form.Item name="end_time" style={{ margin: 0 }}>
                         <DatePicker
                             showTime
                             format="YYYY-MM-DD HH:mm"
+                            defaultValue={date}
                             className="w-full hover:border-blue-400 focus:border-blue-400 transition-all duration-200"
+                            onOk={(date) => handleDateChange(record, 'end_time', date)}
+                            autoFocus
                         />
                     </Form.Item>
                 ) : (
-                    <span className="text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                    <span
+                        className="text-gray-600 hover:text-blue-500 transition-colors duration-200 cursor-pointer text-xs sm:text-sm"
+                        onClick={() => handleFieldEdit(record, 'end_time')}
+                    >
                         {date.format(format)}
                     </span>
                 );
@@ -354,30 +453,8 @@ const TaskTable: React.FC<TaskTableProps> = ({
             align: 'center' as const,
             className: '!w-[120px] sm:!w-[15%]',
             render: (_: any, record: TaskPayload) => {
-                const editable = isEditing && editingTask?.id === record.id;
-                return editable ? (
-                    <Space className="animate-fade-in w-full justify-center">
-                        <Button
-                            type="primary"
-                            onClick={() => save(record.id)}
-                            icon={<FontAwesomeIcon icon={faSave} className="text-sm sm:text-base" />}
-                            className="!bg-green-400 hover:!bg-green-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
-                        ></Button>
-                        <Button
-                            onClick={cancel}
-                            icon={<FontAwesomeIcon icon={faTimes} className="text-sm sm:text-base" />}
-                            className="hover:!border-red-400 hover:!text-red-500 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
-                        />
-                    </Space>
-                ) : (
+                return (
                     <Space className="animate-fade-in w-full justify-center" size="small">
-                        <Button
-                            type="primary"
-                            disabled={isEditing}
-                            onClick={() => edit(record)}
-                            icon={<FontAwesomeIcon icon={faEdit} className="text-sm sm:text-base" />}
-                            className="!bg-blue-500 hover:!bg-blue-600 transition-all duration-200 !w-6 !h-6 sm:!w-8 sm:!h-8 !p-0 flex items-center justify-center"
-                        />
                         <Button
                             type="primary"
                             onClick={() => handleViewDetail(record)}
@@ -428,7 +505,7 @@ const TaskTable: React.FC<TaskTableProps> = ({
     };
 
     return (
-        <div className="h-full">
+        <div>
             <Form form={form} component={false}>
                 <TaskTableContent
                     loading={loading}

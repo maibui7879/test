@@ -41,62 +41,13 @@ const NotesAndAttachments: React.FC<NotesAndAttachmentsProps> = ({
     };
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Thêm ghi chú và tệp đính kèm</h3>
-                <div className="space-y-4">
-                    <div className="flex flex-col gap-4">
-                        <TextArea
-                            value={newNote}
-                            onChange={(e) => onNoteChange(e.target.value)}
-                            placeholder="Nhập ghi chú..."
-                            rows={3}
-                            className="w-full"
-                            maxLength={500}
-                            showCount
-                        />
-                        <div className="flex items-center gap-4">
-                            <Upload
-                                customRequest={({ onSuccess }) => setTimeout(() => onSuccess?.('ok'), 0)}
-                                onChange={onFileChange}
-                                showUploadList={false}
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                                beforeUpload={(file) => {
-                                    const isLt10M = file.size / 1024 / 1024 < 10;
-                                    if (!isLt10M) {
-                                        onFileSizeError();
-                                        return false;
-                                    }
-                                    return true;
-                                }}
-                            >
-                                <Button icon={<UploadOutlined />}>Chọn tệp</Button>
-                            </Upload>
-                            {newFile && (
-                                <div className="flex items-center gap-2">
-                                    <PaperClipOutlined />
-                                    <span className="text-sm text-gray-600">{newFile.name}</span>
-                                    <Button type="text" danger icon={<DeleteOutlined />} onClick={onRemoveFile} />
-                                </div>
-                            )}
-                        </div>
-                        <Button
-                            type="primary"
-                            onClick={onAddNoteAndFile}
-                            loading={loading}
-                            disabled={!newNote.trim() && !newFile}
-                            className="w-full"
-                        >
-                            Thêm
-                        </Button>
-                    </div>
-                </div>
-            </div>
+        <div className="space-y-6 flex flex-col">
+            {/* Danh sách ghi chú và tệp đính kèm */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 text-gray-800">Danh sách ghi chú và tệp đính kèm</h3>
                 {notesAndAttachments.length > 0 ? (
                     <List
-                        dataSource={notesAndAttachments}
+                        dataSource={notesAndAttachments.slice().reverse()} // đảo ngược mảng
                         renderItem={(item) => (
                             <List.Item
                                 actions={[
@@ -153,6 +104,58 @@ const NotesAndAttachments: React.FC<NotesAndAttachmentsProps> = ({
                         </p>
                     </div>
                 )}
+            </div>
+
+            {/* Ô thêm ghi chú và tệp đính kèm (Đưa xuống dưới cùng) */}
+            <div>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Thêm ghi chú và tệp đính kèm</h3>
+                <div className="space-y-4">
+                    <div className="flex flex-col gap-4">
+                        <TextArea
+                            value={newNote}
+                            onChange={(e) => onNoteChange(e.target.value)}
+                            placeholder="Nhập ghi chú..."
+                            rows={3}
+                            className="w-full"
+                            maxLength={500}
+                            showCount
+                        />
+                        <div className="flex items-center gap-4">
+                            <Upload
+                                customRequest={({ onSuccess }) => setTimeout(() => onSuccess?.('ok'), 0)}
+                                onChange={onFileChange}
+                                showUploadList={false}
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                beforeUpload={(file) => {
+                                    const isLt10M = file.size / 1024 / 1024 < 10;
+                                    if (!isLt10M) {
+                                        onFileSizeError();
+                                        return false;
+                                    }
+                                    return true;
+                                }}
+                            >
+                                <Button icon={<UploadOutlined />}>Chọn tệp</Button>
+                            </Upload>
+                            {newFile && (
+                                <div className="flex items-center gap-2">
+                                    <PaperClipOutlined />
+                                    <span className="text-sm text-gray-600">{newFile.name}</span>
+                                    <Button type="text" danger icon={<DeleteOutlined />} onClick={onRemoveFile} />
+                                </div>
+                            )}
+                        </div>
+                        <Button
+                            type="primary"
+                            onClick={onAddNoteAndFile}
+                            loading={loading}
+                            disabled={!newNote.trim() && !newFile}
+                            className="w-full"
+                        >
+                            Thêm
+                        </Button>
+                    </div>
+                </div>
             </div>
         </div>
     );
