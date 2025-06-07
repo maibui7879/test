@@ -13,7 +13,7 @@ const { Content } = Layout;
 
 const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
     const [collapsed, setCollapsed] = useState(false);
-    const { user, logout } = useUser();
+    const { user, logout: originalLogout } = useUser();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedRole, setSelectedRole] = useState<'admin' | 'member' | null>(() => {
         const savedRole = localStorage.getItem('selectedRole');
@@ -40,35 +40,41 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
     }, []);
 
     useEffect(() => {
-        if (
-            user?.role === 'admin' &&
-            selectedRole === null &&
-            !(isFirstLoad && location.pathname.startsWith('/admin'))
-        ) {
+        if (user?.role === 'admin' && selectedRole === null) {
             setIsModalVisible(true);
         }
         setIsFirstLoad(false);
-    }, [user, selectedRole, location.pathname, isFirstLoad]);
+    }, [user, selectedRole]);
 
-    const handleRoleSelect = (role: 'admin' | 'member') => {
-        setSelectedRole(role);
-        localStorage.setItem('selectedRole', role);
-        setIsModalVisible(false);
-        if (role === 'admin') {
-            navigate('/admin');
-        } else {
-            navigate('/dashboard');
-        }
-    };
+    const handleRoleSelect = useCallback(
+        (role: 'admin' | 'member') => {
+            setSelectedRole(role);
+            localStorage.setItem('selectedRole', role);
+            setIsModalVisible(false);
+            navigate(role === 'admin' ? '/admin' : '/dashboard');
+        },
+        [navigate],
+    );
 
-    const handleSettingsClick = () => {
+    const handleSettingsClick = useCallback(() => {
         if (user?.role !== 'admin') {
             message.info({ key: 'settings', content: 'Tính năng này đang phát triển' });
             return;
         }
-
         setIsModalVisible(true);
-    };
+    }, [user?.role, message]);
+
+    const handleLogout = useCallback(() => {
+        originalLogout();
+        window.addEventListener(
+            'load',
+            () => {
+                setSelectedRole(null);
+                localStorage.removeItem('selectedRole');
+            },
+            { once: true },
+        );
+    }, [originalLogout]);
 
     const renderContent = useCallback(() => {
         return <Content className="bg-white">{children}</Content>;
@@ -128,7 +134,7 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
                         collapsed={collapsed}
                         onCollapse={handleCollapse}
                         user={user}
-                        logout={logout}
+                        logout={handleLogout}
                         onSettingsClick={handleSettingsClick}
                     />
                     <div className="overflow-auto" style={{ height: 'calc(100vh - 64px)' }}>

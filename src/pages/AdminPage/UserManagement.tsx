@@ -173,7 +173,7 @@ const UserManagement: React.FC = () => {
     ];
 
     return (
-        <div>
+        <div className="p-6">
             <div className="mb-4 flex justify-between items-center">
                 <Button
                     type="primary"
