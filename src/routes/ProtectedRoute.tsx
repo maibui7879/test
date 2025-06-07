@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useUser } from '@contexts/useAuth/userContext';
 import { useMessage } from '@/hooks/useMessage';
 
@@ -28,8 +29,22 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
         }
     }, [user, requireAdmin, message]);
 
-    if (!user || (requireAdmin && user.role !== 'admin')) {
-        return <>{contextHolder}</>;
+    if (!user) {
+        return (
+            <>
+                {contextHolder}
+                <Navigate to="/404" replace />
+            </>
+        );
+    }
+
+    if (requireAdmin && user.role !== 'admin') {
+        return (
+            <>
+                {contextHolder}
+                <Navigate to="/dashboard" replace />
+            </>
+        );
     }
 
     return (

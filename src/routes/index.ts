@@ -22,11 +22,17 @@ import AdminPage from '@pages/AdminPage';
 import UserManagement from '@pages/AdminPage/UserManagement';
 import Statistics from '@pages/AdminPage/Statistics';
 import UserLogs from '@pages/AdminPage/UserLogs';
+import NotFoundPage from '@pages/404Page';
 
 export const publicRoutes: Route[] = [
     {
         path: '/',
         component: AuthForm,
+        layout: null,
+    },
+    {
+        path: '/404',
+        component: NotFoundPage,
         layout: null,
     },
 ];
