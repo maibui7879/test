@@ -22,6 +22,7 @@ interface HeaderProps {
     onCollapse: () => void;
     user: UserProfile | null;
     logout: () => void;
+    onSettingsClick: () => void;
 }
 
 const formatTimeAgo = (date: string): string => {
@@ -47,7 +48,7 @@ const isNewReminder = (date: string): boolean => {
     return diffInDays <= 1;
 };
 
-function Header({ collapsed, onCollapse, user, logout }: HeaderProps) {
+function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: HeaderProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -125,7 +126,7 @@ function Header({ collapsed, onCollapse, user, logout }: HeaderProps) {
             key: 'settings',
             label: 'Cài đặt',
             icon: <SettingOutlined />,
-            onClick: () => {},
+            onClick: onSettingsClick,
         },
         {
             key: 'logout',

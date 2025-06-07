@@ -21,7 +21,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 
 const { Option } = Select;
 
-const Statistics: React.FC = () => {
+const Statistics = () => {
     const [statistics, setStatistics] = useState<GetStatisticsResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [period, setPeriod] = useState<StatisticsPeriod>('week');
@@ -41,10 +41,6 @@ const Statistics: React.FC = () => {
     useEffect(() => {
         fetchStatistics(period);
     }, [period]);
-
-    const handlePeriodChange = (value: StatisticsPeriod) => {
-        setPeriod(value);
-    };
 
     const userRegistrationData = {
         labels: statistics?.statistics.user_registration.details.map((detail) => detail.period) || [],
@@ -114,11 +110,37 @@ const Statistics: React.FC = () => {
         },
     };
 
+    const taskTableData = [
+        {
+            key: 'personal',
+            type: 'Công việc cá nhân',
+            total: statistics?.statistics.tasks.personal.total || 0,
+        },
+        {
+            key: 'team',
+            type: 'Công việc nhóm',
+            total: statistics?.statistics.tasks.team.total || 0,
+        },
+    ];
+
+    const taskTableColumns = [
+        {
+            title: 'Loại',
+            dataIndex: 'type',
+            key: 'type',
+        },
+        {
+            title: 'Tổng số',
+            dataIndex: 'total',
+            key: 'total',
+        },
+    ];
+
     return (
-        <div>
+        <div className="p-6">
             <div className="mb-4 flex justify-between items-center">
                 <Space>
-                    <Select value={period} onChange={handlePeriodChange} style={{ width: 120 }}>
+                    <Select value={period} onChange={setPeriod} style={{ width: 120 }}>
                         <Option value="week">Tuần này</Option>
                         <Option value="month">Tháng này</Option>
                         <Option value="year">Năm nay</Option>
@@ -188,33 +210,7 @@ const Statistics: React.FC = () => {
                 </Row>
 
                 <Card title="Chi tiết công việc" className="mt-4">
-                    <Table
-                        columns={[
-                            {
-                                title: 'Loại',
-                                dataIndex: 'type',
-                                key: 'type',
-                            },
-                            {
-                                title: 'Tổng số',
-                                dataIndex: 'total',
-                                key: 'total',
-                            },
-                        ]}
-                        dataSource={[
-                            {
-                                key: 'personal',
-                                type: 'Công việc cá nhân',
-                                total: statistics?.statistics.tasks.personal.total || 0,
-                            },
-                            {
-                                key: 'team',
-                                type: 'Công việc nhóm',
-                                total: statistics?.statistics.tasks.team.total || 0,
-                            },
-                        ]}
-                        pagination={false}
-                    />
+                    <Table columns={taskTableColumns} dataSource={taskTableData} pagination={false} />
                 </Card>
             </Spin>
         </div>

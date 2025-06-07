@@ -6,7 +6,8 @@ import DefaultLayoutProps from './type';
 import Sidebar from './Sidebar';
 import { sidebarRoutes, adminSidebarRoutes } from '@/routes';
 import { useUser } from '@contexts/useAuth/userContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useMessage } from '@/hooks/useMessage';
 
 const { Content } = Layout;
 
@@ -14,8 +15,14 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
     const [collapsed, setCollapsed] = useState(false);
     const { user, logout } = useUser();
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectedRole, setSelectedRole] = useState<'admin' | 'member' | null>(null);
+    const [selectedRole, setSelectedRole] = useState<'admin' | 'member' | null>(() => {
+        const savedRole = localStorage.getItem('selectedRole');
+        return savedRole as 'admin' | 'member' | null;
+    });
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
+    const { message, contextHolder } = useMessage();
 
     const handleCollapse = useCallback(() => {
         setCollapsed((prev) => !prev);
@@ -33,19 +40,34 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
     }, []);
 
     useEffect(() => {
-        if (user?.role === 'admin' && selectedRole === null) {
+        if (
+            user?.role === 'admin' &&
+            selectedRole === null &&
+            !(isFirstLoad && location.pathname.startsWith('/admin'))
+        ) {
             setIsModalVisible(true);
         }
-    }, [user, selectedRole]);
+        setIsFirstLoad(false);
+    }, [user, selectedRole, location.pathname, isFirstLoad]);
 
     const handleRoleSelect = (role: 'admin' | 'member') => {
         setSelectedRole(role);
+        localStorage.setItem('selectedRole', role);
         setIsModalVisible(false);
         if (role === 'admin') {
             navigate('/admin');
         } else {
             navigate('/dashboard');
         }
+    };
+
+    const handleSettingsClick = () => {
+        if (user?.role !== 'admin') {
+            message.info({ key: 'settings', content: 'Tính năng này đang phát triển' });
+            return;
+        }
+
+        setIsModalVisible(true);
     };
 
     const renderContent = useCallback(() => {
@@ -56,15 +78,22 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
 
     return (
         <>
+            {contextHolder}
             {user?.role === 'admin' && (
                 <Modal
                     title="Chọn quyền truy cập"
                     open={isModalVisible}
-                    onCancel={() => handleRoleSelect('member')}
+                    onCancel={() => {
+                        if (selectedRole === null) {
+                            handleRoleSelect('member');
+                        } else {
+                            setIsModalVisible(false);
+                        }
+                    }}
                     footer={null}
                     centered
                     maskClosable={false}
-                    closable={false}
+                    closable={selectedRole !== null}
                 >
                     <div className="text-center">
                         <p className="mb-6 text-gray-600">
@@ -76,6 +105,7 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
                                 size="large"
                                 onClick={() => handleRoleSelect('admin')}
                                 className="bg-blue-600 hover:bg-blue-700"
+                                disabled={location.pathname.startsWith('/admin')}
                             >
                                 Quản trị viên
                             </Button>
@@ -94,7 +124,13 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
             <Layout className="min-h-screen bg-white">
                 <Sidebar collapsed={collapsed} routes={routes} />
                 <Layout className="transition-all duration-300 bg-white">
-                    <Header collapsed={collapsed} onCollapse={handleCollapse} user={user} logout={logout} />
+                    <Header
+                        collapsed={collapsed}
+                        onCollapse={handleCollapse}
+                        user={user}
+                        logout={logout}
+                        onSettingsClick={handleSettingsClick}
+                    />
                     <div className="overflow-auto" style={{ height: 'calc(100vh - 64px)' }}>
                         {renderContent()}
                     </div>

@@ -88,23 +88,23 @@ export const sidebarRoutes: Route[] = [
 ];
 
 export const adminSidebarRoutes: Route[] = [
+    // {
+    //     path: '/admin',
+    //     name: 'Quản trị hệ thống',
+    //     icon: faUserShield,
+    //     component: AdminPage,
+    // },
     {
         path: '/admin',
-        name: 'Quản trị hệ thống',
-        icon: faUserShield,
-        component: AdminPage,
+        name: 'Thống kê',
+        icon: faChartBar,
+        component: Statistics,
     },
     {
         path: '/admin/users',
         name: 'Quản lý người dùng',
         icon: faUser,
         component: UserManagement,
-    },
-    {
-        path: '/admin/statistics',
-        name: 'Thống kê',
-        icon: faChartBar,
-        component: Statistics,
     },
     {
         path: '/admin/logs',
