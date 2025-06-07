@@ -1,4 +1,4 @@
-import { ACCESS_TOKEN_KEY } from '../../common/constant';
+import { ACCESS_TOKEN_KEY } from '@common/constant';
 
 export const saveToken = (token: string) => {
     localStorage.setItem(ACCESS_TOKEN_KEY, token);

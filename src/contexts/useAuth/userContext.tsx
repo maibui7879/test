@@ -23,6 +23,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = useCallback(() => {
         clearToken();
+        localStorage.removeItem('full_name');
+        localStorage.removeItem('role');
         setToken(null);
         setUser(null);
         window.location.href = '/';
@@ -38,6 +40,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         try {
             const userInfo = await getMeProfile();
             setUser(userInfo);
+            if (userInfo.full_name) {
+                localStorage.setItem('full_name', userInfo.full_name);
+            }
+            if (userInfo.role) {
+                localStorage.setItem('role', userInfo.role);
+            }
         } catch (error: any) {
             console.error('Lỗi khi lấy user info:', error);
             if (error?.response?.status === 401) {
@@ -64,6 +72,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('Bạn không có quyền truy cập');
             }
 
+            if (userInfo.full_name) {
+                localStorage.setItem('full_name', userInfo.full_name);
+            }
+            if (userInfo.role) {
+                localStorage.setItem('role', userInfo.role);
+            }
             setUser(userInfo);
         } catch (error) {
             logout();

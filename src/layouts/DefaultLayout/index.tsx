@@ -16,10 +16,8 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
     const { user, logout: originalLogout } = useUser();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedRole, setSelectedRole] = useState<'admin' | 'member' | null>(() => {
-        const savedRole = localStorage.getItem('selectedRole');
-        return savedRole as 'admin' | 'member' | null;
+        return localStorage.getItem('selectedRole') as 'admin' | 'member' | null;
     });
-    const [isFirstLoad, setIsFirstLoad] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
     const { message, contextHolder } = useMessage();
@@ -32,6 +30,8 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
         const handleResize = () => {
             if (window.innerWidth <= 768) {
                 setCollapsed(true);
+            } else {
+                setCollapsed(false);
             }
         };
         handleResize();
@@ -40,11 +40,20 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
     }, []);
 
     useEffect(() => {
-        if (user?.role === 'admin' && selectedRole === null) {
-            setIsModalVisible(true);
+        if (!user) return; // No user, no action needed
+
+        // Check if this is the first login (e.g., no role selected and just logged in)
+        const isFirstLogin = !localStorage.getItem('selectedRole') && user.role === 'admin';
+
+        if (user.role === 'admin' && !location.pathname.startsWith('/admin') && selectedRole !== 'member') {
+            navigate('/admin');
+            if (isFirstLogin) {
+                setIsModalVisible(true);
+            }
+        } else if (user.role === 'admin' && selectedRole === null) {
+            setIsModalVisible(true); // Ensure modal shows if no role is selected
         }
-        setIsFirstLoad(false);
-    }, [user, selectedRole]);
+    }, [user, location.pathname, navigate, selectedRole]);
 
     const handleRoleSelect = useCallback(
         (role: 'admin' | 'member') => {
@@ -66,21 +75,16 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
 
     const handleLogout = useCallback(() => {
         originalLogout();
-        window.addEventListener(
-            'load',
-            () => {
-                setSelectedRole(null);
-                localStorage.removeItem('selectedRole');
-            },
-            { once: true },
-        );
-    }, [originalLogout]);
+        setSelectedRole(null);
+        localStorage.removeItem('selectedRole');
+        navigate('/login');
+    }, [originalLogout, navigate]);
 
     const renderContent = useCallback(() => {
         return <Content className="bg-white">{children}</Content>;
     }, [children]);
 
-    const routes = selectedRole === 'admin' ? adminSidebarRoutes : sidebarRoutes;
+    const routes = location.pathname.startsWith('/admin') ? adminSidebarRoutes : sidebarRoutes;
 
     return (
         <>
@@ -111,7 +115,6 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
                                 size="large"
                                 onClick={() => handleRoleSelect('admin')}
                                 className="bg-blue-600 hover:bg-blue-700"
-                                disabled={location.pathname.startsWith('/admin')}
                             >
                                 Quản trị viên
                             </Button>

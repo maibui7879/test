@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useUser } from '@contexts/useAuth/userContext';
 import { useMessage } from '@/hooks/useMessage';
+import { getToken } from '@/utils/auth/authUtils';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -9,11 +9,13 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-    const { user } = useUser();
     const { message, contextHolder } = useMessage();
 
     useEffect(() => {
-        if (!user) {
+        const token = getToken();
+        const userRole = localStorage.getItem('role');
+
+        if (!token) {
             message.error({
                 key: 'auth',
                 content: 'Vui lòng đăng nhập để tiếp tục',
@@ -21,15 +23,18 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
             return;
         }
 
-        if (requireAdmin && user.role !== 'admin') {
+        if (requireAdmin && userRole !== 'admin') {
             message.warning({
                 key: 'admin',
                 content: 'Bạn không có quyền truy cập trang này',
             });
         }
-    }, [user, requireAdmin, message]);
+    }, [requireAdmin, message]);
 
-    if (!user) {
+    const token = getToken();
+    const userRole = localStorage.getItem('role');
+
+    if (!token) {
         return (
             <>
                 {contextHolder}
@@ -38,7 +43,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
         );
     }
 
-    if (requireAdmin && user.role !== 'admin') {
+    if (requireAdmin && userRole !== 'admin') {
         return (
             <>
                 {contextHolder}

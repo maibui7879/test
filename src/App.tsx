@@ -26,51 +26,35 @@ function App() {
             const isPublicRoute = route.path === '/';
             const is404Route = route.path === '/404';
 
+            const renderElement = () => {
+                if (!Page) return undefined;
+
+                if (isPublicRoute || is404Route) {
+                    return (
+                        <Layout>
+                            <Page />
+                        </Layout>
+                    );
+                }
+
+                return (
+                    <ProtectedRoute requireAdmin={isAdminRoute}>
+                        <Layout>
+                            <Page />
+                        </Layout>
+                    </ProtectedRoute>
+                );
+            };
+
             if (route.children && route.children.length > 0) {
                 return (
-                    <Route
-                        key={index}
-                        path={route.path}
-                        element={
-                            Page ? (
-                                isPublicRoute || is404Route ? (
-                                    <Layout>
-                                        <Page />
-                                    </Layout>
-                                ) : (
-                                    <ProtectedRoute requireAdmin={isAdminRoute}>
-                                        <Layout>
-                                            <Page />
-                                        </Layout>
-                                    </ProtectedRoute>
-                                )
-                            ) : undefined
-                        }
-                    >
+                    <Route key={index} path={route.path} element={renderElement()}>
                         {renderRoutes(route.children)}
                     </Route>
                 );
-            } else {
-                return (
-                    <Route
-                        key={index}
-                        path={route.path}
-                        element={
-                            isPublicRoute || is404Route ? (
-                                <Layout>
-                                    <Page />
-                                </Layout>
-                            ) : (
-                                <ProtectedRoute requireAdmin={isAdminRoute}>
-                                    <Layout>
-                                        <Page />
-                                    </Layout>
-                                </ProtectedRoute>
-                            )
-                        }
-                    />
-                );
             }
+
+            return <Route key={index} path={route.path} element={renderElement()} />;
         });
 
     return (
