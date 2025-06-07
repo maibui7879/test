@@ -5,6 +5,7 @@ import { publicRoutes, privateRoutes, sidebarRoutes, adminSidebarRoutes } from '
 import { UserProvider } from './contexts/useAuth/userContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ProtectedRoute from './routes/ProtectedRoute';
 
 function App() {
     const allRoutes = [...publicRoutes, ...privateRoutes, ...sidebarRoutes, ...adminSidebarRoutes];
@@ -20,6 +21,9 @@ function App() {
                 Layout = route.layout;
             }
 
+            const isAdminRoute = route.path.startsWith('/admin');
+            const isPublicRoute = route.path === '/';
+
             if (route.children && route.children.length > 0) {
                 return (
                     <Route
@@ -27,9 +31,17 @@ function App() {
                         path={route.path}
                         element={
                             Page ? (
-                                <Layout>
-                                    <Page />
-                                </Layout>
+                                isPublicRoute ? (
+                                    <Layout>
+                                        <Page />
+                                    </Layout>
+                                ) : (
+                                    <ProtectedRoute requireAdmin={isAdminRoute}>
+                                        <Layout>
+                                            <Page />
+                                        </Layout>
+                                    </ProtectedRoute>
+                                )
                             ) : undefined
                         }
                     >
@@ -42,9 +54,17 @@ function App() {
                         key={index}
                         path={route.path}
                         element={
-                            <Layout>
-                                <Page />
-                            </Layout>
+                            isPublicRoute ? (
+                                <Layout>
+                                    <Page />
+                                </Layout>
+                            ) : (
+                                <ProtectedRoute requireAdmin={isAdminRoute}>
+                                    <Layout>
+                                        <Page />
+                                    </Layout>
+                                </ProtectedRoute>
+                            )
                         }
                     />
                 );
