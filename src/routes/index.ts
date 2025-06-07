@@ -1,14 +1,27 @@
 import { AuthForm } from '@pages/Auth';
-import Dashboard from '@pages/Dashboard';
+import Dashboard from '@pages/DashboardPage';
 import PersonalTask from '@pages/PersonalTask';
 import Profile from '@pages/Profile';
 import Route from './type';
-import { faClipboard, faTasks, faUser, faUsers, faBell } from '@fortawesome/free-solid-svg-icons';
+import {
+    faClipboard,
+    faTasks,
+    faUser,
+    faUsers,
+    faBell,
+    faUserShield,
+    faChartBar,
+    faHistory,
+} from '@fortawesome/free-solid-svg-icons';
 import CalenderPerson from '@pages/PersonalTask/calendar';
 import CreatedTeamsPage from '@pages/TeamPage/CreatedTeamsPage';
 import JoinedTeamsPage from '@pages/TeamPage/JoinedTeamsPage';
 import TeamDetail from '@pages/TeamPage/TeamDetail';
 import ReminderPage from '@pages/Reminder';
+import AdminPage from '@pages/AdminPage';
+import UserManagement from '@pages/AdminPage/UserManagement';
+import Statistics from '@pages/AdminPage/Statistics';
+import UserLogs from '@pages/AdminPage/UserLogs';
 
 export const publicRoutes: Route[] = [
     {
@@ -71,6 +84,33 @@ export const sidebarRoutes: Route[] = [
         icon: faUser,
         name: 'Trang cá nhân',
         component: Profile,
+    },
+];
+
+export const adminSidebarRoutes: Route[] = [
+    {
+        path: '/admin',
+        name: 'Quản trị hệ thống',
+        icon: faUserShield,
+        component: AdminPage,
+    },
+    {
+        path: '/admin/users',
+        name: 'Quản lý người dùng',
+        icon: faUser,
+        component: UserManagement,
+    },
+    {
+        path: '/admin/statistics',
+        name: 'Thống kê',
+        icon: faChartBar,
+        component: Statistics,
+    },
+    {
+        path: '/admin/logs',
+        name: 'Lịch sử hoạt động',
+        icon: faHistory,
+        component: UserLogs,
     },
 ];
 

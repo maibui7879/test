@@ -2,7 +2,6 @@ import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { Layout, Menu } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { sidebarRoutes } from '@/routes';
 import SidebarFooter from './SidebarFooter';
 import Route from '@/routes/type';
 
@@ -10,9 +9,10 @@ const { Sider } = Layout;
 
 interface SidebarProps {
     collapsed: boolean;
+    routes: Route[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
+const Sidebar = ({ collapsed, routes }: SidebarProps) => {
     const location = useLocation();
     const navigate = useNavigate();
     const [dimensions, setDimensions] = useState({
@@ -71,8 +71,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     }, []);
 
     const menuItems = useMemo(() => {
-        return sidebarRoutes.map((route) => getMenuItem(route));
-    }, [getMenuItem]);
+        return routes.map((route) => getMenuItem(route));
+    }, [routes, getMenuItem]);
 
     const handleMenuClick = useCallback(
         ({ key }: { key: string }) => {

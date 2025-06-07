@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useUser } from '@contexts/useAuth/userContext';
 import { Avatar, Dropdown, Button, Badge, Space, Typography, List, Tag, Spin } from 'antd';
 import {
     BellOutlined,
@@ -12,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { useMessage } from '@/hooks/useMessage';
 import { getReminders, markReminderRead } from '@services/remiderService';
-import { Reminder } from '@services/types/types';
+import { Reminder, UserProfile } from '@services/types/types';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,6 +20,8 @@ const { Text } = Typography;
 interface HeaderProps {
     collapsed: boolean;
     onCollapse: () => void;
+    user: UserProfile | null;
+    logout: () => void;
 }
 
 const formatTimeAgo = (date: string): string => {
@@ -46,8 +47,7 @@ const isNewReminder = (date: string): boolean => {
     return diffInDays <= 1;
 };
 
-function Header({ collapsed, onCollapse }: HeaderProps) {
-    const { user, logout } = useUser();
+function Header({ collapsed, onCollapse, user, logout }: HeaderProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [reminders, setReminders] = useState<Reminder[]>([]);

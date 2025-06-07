@@ -1,13 +1,13 @@
 import React, { Fragment } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DefaultLayout from './layouts/DefaultLayout';
-import { publicRoutes, privateRoutes, sidebarRoutes } from './routes';
+import { publicRoutes, privateRoutes, sidebarRoutes, adminSidebarRoutes } from './routes';
 import { UserProvider } from './contexts/useAuth/userContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
-    const allRoutes = [...publicRoutes, ...privateRoutes, ...sidebarRoutes];
+    const allRoutes = [...publicRoutes, ...privateRoutes, ...sidebarRoutes, ...adminSidebarRoutes];
 
     const renderRoutes = (routes: any[]) =>
         routes.map((route, index) => {

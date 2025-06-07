@@ -268,3 +268,61 @@ export interface StatisticsResponse {
         priority_stats: PriorityStats[];
     };
 }
+//===========================
+export interface UserLog {
+    action: string;
+    description: string;
+    ip_address: string;
+    created_at: string;
+    email: string;
+    full_name: string;
+}
+
+export interface GetUserLogsResponse {
+    success: boolean;
+    message: string;
+    data: {
+        logs: UserLog[];
+    };
+}
+
+export interface User {
+    id: number;
+    email: string;
+    password_hash: string;
+    role: string;
+    status: string;
+    google_id: string | null;
+    created_at?: string;
+    updated_at?: string;
+    gender: string;
+}
+
+export interface GetUsersResponse {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    users: User[];
+}
+
+export interface GetUsersParams {
+    page?: number;
+    limit?: number;
+    gender?: 'male' | 'female' | 'other';
+}
+
+export interface CreateUserParams {
+    email: string;
+    password: string;
+    full_name: string;
+    role: 'admin' | 'member';
+}
+
+export interface CreateUserResponse {
+    id: number;
+    email: string;
+    full_name: string;
+    role: string;
+    created_at?: string;
+}

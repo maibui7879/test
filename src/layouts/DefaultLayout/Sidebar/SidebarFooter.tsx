@@ -5,7 +5,7 @@ import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { useUser } from '@contexts/useAuth/userContext';
 import { SidebarFooterProps } from './type';
 
-const SidebarFooter: React.FC<SidebarFooterProps> = React.memo(({ collapsed }) => {
+const SidebarFooter = React.memo(({ collapsed }: SidebarFooterProps) => {
     const { logout } = useUser();
 
     const handleLogout = useCallback(() => {
@@ -27,7 +27,5 @@ const SidebarFooter: React.FC<SidebarFooterProps> = React.memo(({ collapsed }) =
         </div>
     );
 });
-
-SidebarFooter.displayName = 'SidebarFooter';
 
 export default SidebarFooter;

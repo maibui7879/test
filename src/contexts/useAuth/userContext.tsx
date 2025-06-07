@@ -75,7 +75,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         if (token) fetchUserInfo();
     }, [token, fetchUserInfo]);
 
-    // Kiểm tra phiên làm việc định kỳ
     useEffect(() => {
         const checkSessionInterval = setInterval(
             () => {
