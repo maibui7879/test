@@ -270,6 +270,7 @@ export interface StatisticsResponse {
 }
 //===========================
 export interface UserLog {
+    id?: string;
     action: string;
     description: string;
     ip_address: string;
@@ -279,11 +280,7 @@ export interface UserLog {
 }
 
 export interface GetUserLogsResponse {
-    success: boolean;
-    message: string;
-    data: {
-        logs: UserLog[];
-    };
+    logs: UserLog[];
 }
 
 export interface User {

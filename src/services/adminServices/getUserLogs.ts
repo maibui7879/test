@@ -1,5 +1,6 @@
 import apiRequest from '../common/apiRequest';
-import type { UserLog, GetUserLogsResponse } from '../types/types';
+import type { UserLog } from '../types/types';
+import type { ApiResponse } from '../common/apiRequest';
 
 export interface GetUserLogsParams {
     page?: string;
@@ -16,12 +17,11 @@ export interface PaginationInfo {
     totalPages: number;
 }
 
-export interface GetUserLogsResponseData {
-    data: GetUserLogsResponse;
-    pagination: PaginationInfo;
+interface GetUserLogsResponse {
+    logs: UserLog[];
 }
 
-const getUserLogsApi = async (params: GetUserLogsParams = {}): Promise<GetUserLogsResponseData> => {
+const getUserLogsApi = async (params: GetUserLogsParams = {}): Promise<ApiResponse<GetUserLogsResponse>> => {
     console.log('getUserLogs service called with params:', params);
     const { page = '1', limit = '10', startDate, endDate, action } = params;
 
@@ -35,7 +35,7 @@ const getUserLogsApi = async (params: GetUserLogsParams = {}): Promise<GetUserLo
         if (endDate) queryParams.append('endDate', endDate);
         if (action) queryParams.append('action', action);
 
-        const response = await apiRequest<GetUserLogsResponseData>(
+        const response = await apiRequest<GetUserLogsResponse>(
             `/admin/logs?${queryParams.toString()}`,
             'GET',
             null,
@@ -47,7 +47,7 @@ const getUserLogsApi = async (params: GetUserLogsParams = {}): Promise<GetUserLo
             throw new Error(response.message || 'Không thể lấy lịch sử hoạt động');
         }
 
-        return response.data;
+        return response;
     } catch (error) {
         console.error('Error in getUserLogs service:', error);
         throw error;

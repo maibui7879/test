@@ -20,9 +20,9 @@ const UserLogs: React.FC = () => {
         setLoading(true);
         try {
             const response = await getUserLogsApi({});
-            if (response?.data.data.logs) {
-                setLogs(response.data.data.logs);
-                setFilteredLogs(response.data.data.logs);
+            if (response?.data) {
+                setLogs(response.data.logs);
+                setFilteredLogs(response.data.logs);
             }
         } catch (error) {
             message.error('Không thể tải lịch sử hoạt động');
@@ -64,6 +64,7 @@ const UserLogs: React.FC = () => {
                 { text: 'Đăng xuất', value: 'LOGOUT' },
                 { text: 'Tạo nhóm', value: 'CREATE_TEAM' },
                 { text: 'Cập nhật thông tin', value: 'UPDATE_PROFILE' },
+                { text: 'Admin - Xem lịch sử tham gia', value: 'Admin - Xem lịch sử tham gia' },
             ],
             onFilter: (value: boolean | Key, record: UserLog) => record.action === value,
         },
@@ -139,6 +140,7 @@ const UserLogs: React.FC = () => {
                         { value: 'LOGOUT', label: 'Đăng xuất' },
                         { value: 'CREATE_TEAM', label: 'Tạo nhóm' },
                         { value: 'UPDATE_PROFILE', label: 'Cập nhật thông tin' },
+                        { value: 'Admin - Xem lịch sử tham gia', label: 'Admin - Xem lịch sử tham gia' },
                     ]}
                 />
             </Space>
