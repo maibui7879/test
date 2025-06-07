@@ -70,7 +70,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         };
     }, []);
 
-
     const menuItems = useMemo(() => {
         return sidebarRoutes.map((route) => getMenuItem(route));
     }, [getMenuItem]);

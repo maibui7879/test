@@ -20,7 +20,7 @@ interface NotesAndAttachmentsProps {
     onFileSizeError: () => void;
 }
 
-const NotesAndAttachments: React.FC<NotesAndAttachmentsProps> = ({
+const NotesAndAttachments = ({
     notesAndAttachments,
     newNote,
     newFile,
@@ -31,7 +31,7 @@ const NotesAndAttachments: React.FC<NotesAndAttachmentsProps> = ({
     onDeleteNote,
     onRemoveFile,
     onFileSizeError,
-}) => {
+}: NotesAndAttachmentsProps) => {
     const formatFileSize = (bytes: number | null | undefined): string => {
         if (!bytes) return '0 B';
         const k = 1024;
@@ -42,7 +42,6 @@ const NotesAndAttachments: React.FC<NotesAndAttachmentsProps> = ({
 
     return (
         <div className="space-y-6 flex flex-col">
-            {/* Danh sách ghi chú và tệp đính kèm */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 text-gray-800">Danh sách ghi chú và tệp đính kèm</h3>
                 {notesAndAttachments.length > 0 ? (

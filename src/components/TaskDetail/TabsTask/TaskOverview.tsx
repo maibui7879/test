@@ -17,7 +17,7 @@ interface TaskOverviewProps {
     onDelete: () => void;
 }
 
-const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEdit, onCancel, onSave, onDelete }) => {
+const TaskOverview = ({ task, isEditing, form, onEdit, onCancel, onSave, onDelete }: TaskOverviewProps) => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -62,10 +62,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({ task, isEditing, form, onEd
                                 <Input className="hover:border-blue-400 focus:border-blue-400" />
                             </Form.Item>
                         ) : (
-                            <p
-                                className="font-medium text-gray-800 truncate max-w-full"
-                                title={task.title} 
-                            >
+                            <p className="font-medium text-gray-800 truncate max-w-full" title={task.title}>
                                 {task.title}
                             </p>
                         )}

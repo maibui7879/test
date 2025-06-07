@@ -65,7 +65,6 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess }) => {
         }
     };
 
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
             <div className="w-1/2 bg-white p-8 rounded-lg shadow-lg">

@@ -22,7 +22,7 @@ interface CommentsProps {
     onEditCommentTextChange: (value: string) => void;
 }
 
-const Comments: React.FC<CommentsProps> = ({
+const Comments = ({
     comments,
     newComment,
     loading,
@@ -35,7 +35,7 @@ const Comments: React.FC<CommentsProps> = ({
     onSaveEdit,
     onDeleteComment,
     onEditCommentTextChange,
-}) => {
+}: CommentsProps) => {
     return (
         <div className="space-y-6 flex flex-col">
             {/* Danh sách bình luận */}
@@ -78,9 +78,7 @@ const Comments: React.FC<CommentsProps> = ({
                             ]}
                         >
                             <List.Item.Meta
-                                avatar={
-                                    <Avatar>{comment.full_name ? comment.full_name.toUpperCase() : 'U'}</Avatar>
-                                }
+                                avatar={<Avatar>{comment.full_name ? comment.full_name.toUpperCase() : 'U'}</Avatar>}
                                 title={
                                     <Space>
                                         <span className="font-medium">
