@@ -24,6 +24,7 @@ const Tasks = ({ teamId }: TasksProps) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalTasks, setTotalTasks] = useState(0);
     const [teamMembers, setTeamMembers] = useState<UserProfile[]>([]);
+    const [filters, setFilters] = useState<any>({});
 
     const fetchTeamMembers = useCallback(async () => {
         if (!teamId) return;
@@ -59,6 +60,7 @@ const Tasks = ({ teamId }: TasksProps) => {
             const response = await getAllTaskTeam(teamId, {
                 page: currentPage,
                 limit: 10,
+                ...filters,
             });
 
             if (response?.tasksTeam) {
@@ -83,7 +85,7 @@ const Tasks = ({ teamId }: TasksProps) => {
         } finally {
             setLoading(false);
         }
-    }, [teamId, currentPage, message]);
+    }, [teamId, currentPage, filters, message]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -174,6 +176,11 @@ const Tasks = ({ teamId }: TasksProps) => {
         [teamId, fetchTasks, message],
     );
 
+    const handleFilter = (values: any) => {
+        setFilters(values);
+        setCurrentPage(1); // Reset về trang 1 khi lọc
+    };
+
     useEffect(() => {
         fetchTasks();
         fetchTeamMembers();
@@ -184,14 +191,6 @@ const Tasks = ({ teamId }: TasksProps) => {
             {contextHolder}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => setIsModalVisible(true)}
-                    className="flex items-center"
-                >
-                    Thêm công việc
-                </Button>
             </div>
 
             <TaskTable
@@ -207,6 +206,8 @@ const Tasks = ({ teamId }: TasksProps) => {
                 onPageChange={handlePageChange}
                 teamId={teamId}
                 teamMembers={teamMembers}
+                onTaskCreated={() => setIsModalVisible(true)}
+                onFilter={handleFilter}
             />
 
             <Modal

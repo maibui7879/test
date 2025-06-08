@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm } from 'antd';
+import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { TaskPayload, UserProfile } from '@services/types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faTimes, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
-import TaskTableContent from './TaskTableContent';
 import useDebounce from '@hooks/useDebounce';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -16,12 +15,14 @@ import {
     getStatusColor,
     getStatusText,
 } from './tableState';
-import { TaskTableProps } from './types';
+import { TaskTableContentProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
+import FilterModal from './FilterModal';
+import { SearchOutlined, FilterOutlined, PlusOutlined } from '@ant-design/icons';
 
 dayjs.extend(utc);
 
-const TaskTable: React.FC<TaskTableProps> = ({
+const TaskTable: React.FC<TaskTableContentProps> = ({
     tasks,
     loading,
     error,
@@ -34,19 +35,19 @@ const TaskTable: React.FC<TaskTableProps> = ({
     teamId,
     teamMembers = [],
     onAssignTask,
+    onTaskCreated,
+    onFilter,
 }) => {
-    const [searchText, setSearchText] = useState('');
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [form] = Form.useForm();
     const [localTasks, setLocalTasks] = useState<TaskPayload[]>(tasks);
     const [editingField, setEditingField] = useState<{ id: string | number; field: string } | null>(null);
+    const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
     useEffect(() => {
         setLocalTasks(tasks);
     }, [tasks]);
-
-    const debouncedSearchText = useDebounce(searchText, 300);
 
     const handleDateChange = (record: TaskPayload, field: string, date: dayjs.Dayjs | null) => {
         if (date) {
@@ -128,6 +129,13 @@ const TaskTable: React.FC<TaskTableProps> = ({
 
     const handleFieldCancel = () => {
         setEditingField(null);
+    };
+
+    const handleFilter = (values: any) => {
+        if (onFilter) {
+            onFilter(values);
+            onPageChange(1); // Reset về trang 1 khi lọc
+        }
     };
 
     const columns: ColumnsType<TaskPayload> = [
@@ -486,11 +494,6 @@ const TaskTable: React.FC<TaskTableProps> = ({
         },
     ];
 
-    const filteredTasks = localTasks.filter((task) => {
-        const searchLower = debouncedSearchText.replace(/^\s+/, '').toLowerCase();
-        return task.title.toLowerCase().includes(searchLower);
-    });
-
     const renderTaskDetails = () => {
         if (!selectedTask) return null;
         return (
@@ -505,26 +508,37 @@ const TaskTable: React.FC<TaskTableProps> = ({
     };
 
     return (
-        <div>
-            <Form form={form} component={false}>
-                <TaskTableContent
-                    loading={loading}
-                    error={error}
-                    onReload={onReload}
-                    searchText={searchText}
-                    setSearchText={setSearchText}
-                    filteredTasks={filteredTasks}
-                    columns={columns}
-                    currentPage={currentPage}
-                    totalTasks={totalTasks}
-                    onPageChange={onPageChange}
-                    teamId={teamId}
-                    onEditTask={onEditTask}
-                    onDeleteTask={handleDeleteTask}
-                    teamMembers={teamMembers}
-                    onAssignTask={onAssignTask}
-                />
-            </Form>
+        <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b border-gray-200">
+                <div className="flex justify-between items-center mb-4">
+                    <Button type="primary" icon={<PlusOutlined />} onClick={onTaskCreated}>
+                        Thêm công việc
+                    </Button>
+                    <Button icon={<FilterOutlined />} onClick={() => setIsFilterModalVisible(true)}>
+                        Lọc
+                    </Button>
+                </div>
+            </div>
+
+            <Table
+                columns={columns}
+                dataSource={localTasks}
+                loading={loading}
+                rowKey="id"
+                pagination={{
+                    current: currentPage,
+                    total: totalTasks,
+                    pageSize: 10,
+                    onChange: onPageChange,
+                }}
+            />
+
+            <FilterModal
+                visible={isFilterModalVisible}
+                onClose={() => setIsFilterModalVisible(false)}
+                onFilter={handleFilter}
+                teamMembers={teamMembers}
+            />
 
             <Drawer
                 title={<div className="text-xl font-semibold text-gray-800">Chi tiết công việc</div>}

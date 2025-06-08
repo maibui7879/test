@@ -16,6 +16,7 @@ function PersonalTask() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalTasks, setTotalTasks] = useState(0);
+    const [filters, setFilters] = useState<any>({});
     const { message, contextHolder } = useMessage();
     const messageRef = useRef(message);
 
@@ -30,6 +31,7 @@ function PersonalTask() {
             const response = await getAllTaskUser({
                 page: currentPage,
                 limit: 10,
+                ...filters,
             });
 
             if (response?.personalTasks) {
@@ -55,7 +57,7 @@ function PersonalTask() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage]);
+    }, [currentPage, filters]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -114,6 +116,11 @@ function PersonalTask() {
         }
     }, []);
 
+    const handleFilter = (values: any) => {
+        setFilters(values);
+        setCurrentPage(1);
+    };
+
     useEffect(() => {
         fetchTasks();
     }, [fetchTasks]);
@@ -123,14 +130,6 @@ function PersonalTask() {
             {contextHolder}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>
-                <Button
-                    type="primary"
-                    icon={<FontAwesomeIcon icon={faPlus} />}
-                    onClick={() => setIsModalVisible(true)}
-                    className="flex items-center"
-                >
-                    Thêm công việc
-                </Button>
             </div>
 
             <TaskTable
@@ -143,6 +142,8 @@ function PersonalTask() {
                 currentPage={currentPage}
                 totalTasks={totalTasks}
                 onPageChange={handlePageChange}
+                onTaskCreated={() => setIsModalVisible(true)}
+                onFilter={handleFilter}
             />
 
             <Modal
