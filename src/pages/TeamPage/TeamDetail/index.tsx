@@ -62,7 +62,7 @@ const TeamDetail = () => {
                 <Tabs
                     activeKey={activeTab}
                     onChange={handleTabChange}
-                    className="team-detail-tabs"
+                    className="team-detail-tabs !text-[13px]"
                     items={[
                         {
                             key: 'overview',

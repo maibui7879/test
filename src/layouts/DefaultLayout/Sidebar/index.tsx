@@ -36,8 +36,8 @@ const Sidebar = ({ collapsed, routes }: SidebarProps) => {
         const renderIcon = (icon?: any) => {
             if (!icon) return null;
             return (
-                <div className="flex items-center justify-center w-5 h-5">
-                    <FontAwesomeIcon icon={icon} className="text-base" />
+                <div className="flex items-center justify-center w-4 h-4">
+                    <FontAwesomeIcon icon={icon} className="text-sm" />
                 </div>
             );
         };
@@ -106,7 +106,7 @@ const Sidebar = ({ collapsed, routes }: SidebarProps) => {
                 className="bg-transparent border-r-0"
                 style={{
                     padding: '8px 0',
-                    fontSize: '14px',
+                    fontSize: '13px',
                 }}
                 inlineCollapsed={collapsed}
             />
