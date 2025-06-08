@@ -21,5 +21,6 @@ export interface FilterModalProps {
     visible: boolean;
     onClose: () => void;
     onFilter: (values: any) => void;
+    teamId?: string;
     teamMembers?: UserProfile[];
 }

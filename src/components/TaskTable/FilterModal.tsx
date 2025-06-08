@@ -4,7 +4,7 @@ import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { FilterModalProps } from './types';
 import { STATUS_TAGS, PRIORITY_TAGS } from './tableState';
 
-const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, teamMembers }) => {
+const FilterModal = ({ visible, onClose, onFilter, teamId, teamMembers = [] }: FilterModalProps) => {
     const [form] = Form.useForm();
 
     const handleSubmit = () => {
@@ -91,7 +91,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, t
                     />
                 </Form.Item>
 
-                {teamMembers && (
+                {teamId && teamMembers && teamMembers.length > 0 && (
                     <Form.Item
                         name="assignee"
                         label={<span className="text-sm sm:text-base font-medium">Người thực hiện</span>}

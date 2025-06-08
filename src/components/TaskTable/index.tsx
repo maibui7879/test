@@ -583,6 +583,7 @@ const TaskTable = ({
                 visible={isFilterModalVisible}
                 onClose={() => setIsFilterModalVisible(false)}
                 onFilter={handleFilter}
+                teamId={teamId}
                 teamMembers={teamMembers}
             />
 
