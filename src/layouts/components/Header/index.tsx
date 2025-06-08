@@ -120,7 +120,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
             key: 'profile',
             label: 'Thông tin cá nhân',
             icon: <UserOutlined />,
-            onClick: () => {},
+            onClick: () => navigate('/user'),
         },
         {
             key: 'settings',
@@ -138,7 +138,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
     ];
 
     const notificationContent = (
-        <div className="w-80 bg-white rounded-lg shadow-lg">
+        <div className="w-64 md:w-80 bg-white rounded-lg shadow-lg">
             <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                 <Text strong className="text-gray-800">
                     Thông báo
@@ -158,7 +158,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                         renderItem={(reminder) => (
                             <List.Item
                                 key={reminder.id}
-                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                                className="px-8 ml-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                                 actions={[
                                     !reminder.is_read && (
                                         <Button

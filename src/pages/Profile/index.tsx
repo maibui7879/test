@@ -1,45 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Form, Input, Button, Avatar, Typography, Divider, DatePicker, Upload, Select } from 'antd';
-import {
-    UserOutlined,
-    MailOutlined,
-    LockOutlined,
-    PhoneOutlined,
-    HomeOutlined,
-    CameraOutlined,
-} from '@ant-design/icons';
+import { UserOutlined, MailOutlined, PhoneOutlined, HomeOutlined, CameraOutlined } from '@ant-design/icons';
 import { useUser } from '@/contexts/useAuth/userContext';
-import { getMeProfile, updateMeProfile, changePassMe } from '@/services/userServices';
+import { getMeProfile, updateMeProfile } from '@/services/userServices';
 import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
-import { ChangePasswordPayload, UpdateUserProfile } from '@services/types/types';
+import { UpdateUserProfile } from '@services/types/types';
+import ChangePasswordModal from './ChangePasswordModal';
 
-const { Title } = Typography;
-const { TextArea } = Input;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
-interface ChangePassword extends ChangePasswordPayload {
-    confirmPassword: string;
-}
-
-const Profile: React.FC = () => {
+const ProfilePage: React.FC = () => {
     const { user } = useUser();
     const { message, contextHolder } = useMessage();
     const [form] = Form.useForm();
-    const [passwordForm] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [avatarFile, setAvatarFile] = useState<any>(null);
     const [avatarUrl, setAvatarUrl] = useState<string>('');
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const res = await getMeProfile();
                 if (res) {
-                    if (res.avatar_url) {
-                        setAvatarUrl(res.avatar_url);
-                    }
-
+                    if (res.avatar_url) setAvatarUrl(res.avatar_url);
                     form.setFieldsValue({
                         full_name: res.full_name,
                         email: res.email,
@@ -54,31 +40,16 @@ const Profile: React.FC = () => {
                 message.error({ key: 'fetch-profile-error', content: 'Failed to fetch profile' });
             }
         };
-
         fetchProfile();
     }, [form, message]);
 
     const handleFileChange = useCallback((info: any) => {
         const file = info.file.originFileObj;
-        console.log('File selected:', file);
         if (file) {
             setAvatarFile(file);
             setAvatarUrl(URL.createObjectURL(file));
         }
     }, []);
-
-    const handleError = useCallback(
-        (error: unknown, defaultMessage: string, key: string) => {
-            let errorMessage = defaultMessage;
-            if (error instanceof Error && 'response' in error) {
-                errorMessage = (error as any).response?.data?.message || 'Server error';
-            } else if (error instanceof Error && 'request' in error) {
-                errorMessage = 'No response from server';
-            }
-            message.error({ key, content: errorMessage });
-        },
-        [message],
-    );
 
     const handleProfileUpdate = useCallback(
         async (values: Partial<UpdateUserProfile>) => {
@@ -99,12 +70,10 @@ const Profile: React.FC = () => {
                     address: values.address?.trim(),
                     bio: values.bio?.trim(),
                 };
-
                 if (values.date_of_birth) {
                     const date = values.date_of_birth as any;
                     payload.date_of_birth = date?.format?.('YYYY-MM-DD') || null;
                 }
-
                 payload.avatar = avatarFile instanceof File ? avatarFile : user.avatar_url;
 
                 const res = await updateMeProfile(payload);
@@ -126,42 +95,22 @@ const Profile: React.FC = () => {
                 });
 
                 message.success({ key: loadingKey, content: 'Profile updated successfully!' });
+                window.location.reload();
+
             } catch (error) {
                 console.error('Update error:', error);
-                handleError(error, 'Failed to update profile', loadingKey);
+                message.error({ key: loadingKey, content: 'Failed to update profile' });
             } finally {
                 setLoading(false);
             }
         },
-        [user, avatarFile, form, message, handleError],
-    );
-
-    const handlePasswordChange = useCallback(
-        async (values: ChangePassword) => {
-            if (!user?.id) return;
-
-            const loadingKey = 'change-password-loading';
-            setLoading(true);
-            message.loading({ key: loadingKey, content: 'Changing password...' });
-
-            try {
-                const { confirmPassword, ...passwordData } = values;
-                await changePassMe(passwordData);
-                message.success({ key: loadingKey, content: 'Password changed successfully!' });
-                passwordForm.resetFields();
-            } catch (error) {
-                handleError(error, 'Failed to change password', loadingKey);
-            } finally {
-                setLoading(false);
-            }
-        },
-        [user, passwordForm, message, handleError],
+        [user, avatarFile, form, message],
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 md:px-8">
             {contextHolder}
-            <div className="max-w-4xl mx-auto">
+            <div className="mx-auto">
                 <Card className="shadow-xl border-0 bg-white">
                     <div className="text-center mb-8">
                         <div className="relative w-32 h-32 mx-auto mb-4">
@@ -176,17 +125,6 @@ const Profile: React.FC = () => {
                                 onChange={handleFileChange}
                                 showUploadList={false}
                                 accept="image/*"
-                                beforeUpload={(file) => {
-                                    const isLt3M = file.size / 1024 / 1024 < 3;
-                                    if (!isLt3M) {
-                                        message.error({
-                                            key: 'upload-size-error',
-                                            content: 'Image must be smaller than 3MB!',
-                                        });
-                                        return Upload.LIST_IGNORE;
-                                    }
-                                    return true;
-                                }}
                             >
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200 cursor-pointer">
                                     <CameraOutlined className="text-white text-2xl" />
@@ -196,157 +134,58 @@ const Profile: React.FC = () => {
                         <Title level={4} className="mt-3 text-gray-800 font-semibold">
                             {user?.full_name || 'No name provided'}
                         </Title>
+                        <Text
+                            className="text-xs italic text-gray-500 hover:text-blue-600 cursor-pointer"
+                            onClick={() => setShowPasswordModal(true)}
+                        >
+                            Đổi mật khẩu
+                        </Text>
                     </div>
 
-                    <Divider>Profile Information</Divider>
+                    <Divider>Thông tin cá nhân</Divider>
 
                     <Form form={form} layout="vertical" onFinish={handleProfileUpdate} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Form.Item
-                                name="full_name"
-                                label="Full Name"
-                                rules={[
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            if (!value || value.trim().length > 0) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject(new Error('Please enter your full name'));
-                                        },
-                                    }),
-                                ]}
-                            >
+                            <Form.Item name="full_name" label="Họ tên" rules={[{ required: true }]}>
                                 <Input prefix={<UserOutlined />} placeholder="Enter full name" />
                             </Form.Item>
-                            <Form.Item
-                                name="email"
-                                label="Email"
-                                rules={[
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            if (!value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject(new Error('Please enter a valid email'));
-                                        },
-                                    }),
-                                ]}
-                            >
+                            <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
                                 <Input prefix={<MailOutlined />} disabled />
                             </Form.Item>
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Form.Item
-                                name="phone_number"
-                                label="Phone Number"
-                                rules={[
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            if (!value || /^[0-9]{10}$/.test(value)) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject(new Error('Please enter a valid phone number'));
-                                        },
-                                    }),
-                                ]}
-                            >
+                            <Form.Item name="phone_number" label="Số điện thoại" rules={[{ required: true }]}>
                                 <Input prefix={<PhoneOutlined />} placeholder="Enter phone number" />
                             </Form.Item>
-                            <Form.Item
-                                name="gender"
-                                label="Gender"
-                                rules={[
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            if (!value || ['male', 'female', 'other'].includes(value)) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject(new Error('Please select a valid gender'));
-                                        },
-                                    }),
-                                ]}
-                            >
+                            <Form.Item name="gender" label="Giới tính" rules={[{ required: true }]}>
                                 <Select>
-                                    <Option value="male">Male</Option>
-                                    <Option value="female">Female</Option>
-                                    <Option value="other">Other</Option>
+                                    <Option value="male">Nam</Option>
+                                    <Option value="female">Nữ</Option>
+                                    <Option value="other">Khác</Option>
                                 </Select>
                             </Form.Item>
                         </div>
-
-                        <Form.Item name="address" label="Address">
+                        <Form.Item name="address" label="Địa chỉ">
                             <Input prefix={<HomeOutlined />} placeholder="Enter address" />
                         </Form.Item>
-
-                        <Form.Item
-                            name="date_of_birth"
-                            label="Date of Birth"
-                            rules={[
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        if (!value || dayjs(value).isValid()) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject(new Error('Please enter a valid date'));
-                                    },
-                                }),
-                            ]}
-                        >
-                            <DatePicker className="w-full" placeholder="Select date of birth" format="DD/MM/YYYY" />
+                        <Form.Item name="date_of_birth" label="Ngày sinh">
+                            <DatePicker className="w-full" placeholder="Chọn ngày sinh" format="DD/MM/YYYY" />
                         </Form.Item>
-
-                        <Form.Item name="bio" label="Bio">
-                            <TextArea rows={4} placeholder="Enter your bio" />
+                        <Form.Item name="bio" label="Giới thiệu">
+                            <Input.TextArea rows={4} placeholder="Nhập phần giới thiệu" />
                         </Form.Item>
-
                         <Form.Item>
                             <Button type="primary" htmlType="submit" loading={loading} className="w-full">
-                                Update Profile
-                            </Button>
-                        </Form.Item>
-                    </Form>
-
-                    <Divider>Change Password</Divider>
-
-                    <Form form={passwordForm} layout="vertical" onFinish={handlePasswordChange}>
-                        <Form.Item name="currentPassword" label="Current Password" rules={[{ required: true }]}>
-                            <Input.Password prefix={<LockOutlined />} placeholder="Enter current password" />
-                        </Form.Item>
-
-                        <Form.Item name="newPassword" label="New Password" rules={[{ required: true, min: 6 }]}>
-                            <Input.Password prefix={<LockOutlined />} placeholder="Enter new password" />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="confirmPassword"
-                            label="Confirm New Password"
-                            dependencies={['newPassword']}
-                            rules={[
-                                { required: true, message: 'Please confirm your new password!' },
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        if (!value || getFieldValue('newPassword') === value) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject(new Error('Passwords do not match!'));
-                                    },
-                                }),
-                            ]}
-                        >
-                            <Input.Password prefix={<LockOutlined />} placeholder="Confirm new password" />
-                        </Form.Item>
-
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit" loading={loading} className="w-full">
-                                Change Password
+                                Cập nhật profile
                             </Button>
                         </Form.Item>
                     </Form>
                 </Card>
             </div>
+
+            <ChangePasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
         </div>
     );
 };
 
-export default Profile;
+export default ProfilePage;

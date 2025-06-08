@@ -156,7 +156,7 @@ function CreatedTeamsPage() {
     return (
         <div className="p-6 min-h-screen">
             {contextHolder}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between flex-col md:flex-row items-center mb-6">
                 <div className="flex items-center gap-4">
                     <Title level={3} className="m-0">
                         Nhóm đã tạo
@@ -172,11 +172,11 @@ function CreatedTeamsPage() {
                         allowClear
                     />
                     <Button
-                        type="primary"
-                        icon={<FontAwesomeIcon icon={faUserPlus} className="mr-2" />}
-                        onClick={handleOpenCreateModal}
+                    type="primary"
+                    icon={<FontAwesomeIcon icon={faUserPlus} className="md:mr-2" />}
+                    onClick={handleOpenCreateModal}
                     >
-                        Tạo nhóm mới
+                    <span className="hidden md:inline">Tạo nhóm mới</span>
                     </Button>
                 </Space>
             </div>

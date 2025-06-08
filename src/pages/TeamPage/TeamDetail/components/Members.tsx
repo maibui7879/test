@@ -198,6 +198,8 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
             key: 'role',
             render: (_: any, record: TeamMemberInfo) => {
                 const editable = isEditing(record);
+                const canEdit = record.role !== ROLES.CREATOR && currentUserRole && currentUserRole !== ROLES.MEMBER;
+
                 return editable ? (
                     <Select
                         value={editingRole}
@@ -210,26 +212,31 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                 ) : (
                     <Space>
                         <span
-                            className={`px-2 py-1 rounded-full text-sm ${
+                            className={`px-1 py-1 rounded-full text-sm cursor-pointer ${
                                 record.role === ROLES.CREATOR
-                                    ? 'bg-purple-100 text-purple-800'
+                                    ? 'bg-purple-100 text-purple-800 text-xs'
                                     : record.role === ROLES.ADMIN
-                                      ? 'bg-blue-100 text-blue-800'
-                                      : 'bg-green-100 text-green-800'
+                                      ? 'bg-blue-100 text-blue-800 text-xs'
+                                      : 'bg-green-100 text-green-800 text-xs'
                             }`}
+                            onClick={() => {
+                                if (canEdit) handleEdit(record);
+                            }}
                         >
                             {record.role === ROLES.CREATOR
-                                ? 'Người tạo'
+                                ? 'Creator'
                                 : record.role === ROLES.ADMIN
-                                  ? 'Quản trị viên'
-                                  : 'Thành viên'}
+                                  ? 'Admin'
+                                  : 'Member'}
                         </span>
-                        {record.role !== ROLES.CREATOR && currentUserRole && currentUserRole !== ROLES.MEMBER && (
+
+                        {canEdit && (
                             <Button
                                 type="text"
                                 icon={<EditOutlined />}
                                 onClick={() => handleEdit(record)}
                                 aria-label={`Chỉnh sửa vai trò của ${record.full_name}`}
+                                className="hidden lg:inline"
                             />
                         )}
                     </Space>
@@ -269,7 +276,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                                       onClick={() => handleViewStatistics(record)}
                                       aria-label={`Xem thống kê của ${record.full_name}`}
                                   >
-                                      Thống kê
+                                      <span className="hidden lg:inline">Thống kê</span>
                                   </Button>
                                   {record.role !== ROLES.CREATOR && (
                                       <Popconfirm
@@ -286,7 +293,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                                               icon={<UserDeleteOutlined />}
                                               aria-label={`Xóa thành viên ${record.full_name}`}
                                           >
-                                              Xóa
+                                              <span className="hidden lg:inline">Xóa</span>
                                           </Button>
                                       </Popconfirm>
                                   )}

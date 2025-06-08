@@ -14,6 +14,7 @@ export interface SidebarProps {
     footer?: React.ReactNode;
     collapsed: boolean;
     isMobile?: boolean;
+    setCollapsed: (val: boolean) => void;
 }
 
 export default SidebarProps;
