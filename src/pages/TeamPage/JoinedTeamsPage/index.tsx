@@ -1,10 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { Typography, Button, Spin, Alert } from 'antd';
+import { Typography, Button, Spin, Alert, Input, Space } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import TeamCard from '../components/TeamCard';
-import { getJoinedTeams } from '@services/teamServices';
+import { getJoinedTeams, leaveTeam } from '@services/teamServices';
 import { Team } from '@services/types/types';
 import { TeamState } from '../type';
 import { useMessage } from '@hooks/useMessage';
+import useDebounce from '@hooks/useDebounce';
 
 const { Title } = Typography;
 
@@ -20,6 +23,8 @@ function JoinedTeamsPage() {
         hasMore: true,
         fetchedPages: [],
     });
+    const [searchTitle, setSearchTitle] = useState('');
+    const debouncedSearchTitle = useDebounce(searchTitle, 500);
 
     const limitPerPage = 4;
 
@@ -29,7 +34,7 @@ function JoinedTeamsPage() {
 
             setState((prev) => ({ ...prev, loading: true, error: null }));
             try {
-                const res = await getJoinedTeams(pageNumber, limitPerPage);
+                const res = await getJoinedTeams(pageNumber, limitPerPage, debouncedSearchTitle);
                 const responseData = res.data;
                 if (res.success && responseData && Array.isArray(responseData.data)) {
                     setState((prev) => ({
@@ -53,8 +58,13 @@ function JoinedTeamsPage() {
                 setState((prev) => ({ ...prev, loading: false }));
             }
         },
-        [state.loading, state.fetchedPages, message],
+        [state.loading, state.fetchedPages, message, debouncedSearchTitle],
     );
+
+    React.useEffect(() => {
+        setState((prev) => ({ ...prev, teams: [], page: 1, fetchedPages: [] }));
+        fetchTeams(1);
+    }, [debouncedSearchTitle]);
 
     React.useEffect(() => {
         fetchTeams(state.page);
@@ -70,19 +80,17 @@ function JoinedTeamsPage() {
             message.loading({ key: loadingKey, content: 'Đang rời nhóm...' });
 
             try {
-                // TODO: Implement leaveTeam API call
-                // const res = await leaveTeam(teamId);
-                // if (res.success) {
-                //     setState((prev) => ({
-                //         ...prev,
-                //         teams: prev.teams.filter((team) => team.id !== teamId),
-                //         total: prev.total - 1,
-                //     }));
-                //     message.success({ key: loadingKey, content: 'Đã rời nhóm thành công!' });
-                // } else {
-                //     message.error({ key: loadingKey, content: res.message || 'Lỗi khi rời nhóm' });
-                // }
-                message.success({ key: loadingKey, content: 'Đã rời nhóm thành công!' });
+                const res = await leaveTeam(teamId);
+                if (res.success) {
+                    setState((prev) => ({
+                        ...prev,
+                        teams: prev.teams.filter((team) => team.id !== teamId),
+                        total: prev.total - 1,
+                    }));
+                    message.success({ key: loadingKey, content: 'Đã rời nhóm thành công!' });
+                } else {
+                    message.error({ key: loadingKey, content: res.message || 'Lỗi khi rời nhóm' });
+                }
             } catch (error: any) {
                 message.error({ key: loadingKey, content: error.message || 'Có lỗi xảy ra khi rời nhóm' });
             }
@@ -99,6 +107,14 @@ function JoinedTeamsPage() {
                         Nhóm đang tham gia
                     </Title>
                 </div>
+                <Input
+                    placeholder="Tìm kiếm team..."
+                    prefix={<FontAwesomeIcon icon={faSearch} />}
+                    value={searchTitle}
+                    onChange={(e) => setSearchTitle(e.target.value)}
+                    className="w-64"
+                    allowClear
+                />
             </div>
 
             {state.error && <Alert message={state.error} type="error" className="mb-4" />}

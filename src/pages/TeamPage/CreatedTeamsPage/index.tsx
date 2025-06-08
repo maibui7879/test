@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { Typography, Button, Spin, Alert, Modal, Form, Input } from 'antd';
+import { Typography, Button, Spin, Alert, Modal, Form, Input, Space } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import TeamCard from '../components/TeamCard';
 import { getCreatedTeams, createTeam, updateTeam, deleteTeam } from '@services/teamServices';
 import { Team } from '@services/types/types';
 import { TeamState } from '../type';
 import { useMessage } from '@hooks/useMessage';
+import useDebounce from '@hooks/useDebounce';
 
 const { Title } = Typography;
 
@@ -26,6 +27,8 @@ function CreatedTeamsPage() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingTeam, setEditingTeam] = useState<Team | null>(null);
     const [form] = Form.useForm();
+    const [searchTitle, setSearchTitle] = useState('');
+    const debouncedSearchTitle = useDebounce(searchTitle, 500);
 
     const limitPerPage = 4;
 
@@ -35,7 +38,7 @@ function CreatedTeamsPage() {
 
             setState((prev) => ({ ...prev, loading: true, error: null }));
             try {
-                const res = await getCreatedTeams(pageNumber, limitPerPage);
+                const res = await getCreatedTeams(pageNumber, limitPerPage, debouncedSearchTitle);
                 const responseData = res.data;
                 if (res.success && responseData && Array.isArray(responseData.data)) {
                     setState((prev) => ({
@@ -59,8 +62,13 @@ function CreatedTeamsPage() {
                 setState((prev) => ({ ...prev, loading: false }));
             }
         },
-        [state.loading, state.fetchedPages, message],
+        [state.loading, state.fetchedPages, message, debouncedSearchTitle],
     );
+
+    React.useEffect(() => {
+        setState((prev) => ({ ...prev, teams: [], page: 1, fetchedPages: [] }));
+        fetchTeams(1);
+    }, [debouncedSearchTitle]);
 
     React.useEffect(() => {
         fetchTeams(state.page);
@@ -154,13 +162,23 @@ function CreatedTeamsPage() {
                         Nhóm đã tạo
                     </Title>
                 </div>
-                <Button
-                    type="primary"
-                    icon={<FontAwesomeIcon icon={faUserPlus} className="mr-2" />}
-                    onClick={handleOpenCreateModal}
-                >
-                    Tạo nhóm mới
-                </Button>
+                <Space>
+                    <Input
+                        placeholder="Tìm kiếm team..."
+                        prefix={<FontAwesomeIcon icon={faSearch} />}
+                        value={searchTitle}
+                        onChange={(e) => setSearchTitle(e.target.value)}
+                        className="w-64"
+                        allowClear
+                    />
+                    <Button
+                        type="primary"
+                        icon={<FontAwesomeIcon icon={faUserPlus} className="mr-2" />}
+                        onClick={handleOpenCreateModal}
+                    >
+                        Tạo nhóm mới
+                    </Button>
+                </Space>
             </div>
 
             {state.error && <Alert message={state.error} type="error" className="mb-4" />}

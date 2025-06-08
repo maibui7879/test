@@ -226,77 +226,100 @@ const CalendarComponent = ({ tasks, loading = false, onTaskCreated }: CalendarCo
                         </div>
                     }
                     footer={null}
-                    style={{ maxWidth: 700 }}
+                    width={window.innerWidth < 640 ? '95%' : 700}
+                    className="calendar-modal"
                 >
-                    <Tabs defaultActiveKey="tasks">
+                    <Tabs defaultActiveKey="tasks" className="calendar-tabs">
                         <Tabs.TabPane tab="Công việc" key="tasks">
-                            <List
-                                dataSource={selectedDateTasks}
-                                renderItem={(task) => (
-                                    <List.Item
-                                        key={task.id}
-                                        onClick={() => handleEditTask(task)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <List.Item.Meta
-                                            avatar={
-                                                <Avatar
-                                                    style={{
-                                                        backgroundColor: getEventColor(task.status, task.priority),
-                                                    }}
-                                                >
-                                                    {task.title.charAt(0).toUpperCase()}
-                                                </Avatar>
-                                            }
-                                            title={task.title}
-                                            description={
-                                                <>
-                                                    <Tag color={STATUS_TAGS[task.status]?.color}>
-                                                        {STATUS_TAGS[task.status]?.text}
-                                                    </Tag>
-                                                    <Tag color={PRIORITY_TAGS[task.priority]?.color}>
-                                                        {PRIORITY_TAGS[task.priority]?.text}
-                                                    </Tag>
-                                                </>
-                                            }
-                                        />
-                                    </List.Item>
-                                )}
-                                locale={{ emptyText: 'Không có công việc nào trong ngày này.' }}
-                            />
-                        </Tabs.TabPane>
-                        <Tabs.TabPane tab="Nhắc nhở" key="reminders">
-                            <List
-                                dataSource={
-                                    selectedDate
-                                        ? (() => {
-                                              const allTaskIds = tasks.map((task) => task.id?.toString());
-                                              return reminders.filter(
-                                                  (reminder) =>
-                                                      allTaskIds.includes(reminder.task_id.toString()) &&
-                                                      dayjs(reminder.created_at).isSame(dayjs(selectedDate), 'day'),
-                                              );
-                                          })()
-                                        : []
-                                }
-                                renderItem={(reminder) => {
-                                    const task = tasks.find(
-                                        (task) => task.id?.toString() === reminder.task_id.toString(),
-                                    );
-                                    const taskTitle = task ? task.title : 'Không rõ công việc';
-
-                                    return (
-                                        <List.Item key={reminder.id}>
+                            <div className="max-h-[60vh] overflow-y-auto pr-2">
+                                <List
+                                    dataSource={selectedDateTasks}
+                                    renderItem={(task) => (
+                                        <List.Item
+                                            key={task.id}
+                                            onClick={() => handleEditTask(task)}
+                                            className="hover:bg-gray-50 transition-colors duration-200"
+                                        >
                                             <List.Item.Meta
-                                                avatar={<FontAwesomeIcon icon={faBell} className="text-red-500 mt-1" />}
-                                                title={`${taskTitle} - ${dayjs(reminder.created_at).format('HH:mm DD/MM/YYYY')}`}
-                                                description={reminder.mes}
+                                                avatar={
+                                                    <Avatar
+                                                        style={{
+                                                            backgroundColor: getEventColor(task.status, task.priority),
+                                                        }}
+                                                    >
+                                                        {task.title.charAt(0).toUpperCase()}
+                                                    </Avatar>
+                                                }
+                                                title={<span className="line-clamp-1 font-medium">{task.title}</span>}
+                                                description={
+                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                        <Tag color={STATUS_TAGS[task.status]?.color}>
+                                                            {STATUS_TAGS[task.status]?.text}
+                                                        </Tag>
+                                                        <Tag color={PRIORITY_TAGS[task.priority]?.color}>
+                                                            {PRIORITY_TAGS[task.priority]?.text}
+                                                        </Tag>
+                                                    </div>
+                                                }
                                             />
                                         </List.Item>
-                                    );
-                                }}
-                                locale={{ emptyText: 'Không có nhắc nhở nào trong ngày này.' }}
-                            />
+                                    )}
+                                    locale={{ emptyText: 'Không có công việc nào trong ngày này.' }}
+                                />
+                            </div>
+                        </Tabs.TabPane>
+                        <Tabs.TabPane tab="Nhắc nhở" key="reminders">
+                            <div className="max-h-[60vh] overflow-y-auto pr-2">
+                                <List
+                                    dataSource={
+                                        selectedDate
+                                            ? (() => {
+                                                  const allTaskIds = tasks.map((task) => task.id?.toString());
+                                                  return reminders.filter(
+                                                      (reminder) =>
+                                                          allTaskIds.includes(reminder.task_id.toString()) &&
+                                                          dayjs(reminder.created_at).isSame(dayjs(selectedDate), 'day'),
+                                                  );
+                                              })()
+                                            : []
+                                    }
+                                    renderItem={(reminder) => {
+                                        const task = tasks.find(
+                                            (task) => task.id?.toString() === reminder.task_id.toString(),
+                                        );
+                                        const taskTitle = task ? task.title : 'Không rõ công việc';
+
+                                        return (
+                                            <List.Item
+                                                key={reminder.id}
+                                                className="hover:bg-gray-50 transition-colors duration-200"
+                                            >
+                                                <List.Item.Meta
+                                                    avatar={
+                                                        <FontAwesomeIcon icon={faBell} className="text-red-500 mt-1" />
+                                                    }
+                                                    title={
+                                                        <div className="flex flex-col">
+                                                            <span className="line-clamp-1 font-medium">
+                                                                {taskTitle}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500">
+                                                                {dayjs(reminder.created_at).format('HH:mm DD/MM/YYYY')}
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                    description={
+                                                        <span className="line-clamp-2 text-gray-600">
+                                                            {reminder.mes}
+                                                        </span>
+                                                    }
+                                                />
+                                            </List.Item>
+                                        );
+                                    }}
+                                    locale={{ emptyText: 'Không có nhắc nhở nào trong ngày này.' }}
+                                />
+                            </div>
                         </Tabs.TabPane>
                     </Tabs>
                 </Modal>

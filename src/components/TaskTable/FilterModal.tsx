@@ -2,7 +2,6 @@ import React from 'react';
 import { Modal, Form, DatePicker, Select, Button, Space } from 'antd';
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { FilterModalProps } from './types';
-import dayjs from 'dayjs';
 import { STATUS_TAGS, PRIORITY_TAGS } from './tableState';
 
 const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, teamMembers }) => {
@@ -12,23 +11,19 @@ const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, t
         form.validateFields().then((values) => {
             const filters: any = {};
 
-            // Xử lý status
             if (values.status) {
                 filters.status = values.status;
             }
 
-            // Xử lý priority
             if (values.priority) {
                 filters.priority = values.priority;
             }
 
-            // Xử lý date range
             if (values.dateRange) {
                 filters.startDate = values.dateRange[0].format('YYYY-MM-DD HH:mm:ss');
                 filters.endDate = values.dateRange[1].format('YYYY-MM-DD HH:mm:ss');
             }
 
-            // Xử lý assignee (nếu có)
             if (values.assignee) {
                 filters.assigned_user_id = values.assignee;
             }
