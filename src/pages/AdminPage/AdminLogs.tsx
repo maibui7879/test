@@ -7,7 +7,7 @@ import getAdminLogsApi from '../../services/adminServices/getAdminLogs';
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 
-const AdminLogs: React.FC = () => {
+const AdminLogs = () => {
     const [logs, setLogs] = useState<AdminLog[]>([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
@@ -25,8 +25,8 @@ const AdminLogs: React.FC = () => {
         setLoading(true);
         try {
             const response = await getAdminLogsApi({
-                page,
-                limit: pageSize,
+                page: page.toString(),
+                limit: pageSize.toString(),
                 actionType: filters.actionType,
                 startDate: filters.startDate,
                 endDate: filters.endDate,
@@ -52,7 +52,7 @@ const AdminLogs: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchLogs();
+        fetchLogs(pagination.current, pagination.pageSize);
     }, [filters]);
 
     const handleTableChange = (pagination: any) => {
@@ -85,13 +85,13 @@ const AdminLogs: React.FC = () => {
     const getActionTypeColor = (type: string) => {
         switch (type) {
             case 'create':
-                return 'success';
+                return 'green';
             case 'update':
-                return 'warning';
+                return 'blue';
             case 'delete':
-                return 'error';
+                return 'red';
             case 'view':
-                return 'info';
+                return 'purple';
             default:
                 return 'default';
         }
@@ -180,7 +180,11 @@ const AdminLogs: React.FC = () => {
                     columns={columns}
                     dataSource={logs}
                     rowKey="id"
-                    pagination={pagination}
+                    pagination={{
+                        ...pagination,
+                        showSizeChanger: true,
+                        showTotal: (total) => `Tổng số ${total} bản ghi`,
+                    }}
                     loading={loading}
                     onChange={handleTableChange}
                 />

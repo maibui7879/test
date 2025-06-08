@@ -22,7 +22,7 @@ const { Search } = AntInput;
 type UserRole = 'admin' | 'member';
 type UserStatus = 'active' | 'inactive';
 
-const UserManagement: React.FC = () => {
+const UserManagement = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);

@@ -17,8 +17,8 @@ export interface AdminLog {
 }
 
 export interface GetAdminLogsParams {
-    page?: number;
-    limit?: number;
+    page?: string;
+    limit?: string;
     actionType?: string;
     startDate?: string;
     endDate?: string;
@@ -39,10 +39,24 @@ export interface GetAdminLogsResponse {
 
 const getAdminLogsApi = async (params: GetAdminLogsParams = {}): Promise<AdminLogsData> => {
     try {
-        const response = await apiRequest<GetAdminLogsResponse>('/admin/admin-logs', 'GET', params, true);
-        if (!response.data?.data) {
-            throw new Error('Không thể lấy danh sách log');
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.actionType) queryParams.append('actionType', params.actionType);
+        if (params.startDate) queryParams.append('startDate', params.startDate);
+        if (params.endDate) queryParams.append('endDate', params.endDate);
+
+        const response = await apiRequest<GetAdminLogsResponse>(
+            `/admin/admin-logs?${queryParams.toString()}`,
+            'GET',
+            null,
+            true,
+        );
+
+        if (!response.success || !response.data?.data) {
+            throw new Error(response.message || 'Không thể lấy danh sách log');
         }
+
         return response.data.data;
     } catch (error) {
         console.error('Error in getAdminLogs service:', error);

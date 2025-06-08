@@ -10,7 +10,7 @@ import dayjs from 'dayjs';
 const { RangePicker } = DatePicker;
 const { Search } = Input;
 
-const UserLogs: React.FC = () => {
+const UserLogs = () => {
     const [logs, setLogs] = useState<UserLog[]>([]);
     const [filteredLogs, setFilteredLogs] = useState<UserLog[]>([]);
     const [loading, setLoading] = useState(false);

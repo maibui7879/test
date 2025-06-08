@@ -9,7 +9,6 @@ import {
     faUser,
     faUsers,
     faBell,
-    faUserShield,
     faChartBar,
     faHistory,
 } from '@fortawesome/free-solid-svg-icons';
@@ -18,7 +17,6 @@ import CreatedTeamsPage from '@pages/TeamPage/CreatedTeamsPage';
 import JoinedTeamsPage from '@pages/TeamPage/JoinedTeamsPage';
 import TeamDetail from '@pages/TeamPage/TeamDetail';
 import ReminderPage from '@pages/Reminder';
-import AdminPage from '@pages/AdminPage';
 import UserManagement from '@pages/AdminPage/UserManagement';
 import Statistics from '@pages/AdminPage/Statistics';
 import UserLogs from '@pages/AdminPage/UserLogs';
