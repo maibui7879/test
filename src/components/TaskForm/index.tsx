@@ -88,12 +88,7 @@ function TaskForm({ onTaskCreated, onClose, initialValues, taskId, teamId }: Tas
     return (
         <>
             {contextHolder}
-            <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSubmit}
-                className="space-y-4 p-4 bg-white rounded-lg shadow-sm"
-            >
+            <Form form={form} layout="vertical" onFinish={handleSubmit} className=" p-4 bg-white ">
                 <Form.Item
                     name="title"
                     label={<span className="text-gray-700 font-medium">Tiêu đề</span>}

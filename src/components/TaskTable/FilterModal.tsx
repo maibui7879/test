@@ -1,8 +1,9 @@
 import React from 'react';
-import { Modal, Form, DatePicker, Select, Button } from 'antd';
-import { FilterOutlined } from '@ant-design/icons';
+import { Modal, Form, DatePicker, Select, Button, Space } from 'antd';
+import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { FilterModalProps } from './types';
 import dayjs from 'dayjs';
+import { STATUS_TAGS, PRIORITY_TAGS } from './tableState';
 
 const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, teamMembers }) => {
     const [form] = Form.useForm();
@@ -50,42 +51,65 @@ const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, t
     return (
         <Modal
             title={
-                <div className="flex items-center">
+                <div className="flex items-center text-lg sm:text-xl font-semibold">
                     <FilterOutlined className="mr-2" />
                     Lọc công việc
                 </div>
             }
             open={visible}
             onCancel={onClose}
+            width={window.innerWidth < 640 ? '95%' : 500}
+            className="filter-modal"
             footer={[
-                <Button key="reset" onClick={handleReset}>
-                    Đặt lại
-                </Button>,
-                <Button key="submit" type="primary" onClick={handleSubmit}>
-                    Áp dụng
-                </Button>,
+                <Space key="footer" className="w-full justify-end">
+                    <Button icon={<ReloadOutlined />} onClick={handleReset} className="!flex !items-center">
+                        Đặt lại
+                    </Button>
+                    <Button type="primary" onClick={handleSubmit} className="!flex !items-center">
+                        Áp dụng
+                    </Button>
+                </Space>,
             ]}
         >
-            <Form form={form} layout="vertical">
-                <Form.Item name="status" label="Trạng thái">
-                    <Select placeholder="Chọn trạng thái" allowClear>
-                        <Select.Option value="todo">Chưa thực hiện</Select.Option>
-                        <Select.Option value="in_progress">Đang thực hiện</Select.Option>
-                        <Select.Option value="done">Hoàn thành</Select.Option>
-                    </Select>
+            <Form form={form} layout="vertical" className="space-y-4">
+                <Form.Item name="status" label={<span className="text-sm sm:text-base font-medium">Trạng thái</span>}>
+                    <Select
+                        placeholder="Chọn trạng thái"
+                        allowClear
+                        className="w-full"
+                        options={Object.entries(STATUS_TAGS).map(([value, { text }]) => ({
+                            value,
+                            label: text,
+                        }))}
+                    />
                 </Form.Item>
 
-                <Form.Item name="priority" label="Độ ưu tiên">
-                    <Select placeholder="Chọn độ ưu tiên" allowClear>
-                        <Select.Option value="low">Thấp</Select.Option>
-                        <Select.Option value="medium">Trung bình</Select.Option>
-                        <Select.Option value="high">Cao</Select.Option>
-                    </Select>
+                <Form.Item name="priority" label={<span className="text-sm sm:text-base font-medium">Độ ưu tiên</span>}>
+                    <Select
+                        placeholder="Chọn độ ưu tiên"
+                        allowClear
+                        className="w-full"
+                        options={Object.entries(PRIORITY_TAGS).map(([value, { text }]) => ({
+                            value,
+                            label: text,
+                        }))}
+                    />
                 </Form.Item>
 
                 {teamMembers && (
-                    <Form.Item name="assignee" label="Người thực hiện">
-                        <Select placeholder="Chọn người thực hiện" allowClear>
+                    <Form.Item
+                        name="assignee"
+                        label={<span className="text-sm sm:text-base font-medium">Người thực hiện</span>}
+                    >
+                        <Select
+                            placeholder="Chọn người thực hiện"
+                            allowClear
+                            className="w-full"
+                            showSearch
+                            filterOption={(input, option) =>
+                                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                            }
+                        >
                             {teamMembers.map((member) => (
                                 <Select.Option key={member.id} value={member.id}>
                                     {member.full_name}
@@ -95,8 +119,13 @@ const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onFilter, t
                     </Form.Item>
                 )}
 
-                <Form.Item name="dateRange" label="Thời gian">
-                    <DatePicker.RangePicker showTime format="YYYY-MM-DD HH:mm:ss" className="w-full" />
+                <Form.Item name="dateRange" label={<span className="text-sm sm:text-base font-medium">Thời gian</span>}>
+                    <DatePicker.RangePicker
+                        showTime
+                        format="YYYY-MM-DD HH:mm:ss"
+                        className="w-full"
+                        placeholder={['Từ ngày', 'Đến ngày']}
+                    />
                 </Form.Item>
             </Form>
         </Modal>

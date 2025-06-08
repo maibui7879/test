@@ -28,21 +28,24 @@ export const ROLE_COLORS = {
     default: 'default',
 } as const;
 
+export const STATUS_TAGS = {
+    todo: { color: 'default', text: 'Chưa thực hiện' },
+    in_progress: { color: 'processing', text: 'Đang thực hiện' },
+    done: { color: 'success', text: 'Hoàn thành' },
+} as const;
+
+export const PRIORITY_TAGS = {
+    low: { color: 'success', text: 'Thấp' },
+    medium: { color: 'warning', text: 'Trung bình' },
+    high: { color: 'error', text: 'Cao' },
+} as const;
+
 export const getPriorityColor = (priority: string) => {
     return PRIORITY_COLORS[priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.default;
 };
 
 export const getPriorityText = (priority: string) => {
-    switch (priority) {
-        case 'high':
-            return 'Cao';
-        case 'medium':
-            return 'Trung bình';
-        case 'low':
-            return 'Thấp';
-        default:
-            return priority;
-    }
+    return PRIORITY_TAGS[priority as keyof typeof PRIORITY_TAGS]?.text || priority;
 };
 
 export const getStatusColor = (status: string) => {
@@ -50,16 +53,7 @@ export const getStatusColor = (status: string) => {
 };
 
 export const getStatusText = (status: string) => {
-    switch (status) {
-        case 'todo':
-            return 'Chưa thực hiện';
-        case 'in_progress':
-            return 'Đang thực hiện';
-        case 'done':
-            return 'Hoàn thành';
-        default:
-            return status;
-    }
+    return STATUS_TAGS[status as keyof typeof STATUS_TAGS]?.text || status;
 };
 
 export const getRoleColor = (role: string | undefined) => {
@@ -78,4 +72,12 @@ export const getRoleText = (role: string | undefined) => {
         default:
             return role || 'Không xác định';
     }
+};
+
+export const getEventColor = (status: string, priority: string) => {
+    if (status === 'done') return EVENT_COLORS.done;
+    if (status === 'in_progress') return EVENT_COLORS.in_progress;
+    if (priority === 'high') return EVENT_COLORS.high;
+    if (priority === 'medium') return EVENT_COLORS.medium;
+    return EVENT_COLORS.default;
 };

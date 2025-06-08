@@ -523,25 +523,38 @@ const TaskTable = ({
     return (
         <div className="bg-white rounded-lg shadow">
             <div className="p-4 border-b border-gray-200">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-4">
-                        <Button type="primary" icon={<PlusOutlined />} onClick={onTaskCreated}>
-                            Thêm công việc
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={onTaskCreated}
+                            className="!flex !items-center"
+                        >
+                            <span className="hidden sm:inline">Thêm công việc</span>
                         </Button>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <Button icon={<ReloadOutlined />} onClick={handleReset}></Button>{' '}
-                        <Input
-                            placeholder="Tìm kiếm theo tiêu đề..."
-                            prefix={<SearchOutlined />}
-                            value={searchTitle}
-                            onChange={(e) => setSearchTitle(e.target.value)}
-                            className="w-64"
-                            allowClear
-                        />
-                        <Button icon={<FilterOutlined />} onClick={() => setIsFilterModalVisible(true)}>
-                            Lọc
-                        </Button>
+                    <div className="flex items-center space-x-2 w-full sm:w-auto">
+                        <Tooltip title="Làm mới">
+                            <Button icon={<ReloadOutlined />} onClick={handleReset} className="!flex !items-center" />
+                        </Tooltip>
+                        <div className="relative flex-1 sm:flex-none">
+                            <Input
+                                placeholder="Tìm kiếm..."
+                                prefix={<SearchOutlined />}
+                                value={searchTitle}
+                                onChange={(e) => setSearchTitle(e.target.value)}
+                                className="w-full sm:w-48 md:w-64"
+                                allowClear
+                            />
+                        </div>
+                        <Tooltip title="Lọc">
+                            <Button
+                                icon={<FilterOutlined />}
+                                onClick={() => setIsFilterModalVisible(true)}
+                                className="!flex !items-center"
+                            />
+                        </Tooltip>
                     </div>
                 </div>
             </div>

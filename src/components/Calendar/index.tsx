@@ -9,35 +9,7 @@ import dayjs from 'dayjs';
 import TaskForm from '@/components/TaskForm';
 import { TaskPayload, Reminder } from '@services/types/types';
 import { getReminders } from '@services/remiderService';
-
-const EVENT_COLORS = {
-    done: '#059669',
-    in_progress: '#2563EB',
-    high: '#DC2626',
-    medium: '#D97706',
-    low: '#059669',
-    default: '#4B5563',
-} as const;
-
-const getEventColor = (status: string, priority: string) => {
-    if (status === 'done') return EVENT_COLORS.done;
-    if (status === 'in_progress') return EVENT_COLORS.in_progress;
-    if (priority === 'high') return EVENT_COLORS.high;
-    if (priority === 'medium') return EVENT_COLORS.medium;
-    return EVENT_COLORS.default;
-};
-
-const STATUS_TAGS = {
-    todo: { color: 'default', text: 'Chờ thực hiện' },
-    in_progress: { color: 'processing', text: 'Đang thực hiện' },
-    done: { color: 'success', text: 'Hoàn thành' },
-};
-
-const PRIORITY_TAGS = {
-    low: { color: 'success', text: 'Thấp' },
-    medium: { color: 'warning', text: 'Trung bình' },
-    high: { color: 'error', text: 'Cao' },
-};
+import { EVENT_COLORS, STATUS_TAGS, PRIORITY_TAGS, getEventColor } from '../TaskTable/tableState';
 
 interface CalendarComponentProps {
     tasks: TaskPayload[];
@@ -308,7 +280,6 @@ const CalendarComponent = ({ tasks, loading = false, onTaskCreated }: CalendarCo
                                         : []
                                 }
                                 renderItem={(reminder) => {
-                                    // Tìm task tương ứng với reminder.task_id
                                     const task = tasks.find(
                                         (task) => task.id?.toString() === reminder.task_id.toString(),
                                     );
