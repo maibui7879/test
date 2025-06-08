@@ -1,5 +1,5 @@
 import apiRequest from '../common/apiRequest';
-import type { GetUsersResponse, GetUsersParams } from '../types/types';
+import type { GetUsersResponse } from '../types/types';
 
 export interface PaginationInfo {
     page: number;
@@ -13,9 +13,19 @@ export interface GetUsersResponseData {
     pagination: PaginationInfo;
 }
 
+export interface GetUsersParams {
+    page?: string;
+    limit?: string;
+    fullName?: string;
+    gender?: 'male' | 'female' | 'other';
+    status?: 'active' | 'inactive' | 'banned';
+    startDate?: string;
+    endDate?: string;
+}
+
 const getUsersApi = async (params: GetUsersParams = {}): Promise<GetUsersResponseData> => {
     console.log('getUsers service called with params:', params);
-    const { page = '1', limit = '10', gender } = params;
+    const { page = '1', limit = '10', fullName, gender, status, startDate, endDate } = params;
 
     try {
         const queryParams = new URLSearchParams({
@@ -23,7 +33,11 @@ const getUsersApi = async (params: GetUsersParams = {}): Promise<GetUsersRespons
             limit: limit.toString(),
         });
 
+        if (fullName) queryParams.append('fullName', fullName);
         if (gender) queryParams.append('gender', gender);
+        if (status) queryParams.append('status', status);
+        if (startDate) queryParams.append('startDate', startDate);
+        if (endDate) queryParams.append('endDate', endDate);
 
         const response = await apiRequest<GetUsersResponseData>(
             `/admin/users?${queryParams.toString()}`,

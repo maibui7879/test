@@ -5,9 +5,7 @@ import type { ApiResponse } from '../common/apiRequest';
 export interface GetUserLogsParams {
     page?: string;
     limit?: string;
-    startDate?: string;
-    endDate?: string;
-    action?: string;
+    fullName?: string;
 }
 
 export interface PaginationInfo {
@@ -23,7 +21,7 @@ interface GetUserLogsResponse {
 
 const getUserLogsApi = async (params: GetUserLogsParams = {}): Promise<ApiResponse<GetUserLogsResponse>> => {
     console.log('getUserLogs service called with params:', params);
-    const { page = '1', limit = '10', startDate, endDate, action } = params;
+    const { page = '1', limit = '10', fullName } = params;
 
     try {
         const queryParams = new URLSearchParams({
@@ -31,9 +29,7 @@ const getUserLogsApi = async (params: GetUserLogsParams = {}): Promise<ApiRespon
             limit,
         });
 
-        if (startDate) queryParams.append('startDate', startDate);
-        if (endDate) queryParams.append('endDate', endDate);
-        if (action) queryParams.append('action', action);
+        if (fullName) queryParams.append('fullName', fullName);
 
         const response = await apiRequest<GetUserLogsResponse>(
             `/admin/logs?${queryParams.toString()}`,
