@@ -4,6 +4,11 @@ import { TeamTasksResponse } from '../types/types';
 interface TaskQueryParams {
     page?: number;
     limit?: number;
+    searchTitle?: string;
+    status?: 'todo' | 'in_progress' | 'done';
+    priority?: 'low' | 'medium' | 'high';
+    startDate?: string;
+    endDate?: string;
 }
 
 const getAllTaskTeam = async (teamId: string, params?: TaskQueryParams): Promise<TeamTasksResponse> => {
@@ -11,6 +16,11 @@ const getAllTaskTeam = async (teamId: string, params?: TaskQueryParams): Promise
         const queryParams = new URLSearchParams();
         if (params?.page) queryParams.append('page', params.page.toString());
         if (params?.limit) queryParams.append('limit', params.limit.toString());
+        if (params?.searchTitle) queryParams.append('searchTitle', params.searchTitle);
+        if (params?.status) queryParams.append('status', params.status);
+        if (params?.priority) queryParams.append('priority', params.priority);
+        if (params?.startDate) queryParams.append('startDate', params.startDate);
+        if (params?.endDate) queryParams.append('endDate', params.endDate);
 
         const url = `/tasks/team/${teamId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const res = await apiRequest<TeamTasksResponse>(url, 'GET', null, true);

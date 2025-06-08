@@ -12,6 +12,11 @@ interface TaskResponse {
 interface TaskQueryParams {
     page?: number;
     limit?: number;
+    searchTitle?: string;
+    status?: 'todo' | 'in_progress' | 'done';
+    priority?: 'low' | 'medium' | 'high';
+    startDate?: string;
+    endDate?: string;
 }
 
 const getAllTaskUser = async (params?: TaskQueryParams): Promise<TaskResponse> => {
@@ -19,6 +24,11 @@ const getAllTaskUser = async (params?: TaskQueryParams): Promise<TaskResponse> =
         const queryParams = new URLSearchParams();
         if (params?.page) queryParams.append('page', params.page.toString());
         if (params?.limit) queryParams.append('limit', params.limit.toString());
+        if (params?.searchTitle) queryParams.append('searchTitle', params.searchTitle);
+        if (params?.status) queryParams.append('status', params.status);
+        if (params?.priority) queryParams.append('priority', params.priority);
+        if (params?.startDate) queryParams.append('startDate', params.startDate);
+        if (params?.endDate) queryParams.append('endDate', params.endDate);
 
         const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const res = await apiRequest<TaskResponse>(url, 'GET', null, true);
