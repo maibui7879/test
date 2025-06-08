@@ -1,14 +1,35 @@
+export const EVENT_COLORS = {
+    done: '#059669',
+    in_progress: '#2563EB',
+    high: '#DC2626',
+    medium: '#D97706',
+    low: '#059669',
+    default: '#4B5563',
+} as const;
+
+export const STATUS_COLORS = {
+    todo: 'default',
+    in_progress: 'processing',
+    done: 'success',
+    default: 'default',
+} as const;
+
+export const PRIORITY_COLORS = {
+    high: 'error',
+    medium: 'warning',
+    low: 'success',
+    default: 'default',
+} as const;
+
+export const ROLE_COLORS = {
+    creator: 'purple',
+    admin: 'blue',
+    member: 'green',
+    default: 'default',
+} as const;
+
 export const getPriorityColor = (priority: string) => {
-    switch (priority) {
-        case 'high':
-            return 'red';
-        case 'medium':
-            return 'orange';
-        case 'low':
-            return 'green';
-        default:
-            return 'blue';
-    }
+    return PRIORITY_COLORS[priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.default;
 };
 
 export const getPriorityText = (priority: string) => {
@@ -25,16 +46,7 @@ export const getPriorityText = (priority: string) => {
 };
 
 export const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'todo':
-            return 'default';
-        case 'in_progress':
-            return 'processing';
-        case 'done':
-            return 'success';
-        default:
-            return 'default';
-    }
+    return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || STATUS_COLORS.default;
 };
 
 export const getStatusText = (status: string) => {
@@ -49,17 +61,10 @@ export const getStatusText = (status: string) => {
             return status;
     }
 };
+
 export const getRoleColor = (role: string | undefined) => {
-    switch (role) {
-        case 'creator':
-            return 'purple';
-        case 'admin':
-            return 'blue';
-        case 'member':
-            return 'green';
-        default:
-            return 'default';
-    }
+    if (!role) return ROLE_COLORS.default;
+    return ROLE_COLORS[role as keyof typeof ROLE_COLORS] || ROLE_COLORS.default;
 };
 
 export const getRoleText = (role: string | undefined) => {

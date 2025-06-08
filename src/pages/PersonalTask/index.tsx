@@ -63,58 +63,72 @@ function PersonalTask() {
         setCurrentPage(page);
     };
 
-    const handleUpdateTask = useCallback(async (taskData: TaskPayload) => {
-        const key = 'updateTask';
-        try {
-            if (!taskData.id) {
-                throw new Error('Không tìm thấy ID công việc');
-            }
-            const taskId = taskData.id;
+    const handleUpdateTask = useCallback(
+        async (taskData: TaskPayload) => {
+            const key = 'updateTask';
+            try {
+                if (!taskData.id) {
+                    throw new Error('Không tìm thấy ID công việc');
+                }
+                const taskId = taskData.id;
 
-            let numericId: number;
-            if (typeof taskId === 'string') {
-                numericId = parseInt(taskId, 10);
+                let numericId: number;
+                if (typeof taskId === 'string') {
+                    numericId = parseInt(taskId, 10);
+                    if (isNaN(numericId)) {
+                        throw new Error('ID công việc không hợp lệ');
+                    }
+                } else if (typeof taskId === 'number') {
+                    numericId = taskId;
+                } else {
+                    throw new Error('ID công việc không hợp lệ');
+                }
+
+                messageRef.current.loading({ key, content: 'Đang cập nhật công việc...' });
+
+                // Đảm bảo dữ liệu đầy đủ trước khi gửi lên server
+                const updatedTaskData: TaskPayload = {
+                    ...taskData,
+                    team_id: taskData.team_id || '',
+                    title: taskData.title,
+                    description: taskData.description,
+                    status: taskData.status,
+                    priority: taskData.priority,
+                    start_time: taskData.start_time,
+                    end_time: taskData.end_time,
+                    assigned_user_id: taskData.assigned_user_id,
+                };
+
+                await updateTask(numericId, updatedTaskData);
+                await fetchTasks();
+                messageRef.current.success({ key, content: 'Cập nhật công việc thành công!' });
+            } catch (err: any) {
+                console.error('Error updating task:', err);
+                messageRef.current.error({ key, content: err.message || 'Không thể cập nhật công việc' });
+            }
+        },
+        [fetchTasks],
+    );
+
+    const handleDeleteTask = useCallback(
+        async (taskId: string | number) => {
+            const key = 'deleteTask';
+            try {
+                const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
                 if (isNaN(numericId)) {
                     throw new Error('ID công việc không hợp lệ');
                 }
-            } else if (typeof taskId === 'number') {
-                numericId = taskId;
-            } else {
-                throw new Error('ID công việc không hợp lệ');
+                messageRef.current.loading({ key, content: 'Đang xóa công việc...' });
+                await deleteTask(numericId);
+                await fetchTasks();
+                messageRef.current.success({ key, content: 'Xóa công việc thành công!' });
+            } catch (err: any) {
+                console.error('Error deleting task:', err);
+                messageRef.current.error({ key, content: err.message || 'Không thể xóa công việc' });
             }
-
-            messageRef.current.loading({ key, content: 'Đang cập nhật công việc...' });
-            await updateTask(numericId, taskData);
-            setTasks((prevTasks) => prevTasks.map((task) => (task.id === taskId ? taskData : task)));
-            messageRef.current.success({ key, content: 'Cập nhật công việc thành công!' });
-        } catch (err: any) {
-            console.error('Error updating task:', err);
-            messageRef.current.error({ key, content: err.message || 'Không thể cập nhật công việc' });
-        }
-    }, []);
-
-    const handleDeleteTask = useCallback(async (taskId: string | number) => {
-        const key = 'deleteTask';
-        try {
-            const numericId = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
-            if (isNaN(numericId)) {
-                throw new Error('ID công việc không hợp lệ');
-            }
-            messageRef.current.loading({ key, content: 'Đang xóa công việc...' });
-            await deleteTask(numericId);
-            setTasks((prevTasks) =>
-                prevTasks.filter((task) => {
-                    const id = task.id;
-                    return id !== taskId;
-                }),
-            );
-            setTotalTasks((prev) => prev - 1);
-            messageRef.current.success({ key, content: 'Xóa công việc thành công!' });
-        } catch (err: any) {
-            console.error('Error deleting task:', err);
-            messageRef.current.error({ key, content: err.message || 'Không thể xóa công việc' });
-        }
-    }, []);
+        },
+        [fetchTasks],
+    );
 
     const handleFilter = (values: any) => {
         setFilters(values);

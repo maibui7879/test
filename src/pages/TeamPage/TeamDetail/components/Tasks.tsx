@@ -122,13 +122,13 @@ const Tasks = ({ teamId }: TasksProps) => {
                 };
 
                 await updateTask(numericId, updatedTaskData);
-                setTasks((prevTasks) => prevTasks.map((task) => (task.id === taskId ? updatedTaskData : task)));
+                await fetchTasks();
                 message.success({ key, content: 'Cập nhật công việc thành công!' });
             } catch (err: any) {
                 message.error({ key, content: err.message || 'Không thể cập nhật công việc' });
             }
         },
-        [teamId, message],
+        [teamId, message, fetchTasks],
     );
 
     const handleDeleteTask = useCallback(
@@ -142,14 +142,13 @@ const Tasks = ({ teamId }: TasksProps) => {
 
                 message.loading({ key, content: 'Đang xóa công việc...' });
                 await deleteTask(numericId);
-                setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-                setTotalTasks((prev) => prev - 1);
+                await fetchTasks();
                 message.success({ key, content: 'Xóa công việc thành công!' });
             } catch (err: any) {
                 message.error({ key, content: err.message || 'Không thể xóa công việc' });
             }
         },
-        [message],
+        [message, fetchTasks],
     );
 
     const handleAssignTask = useCallback(
@@ -166,7 +165,6 @@ const Tasks = ({ teamId }: TasksProps) => {
                 };
 
                 await updateAssignment(payload);
-
                 await fetchTasks();
                 message.success({ key, content: 'Phân công công việc thành công!' });
             } catch (err: any) {

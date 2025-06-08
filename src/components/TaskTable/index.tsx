@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Input, Space, Tag, Button, Drawer, Select, DatePicker, Form, Popconfirm, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { TaskPayload, UserProfile } from '@services/types/types';
@@ -18,11 +18,12 @@ import {
 import { TaskTableContentProps } from './types';
 import TaskDetails from '../TaskDetail/TaskDetails';
 import FilterModal from './FilterModal';
-import { SearchOutlined, FilterOutlined, PlusOutlined } from '@ant-design/icons';
+import { SearchOutlined, FilterOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import TaskTableContent from './TaskTableContent';
 
 dayjs.extend(utc);
 
-const TaskTable: React.FC<TaskTableContentProps> = ({
+const TaskTable = ({
     tasks,
     loading,
     error,
@@ -37,35 +38,27 @@ const TaskTable: React.FC<TaskTableContentProps> = ({
     onAssignTask,
     onTaskCreated,
     onFilter,
-}) => {
+}: TaskTableContentProps) => {
     const [selectedTask, setSelectedTask] = useState<TaskPayload | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [form] = Form.useForm();
     const [localTasks, setLocalTasks] = useState<TaskPayload[]>(tasks);
     const [editingField, setEditingField] = useState<{ id: string | number; field: string } | null>(null);
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    const [searchTitle, setSearchTitle] = useState('');
+    const [filters, setFilters] = useState<any>({});
+
+    const debouncedSearchTitle = useDebounce(searchTitle, 500);
 
     useEffect(() => {
         setLocalTasks(tasks);
     }, [tasks]);
 
-    const handleDateChange = (record: TaskPayload, field: string, date: dayjs.Dayjs | null) => {
-        if (date) {
-            try {
-                const formattedDate = date.format('YYYY-MM-DD HH:mm:ss');
-                if (formattedDate !== record[field as keyof TaskPayload]) {
-                    const updatedTask = {
-                        ...record,
-                        [field]: formattedDate,
-                    } as TaskPayload;
-                    onEditTask(updatedTask);
-                }
-            } catch (error) {
-                console.error('Error formatting date:', error);
-            }
+    useEffect(() => {
+        if (onFilter) {
+            onFilter({ ...filters, searchTitle: debouncedSearchTitle });
         }
-        setEditingField(null);
-    };
+    }, [debouncedSearchTitle, filters]);
 
     const handleFieldSave = async (record: TaskPayload, field: string) => {
         try {
@@ -95,25 +88,34 @@ const TaskTable: React.FC<TaskTableContentProps> = ({
                 await onEditTask(updatedTask);
             }
             setEditingField(null);
+            form.resetFields();
         } catch (errInfo) {
             console.log('Validate Failed:', errInfo);
         }
     };
 
-    const handleViewDetail = (task: TaskPayload) => {
-        setSelectedTask(task);
-        setDrawerVisible(true);
+    const handleDateChange = (record: TaskPayload, field: string, date: dayjs.Dayjs | null) => {
+        if (date) {
+            try {
+                const formattedDate = date.format('YYYY-MM-DD HH:mm:ss');
+                if (formattedDate !== record[field as keyof TaskPayload]) {
+                    const updatedTask = {
+                        ...record,
+                        [field]: formattedDate,
+                    } as TaskPayload;
+                    onEditTask(updatedTask);
+                }
+            } catch (error) {
+                console.error('Error formatting date:', error);
+            }
+        }
+        setEditingField(null);
+        form.resetFields();
     };
 
     const handleDeleteTask = async (taskId: string | number) => {
         try {
             await onDeleteTask(taskId);
-            setLocalTasks((prevTasks) =>
-                prevTasks.filter((task) => {
-                    const id = task.id;
-                    return id !== taskId;
-                }),
-            );
         } catch (error) {
             console.error('Error deleting task:', error);
         }
@@ -129,13 +131,24 @@ const TaskTable: React.FC<TaskTableContentProps> = ({
 
     const handleFieldCancel = () => {
         setEditingField(null);
+        form.resetFields();
     };
 
     const handleFilter = (values: any) => {
-        if (onFilter) {
-            onFilter(values);
-            onPageChange(1); // Reset về trang 1 khi lọc
-        }
+        setFilters(values);
+        onPageChange(1);
+    };
+
+    const handleReset = () => {
+        setSearchTitle('');
+        setFilters({});
+        form.resetFields();
+        onPageChange(1);
+    };
+
+    const handleViewDetail = (task: TaskPayload) => {
+        setSelectedTask(task);
+        setDrawerVisible(true);
     };
 
     const columns: ColumnsType<TaskPayload> = [
@@ -511,27 +524,47 @@ const TaskTable: React.FC<TaskTableContentProps> = ({
         <div className="bg-white rounded-lg shadow">
             <div className="p-4 border-b border-gray-200">
                 <div className="flex justify-between items-center mb-4">
-                    <Button type="primary" icon={<PlusOutlined />} onClick={onTaskCreated}>
-                        Thêm công việc
-                    </Button>
-                    <Button icon={<FilterOutlined />} onClick={() => setIsFilterModalVisible(true)}>
-                        Lọc
-                    </Button>
+                    <div className="flex items-center space-x-4">
+                        <Button type="primary" icon={<PlusOutlined />} onClick={onTaskCreated}>
+                            Thêm công việc
+                        </Button>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button icon={<ReloadOutlined />} onClick={handleReset}></Button>{' '}
+                        <Input
+                            placeholder="Tìm kiếm theo tiêu đề..."
+                            prefix={<SearchOutlined />}
+                            value={searchTitle}
+                            onChange={(e) => setSearchTitle(e.target.value)}
+                            className="w-64"
+                            allowClear
+                        />
+                        <Button icon={<FilterOutlined />} onClick={() => setIsFilterModalVisible(true)}>
+                            Lọc
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <Table
-                columns={columns}
-                dataSource={localTasks}
-                loading={loading}
-                rowKey="id"
-                pagination={{
-                    current: currentPage,
-                    total: totalTasks,
-                    pageSize: 10,
-                    onChange: onPageChange,
-                }}
-            />
+            <Form form={form} component={false}>
+                <TaskTableContent
+                    loading={loading}
+                    error={error}
+                    onReload={onReload}
+                    searchText={searchTitle}
+                    setSearchText={setSearchTitle}
+                    filteredTasks={localTasks}
+                    columns={columns}
+                    currentPage={currentPage}
+                    totalTasks={totalTasks}
+                    onPageChange={onPageChange}
+                    teamId={teamId}
+                    onEditTask={onEditTask}
+                    onDeleteTask={handleDeleteTask}
+                    teamMembers={teamMembers}
+                    onAssignTask={onAssignTask}
+                />
+            </Form>
 
             <FilterModal
                 visible={isFilterModalVisible}
