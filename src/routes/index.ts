@@ -23,6 +23,7 @@ import UserManagement from '@pages/AdminPage/UserManagement';
 import Statistics from '@pages/AdminPage/Statistics';
 import UserLogs from '@pages/AdminPage/UserLogs';
 import NotFoundPage from '@pages/404Page';
+import AdminLogs from '@pages/AdminPage/AdminLogs';
 
 export const publicRoutes: Route[] = [
     {
@@ -117,6 +118,12 @@ export const adminSidebarRoutes: Route[] = [
         name: 'Lịch sử hoạt động',
         icon: faHistory,
         component: UserLogs,
+    },
+    {
+        path: '/admin/admin-logs',
+        name: 'Lịch sử Admin',
+        icon: faHistory,
+        component: AdminLogs,
     },
 ];
 

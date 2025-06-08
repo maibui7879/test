@@ -1,13 +1,14 @@
 import React, { useState, useEffect, Key } from 'react';
-import { Table, Card, DatePicker, Select, Space, Button, message } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Table, Card, DatePicker, Select, Space, Button, message, Input } from 'antd';
+import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { getUserLogsApi } from '../../services/adminServices';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import type { ColumnsType } from 'antd/es/table';
-import type { UserLog, GetUserLogsResponse } from '../../services/types/types';
+import type { UserLog } from '../../services/types/types';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
+const { Search } = Input;
 
 const UserLogs: React.FC = () => {
     const [logs, setLogs] = useState<UserLog[]>([]);
@@ -15,15 +16,29 @@ const UserLogs: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
     const [actionFilter, setActionFilter] = useState<string | null>(null);
+    const [searchText, setSearchText] = useState('');
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0,
+    });
 
-    const fetchLogs = async () => {
+    const fetchLogs = async (page = 1, pageSize = 10) => {
         setLoading(true);
         try {
-            const response = await getUserLogsApi({});
-            if (response?.data) {
-                setLogs(response.data.logs);
-                setFilteredLogs(response.data.logs);
-            }
+            const response = await getUserLogsApi({
+                page: page.toString(),
+                limit: pageSize.toString(),
+                fullName: searchText || undefined,
+            });
+
+            setLogs(response.logs);
+            setFilteredLogs(response.logs);
+            setPagination({
+                current: response.page,
+                pageSize: response.limit,
+                total: response.total,
+            });
         } catch (error) {
             message.error('Không thể tải lịch sử hoạt động');
         } finally {
@@ -32,8 +47,17 @@ const UserLogs: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchLogs();
-    }, []);
+        fetchLogs(pagination.current, pagination.pageSize);
+    }, [searchText, dateRange, actionFilter]);
+
+    const handleTableChange = (pagination: any) => {
+        fetchLogs(pagination.current, pagination.pageSize);
+    };
+
+    const handleSearch = (value: string) => {
+        setSearchText(value);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+    };
 
     const columns: ColumnsType<UserLog> = [
         {
@@ -84,33 +108,13 @@ const UserLogs: React.FC = () => {
     const handleDateRangeChange: RangePickerProps['onChange'] = (dates) => {
         if (dates && dates[0] && dates[1]) {
             setDateRange([dates[0], dates[1]]);
-            filterLogs(dates[0], dates[1], actionFilter);
         } else {
             setDateRange(null);
-            filterLogs(null, null, actionFilter);
         }
     };
 
     const handleActionFilterChange = (value: string) => {
         setActionFilter(value);
-        filterLogs(dateRange?.[0] ?? null, dateRange?.[1] ?? null, value);
-    };
-
-    const filterLogs = (startDate: dayjs.Dayjs | null, endDate: dayjs.Dayjs | null, action: string | null) => {
-        let filtered = [...logs];
-
-        if (startDate && endDate) {
-            filtered = filtered.filter((log) => {
-                const logDate = dayjs(log.created_at);
-                return logDate.isAfter(startDate) && logDate.isBefore(endDate);
-            });
-        }
-
-        if (action) {
-            filtered = filtered.filter((log) => log.action === action);
-        }
-
-        setFilteredLogs(filtered);
     };
 
     return (
@@ -118,13 +122,24 @@ const UserLogs: React.FC = () => {
             title="Lịch sử hoạt động người dùng"
             extra={
                 <Space>
-                    <Button icon={<ReloadOutlined />} onClick={fetchLogs} loading={loading}>
+                    <Button
+                        icon={<ReloadOutlined />}
+                        onClick={() => fetchLogs(pagination.current, pagination.pageSize)}
+                        loading={loading}
+                    >
                         Làm mới
                     </Button>
                 </Space>
             }
         >
-            <Space className="mb-4">
+            <Space className="mb-4" wrap>
+                <Search
+                    placeholder="Tìm kiếm theo họ tên"
+                    allowClear
+                    enterButton={<SearchOutlined />}
+                    onSearch={handleSearch}
+                    style={{ width: 300 }}
+                />
                 <RangePicker
                     onChange={handleDateRangeChange}
                     format="DD/MM/YYYY"
@@ -151,10 +166,11 @@ const UserLogs: React.FC = () => {
                 rowKey="id"
                 loading={loading}
                 pagination={{
-                    pageSize: 10,
+                    ...pagination,
                     showSizeChanger: true,
                     showTotal: (total) => `Tổng số ${total} bản ghi`,
                 }}
+                onChange={handleTableChange}
                 scroll={{ x: 1200 }}
             />
         </Card>

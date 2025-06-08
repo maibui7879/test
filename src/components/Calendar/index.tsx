@@ -155,7 +155,7 @@ const CalendarComponent = ({ tasks, loading = false, onTaskCreated }: CalendarCo
                 },
             }}
         >
-            <div className="p-4 sm:p-6 space-y-4 text-base sm:text-sm overflow-hidden">
+            <div className="sm:p-6 space-y-4 text-base sm:text-sm overflow-hidden">
                 <div className="flex justify-between items-center flex-wrap gap-4">
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lịch công việc</h1>
                     <Button

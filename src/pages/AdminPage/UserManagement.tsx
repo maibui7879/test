@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, Form, Input, Select, message, Popconfirm, Input as AntInput } from 'antd';
-import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined } from '@ant-design/icons';
 import {
-    getUsersApi,
-    createUserApi,
-    updateUserRoleApi,
-    updateUserStatusApi,
-    deleteUserApi,
-} from '../../services/adminServices';
+    Table,
+    Button,
+    Space,
+    Modal,
+    Form,
+    Input,
+    Select,
+    message,
+    Popconfirm,
+    Input as AntInput,
+    Checkbox,
+} from 'antd';
+import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined } from '@ant-design/icons';
+import { getUsersApi, createUserApi, updateUserApi, deleteUserApi } from '../../services/adminServices';
 import type { User, CreateUserParams } from '../../services/types/types';
+import type { UpdateUserBody } from '../../services/adminServices/updateUser';
 
 const { Search } = AntInput;
 
@@ -23,6 +30,7 @@ const UserManagement: React.FC = () => {
     const [form] = Form.useForm();
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [searchText, setSearchText] = useState('');
+    const [resetPassword, setResetPassword] = useState(false);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -55,9 +63,35 @@ const UserManagement: React.FC = () => {
         }
     };
 
+    const handleUpdateUser = async (values: any) => {
+        if (!editingUser) return;
+
+        try {
+            const updateData: UpdateUserBody = {
+                full_name: values.full_name,
+                role: values.role,
+                status: values.status,
+            };
+
+            if (resetPassword) {
+                updateData.resetPassword = true;
+            }
+
+            await updateUserApi(editingUser.id.toString(), updateData);
+            message.success('Cập nhật người dùng thành công');
+            setModalVisible(false);
+            form.resetFields();
+            setResetPassword(false);
+            fetchUsers();
+        } catch (error) {
+            message.error('Không thể cập nhật người dùng');
+        }
+    };
+
     const handleUpdateRole = async (userId: string, role: UserRole) => {
         try {
-            await updateUserRoleApi({ userId, role });
+            const updateData: UpdateUserBody = { role };
+            await updateUserApi(userId, updateData);
             message.success('Cập nhật vai trò thành công');
             fetchUsers();
         } catch (error) {
@@ -67,7 +101,8 @@ const UserManagement: React.FC = () => {
 
     const handleUpdateStatus = async (userId: string, status: UserStatus) => {
         try {
-            await updateUserStatusApi({ userId, status });
+            const updateData: UpdateUserBody = { status };
+            await updateUserApi(userId, updateData);
             message.success('Cập nhật trạng thái thành công');
             fetchUsers();
         } catch (error) {
@@ -87,7 +122,11 @@ const UserManagement: React.FC = () => {
 
     const handleSearch = (value: string) => {
         setSearchText(value);
-        const filtered = users.filter((user) => user.email.toLowerCase().includes(value.toLowerCase()));
+        const filtered = users.filter(
+            (user) =>
+                user.email.toLowerCase().includes(value.toLowerCase()) ||
+                (user.full_name && user.full_name.toLowerCase().includes(value.toLowerCase())),
+        );
         setFilteredUsers(filtered);
     };
 
@@ -98,12 +137,12 @@ const UserManagement: React.FC = () => {
             key: 'email',
             sorter: (a: User, b: User) => a.email.localeCompare(b.email),
         },
-        // {
-        //     title: 'Họ và tên',
-        //     dataIndex: 'fullName',
-        //     key: 'fullName',
-        //     sorter: (a: User, b: User) => (a.fullName || '').localeCompare(b.fullName || ''),
-        // },
+        {
+            title: 'Họ và tên',
+            dataIndex: 'full_name',
+            key: 'full_name',
+            sorter: (a: User, b: User) => (a.full_name || '').localeCompare(b.full_name || ''),
+        },
         {
             title: 'Vai trò',
             dataIndex: 'role',
@@ -153,6 +192,7 @@ const UserManagement: React.FC = () => {
                         onClick={() => {
                             setEditingUser(record);
                             setModalVisible(true);
+                            setResetPassword(false);
                         }}
                     >
                         Sửa
@@ -181,6 +221,7 @@ const UserManagement: React.FC = () => {
                     onClick={() => {
                         setEditingUser(null);
                         setModalVisible(true);
+                        setResetPassword(false);
                     }}
                 >
                     Thêm người dùng
@@ -212,10 +253,16 @@ const UserManagement: React.FC = () => {
                 onCancel={() => {
                     setModalVisible(false);
                     form.resetFields();
+                    setResetPassword(false);
                 }}
                 footer={null}
             >
-                <Form form={form} layout="vertical" onFinish={handleCreateUser} initialValues={editingUser || {}}>
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={editingUser ? handleUpdateUser : handleCreateUser}
+                    initialValues={editingUser || {}}
+                >
                     <Form.Item
                         name="email"
                         label="Email"
@@ -228,7 +275,7 @@ const UserManagement: React.FC = () => {
                     </Form.Item>
 
                     <Form.Item
-                        name="fullName"
+                        name="full_name"
                         label="Họ và tên"
                         rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
                     >
@@ -245,6 +292,14 @@ const UserManagement: React.FC = () => {
                             ]}
                         >
                             <Input.Password />
+                        </Form.Item>
+                    )}
+
+                    {editingUser && (
+                        <Form.Item>
+                            <Checkbox checked={resetPassword} onChange={(e) => setResetPassword(e.target.checked)}>
+                                Reset mật khẩu
+                            </Checkbox>
                         </Form.Item>
                     )}
 

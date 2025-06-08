@@ -5,6 +5,7 @@ import { faUser, faChartBar, faHistory } from '@fortawesome/free-solid-svg-icons
 import UserManagement from './UserManagement';
 import Statistics from './Statistics';
 import UserLogs from './UserLogs';
+import AdminLogs from './AdminLogs';
 
 const AdminPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('users');
@@ -31,14 +32,24 @@ const AdminPage: React.FC = () => {
             children: <Statistics />,
         },
         {
-            key: 'logs',
+            key: 'user-logs',
             label: (
                 <span className="flex items-center">
                     <FontAwesomeIcon icon={faHistory} className="mr-2" />
-                    Lịch sử hoạt động
+                    Lịch sử người dùng
                 </span>
             ),
             children: <UserLogs />,
+        },
+        {
+            key: 'admin-logs',
+            label: (
+                <span className="flex items-center">
+                    <FontAwesomeIcon icon={faHistory} className="mr-2" />
+                    Lịch sử Admin
+                </span>
+            ),
+            children: <AdminLogs />,
         },
     ];
 

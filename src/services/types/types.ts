@@ -286,13 +286,17 @@ export interface GetUserLogsResponse {
 export interface User {
     id: number;
     email: string;
-    password_hash: string;
-    role: string;
-    status: string;
-    google_id: string | null;
-    created_at?: string;
-    updated_at?: string;
+    full_name: string;
+    role?: 'admin' | 'member';
+    status?: 'active' | 'inactive';
+    created_at: string;
+    updated_at: string;
     gender: string;
+    phone_number?: string;
+    avatar_url?: string;
+    date_of_birth?: string;
+    address?: string;
+    bio?: string;
 }
 
 export interface GetUsersResponse {
@@ -314,6 +318,7 @@ export interface CreateUserParams {
     password: string;
     full_name: string;
     role: 'admin' | 'member';
+    status: 'active' | 'inactive';
 }
 
 export interface CreateUserResponse {

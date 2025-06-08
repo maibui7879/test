@@ -18,7 +18,7 @@ const deleteUserApi = async (params: DeleteUserParams): Promise<DeleteUserRespon
     const { userId } = params;
 
     try {
-        const response = await apiRequest<DeleteUserResponse>(`/admin/users/${userId}`, 'DELETE', null, true);
+        const response = await apiRequest<DeleteUserResponse>(`/admin/users/`, 'DELETE', { userId }, true);
         console.log('API response in service:', response);
 
         if (!response.success || !response.data) {
