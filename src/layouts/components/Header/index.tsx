@@ -238,6 +238,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                                     open={isNotificationOpen}
                                     onOpenChange={setIsNotificationOpen}
                                     placement="bottomRight"
+                                    dropdownRender={() => notificationContent}
                                 >
                                     <Badge
                                         count={reminders.filter((r) => !r.is_read).length}
