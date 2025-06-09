@@ -224,9 +224,9 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                                 onClick={onCollapse}
                                 className="!text-white hover:!text-gray-100 transition-colors duration-300"
                                 style={{
-                                    fontSize: '16px',
-                                    width: 64,
-                                    height: 64,
+                                    fontSize: window.innerWidth <= 768 ? '14px' : '16px',
+                                    width: window.innerWidth <= 768 ? 48 : 64,
+                                    height: window.innerWidth <= 768 ? 48 : 64,
                                 }}
                             />
                         </div>
@@ -270,7 +270,8 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                                         className="p-0 hover:bg-white/10 rounded-full flex items-center transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-white/20"
                                     >
                                         <Space className="px-2">
-                                            <Text className="text-white text-sm font-medium md:block hover:text-gray-100 transition-colors duration-300">
+                                            {/* Ẩn text trên màn hình nhỏ */}
+                                            <Text className="text-white text-sm font-medium md:block hidden hover:text-gray-100 transition-colors duration-300">
                                                 Xin chào, {user?.full_name || 'User'}
                                             </Text>
                                             <Avatar
@@ -287,7 +288,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                 </div>
             </nav>
         </>
-    );
+);
 }
 
 export default Header;

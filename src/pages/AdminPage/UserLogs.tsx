@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Key } from 'react';
-import { Table, Card, DatePicker, Select, Space, Button, message, Input } from 'antd';
+import { Table, Card, DatePicker, Select, Button, message, Input } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { getUserLogsApi } from '../../services/adminServices';
 import type { RangePickerProps } from 'antd/es/date-picker';
@@ -49,6 +49,23 @@ const UserLogs = () => {
     useEffect(() => {
         fetchLogs(pagination.current, pagination.pageSize);
     }, [searchText, dateRange, actionFilter]);
+
+    useEffect(() => {
+        let tempLogs = [...logs];
+
+        if (actionFilter) {
+            tempLogs = tempLogs.filter((log) => log.action === actionFilter);
+        }
+
+        if (dateRange) {
+            tempLogs = tempLogs.filter((log) => {
+                const logDate = dayjs(log.created_at);
+                return logDate.isAfter(dateRange[0].startOf('day')) && logDate.isBefore(dateRange[1].endOf('day'));
+            });
+        }
+
+        setFilteredLogs(tempLogs);
+    }, [logs, actionFilter, dateRange]);
 
     const handleTableChange = (pagination: any) => {
         fetchLogs(pagination.current, pagination.pageSize);
@@ -121,44 +138,52 @@ const UserLogs = () => {
         <Card
             title="Lịch sử hoạt động người dùng"
             extra={
-                <Space>
-                    <Button
-                        icon={<ReloadOutlined />}
-                        onClick={() => fetchLogs(pagination.current, pagination.pageSize)}
-                        loading={loading}
-                    >
-                        Làm mới
-                    </Button>
-                </Space>
+                <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => fetchLogs(pagination.current, pagination.pageSize)}
+                    loading={loading}
+                >
+                    Làm mới
+                </Button>
             }
         >
-            <Space className="mb-4" wrap>
-                <Search
-                    placeholder="Tìm kiếm theo họ tên"
-                    allowClear
-                    enterButton={<SearchOutlined />}
-                    onSearch={handleSearch}
-                    style={{ width: 300 }}
-                />
-                <RangePicker
-                    onChange={handleDateRangeChange}
-                    format="DD/MM/YYYY"
-                    placeholder={['Từ ngày', 'Đến ngày']}
-                />
-                <Select
-                    placeholder="Lọc theo hành động"
-                    allowClear
-                    style={{ width: 200 }}
-                    onChange={handleActionFilterChange}
-                    options={[
-                        { value: 'LOGIN', label: 'Đăng nhập' },
-                        { value: 'LOGOUT', label: 'Đăng xuất' },
-                        { value: 'CREATE_TEAM', label: 'Tạo nhóm' },
-                        { value: 'UPDATE_PROFILE', label: 'Cập nhật thông tin' },
-                        { value: 'Admin - Xem lịch sử tham gia', label: 'Admin - Xem lịch sử tham gia' },
-                    ]}
-                />
-            </Space>
+            {/* Responsive filter container */}
+            <div className="flex flex-wrap md:flex-nowrap gap-3 mb-4">
+                <div className="flex-1 min-w-[250px]">
+                    <Search
+                        placeholder="Tìm kiếm theo họ tên"
+                        allowClear
+                        enterButton={<SearchOutlined />}
+                        onSearch={handleSearch}
+                        style={{ width: '100%' }}
+                    />
+                </div>
+
+                <div className="flex-1 min-w-[250px]">
+                    <RangePicker
+                        onChange={handleDateRangeChange}
+                        format="DD/MM/YYYY"
+                        placeholder={['Từ ngày', 'Đến ngày']}
+                        style={{ width: '100%' }}
+                    />
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                    <Select
+                        placeholder="Lọc theo hành động"
+                        allowClear
+                        onChange={handleActionFilterChange}
+                        style={{ width: '100%' }}
+                        options={[
+                            { value: 'LOGIN', label: 'Đăng nhập' },
+                            { value: 'LOGOUT', label: 'Đăng xuất' },
+                            { value: 'CREATE_TEAM', label: 'Tạo nhóm' },
+                            { value: 'UPDATE_PROFILE', label: 'Cập nhật thông tin' },
+                            { value: 'Admin - Xem lịch sử tham gia', label: 'Admin - Xem lịch sử tham gia' },
+                        ]}
+                    />
+                </div>
+            </div>
 
             <Table
                 columns={columns}
@@ -171,7 +196,7 @@ const UserLogs = () => {
                     showTotal: (total) => `Tổng số ${total} bản ghi`,
                 }}
                 onChange={handleTableChange}
-                scroll={{ x: 1200 }}
+                scroll={{ x: 'max-content' }}
             />
         </Card>
     );

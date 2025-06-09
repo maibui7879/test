@@ -11,11 +11,13 @@ import {
     Popconfirm,
     Input as AntInput,
     Checkbox,
+    Tag,
 } from 'antd';
 import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined } from '@ant-design/icons';
 import { getUsersApi, createUserApi, updateUserApi, deleteUserApi } from '../../services/adminServices';
 import type { User, CreateUserParams } from '../../services/types/types';
 import type { UpdateUserBody } from '../../services/adminServices/updateUser';
+import type { ColumnsType } from 'antd/es/table';
 
 const { Search } = AntInput;
 
@@ -31,6 +33,17 @@ const UserManagement = () => {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [searchText, setSearchText] = useState('');
     const [resetPassword, setResetPassword] = useState(false);
+
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 576);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -88,28 +101,6 @@ const UserManagement = () => {
         }
     };
 
-    const handleUpdateRole = async (userId: string, role: UserRole) => {
-        try {
-            const updateData: UpdateUserBody = { role };
-            await updateUserApi(userId, updateData);
-            message.success('Cập nhật vai trò thành công');
-            fetchUsers();
-        } catch (error) {
-            message.error('Không thể cập nhật vai trò');
-        }
-    };
-
-    const handleUpdateStatus = async (userId: string, status: UserStatus) => {
-        try {
-            const updateData: UpdateUserBody = { status };
-            await updateUserApi(userId, updateData);
-            message.success('Cập nhật trạng thái thành công');
-            fetchUsers();
-        } catch (error) {
-            message.error('Không thể cập nhật trạng thái');
-        }
-    };
-
     const handleDeleteUser = async (userId: string) => {
         try {
             await deleteUserApi({ userId });
@@ -130,62 +121,58 @@ const UserManagement = () => {
         setFilteredUsers(filtered);
     };
 
-    const columns = [
+    const columns: ColumnsType<User> = React.useMemo(() => [
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
-            sorter: (a: User, b: User) => a.email.localeCompare(b.email),
+            sorter: (a, b) => a.email.localeCompare(b.email),
+            width: 200,
         },
         {
             title: 'Họ và tên',
             dataIndex: 'full_name',
             key: 'full_name',
-            sorter: (a: User, b: User) => (a.full_name || '').localeCompare(b.full_name || ''),
+            sorter: (a, b) => (a.full_name || '').localeCompare(b.full_name || ''),
+            width: 200,
         },
         {
             title: 'Vai trò',
             dataIndex: 'role',
             key: 'role',
-            render: (role: UserRole, record: User) => (
-                <Select
-                    value={role}
-                    onChange={(value: UserRole) => handleUpdateRole(record.id.toString(), value)}
-                    style={{ width: 120 }}
-                >
-                    <Select.Option value="member">Member</Select.Option>
-                    <Select.Option value="admin">Admin</Select.Option>
-                </Select>
-            ),
+            render: (role: UserRole) => {
+                const color = role === 'admin' ? 'blue' : 'magenta';
+                const roleText = role === 'admin' ? 'Quản trị viên' : 'Người dùng';
+                return <Tag color={color}>{roleText}</Tag>;
+            },
+            width: 130,
         },
         {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
-            render: (status: UserStatus, record: User) => (
-                <Select
-                    value={status}
-                    onChange={(value: UserStatus) => handleUpdateStatus(record.id.toString(), value)}
-                    style={{ width: 120 }}
-                >
-                    <Select.Option value="active">Active</Select.Option>
-                    <Select.Option value="inactive">Inactive</Select.Option>
-                </Select>
-            ),
+            render: (status: UserStatus) => {
+                const color = status === 'active' ? 'green' : 'volcano';
+                const statusText = status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động';
+                return <Tag color={color}>{statusText}</Tag>;
+            },
+            width: 130,
         },
         {
             title: 'Ngày tạo',
             dataIndex: 'created_at',
             key: 'created_at',
             render: (date: string) => new Date(date).toLocaleDateString(),
-            sorter: (a: User, b: User) =>
-                new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime(),
+            sorter: (a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime(),
+            width: 150,
         },
         {
             title: 'Thao tác',
             key: 'action',
+            fixed: 'right',
+            width: isMobile ? 80 : 130,
             render: (_: any, record: User) => (
-                <Space size="middle">
+                <Space size="middle" style={{ minWidth: 120 }}>
                     <Button
                         type="primary"
                         icon={<EditOutlined />}
@@ -194,8 +181,10 @@ const UserManagement = () => {
                             setModalVisible(true);
                             setResetPassword(false);
                         }}
+                        style={{ whiteSpace: 'nowrap' }}
+                        size="small"
                     >
-                        Sửa
+                        {!isMobile && 'Sửa'}
                     </Button>
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa người dùng này?"
@@ -203,14 +192,12 @@ const UserManagement = () => {
                         okText="Có"
                         cancelText="Không"
                     >
-                        <Button danger icon={<DeleteOutlined />}>
-                            Xóa
-                        </Button>
+                        <Button danger icon={<DeleteOutlined />} size="small" />
                     </Popconfirm>
                 </Space>
             ),
         },
-    ];
+    ], [isMobile]);
 
     return (
         <div className="p-6">
@@ -227,7 +214,7 @@ const UserManagement = () => {
                     Thêm người dùng
                 </Button>
                 <Search
-                    placeholder="Tìm kiếm theo email hoặc tên"
+                    placeholder="Tìm kiếm theo email hoặc họ và tên"
                     allowClear
                     enterButton={<SearchOutlined />}
                     onSearch={handleSearch}
@@ -245,6 +232,7 @@ const UserManagement = () => {
                     showSizeChanger: true,
                     showTotal: (total) => `Tổng số ${total} người dùng`,
                 }}
+                scroll={{ x: 900 }}
             />
 
             <Modal
@@ -298,7 +286,7 @@ const UserManagement = () => {
                     {editingUser && (
                         <Form.Item>
                             <Checkbox checked={resetPassword} onChange={(e) => setResetPassword(e.target.checked)}>
-                                Reset mật khẩu
+                                Đặt lại mật khẩu
                             </Checkbox>
                         </Form.Item>
                     )}
@@ -309,8 +297,8 @@ const UserManagement = () => {
                         rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
                     >
                         <Select>
-                            <Select.Option value="member">Member</Select.Option>
-                            <Select.Option value="admin">Admin</Select.Option>
+                            <Select.Option value="member">Thành viên</Select.Option>
+                            <Select.Option value="admin">Quản trị viên</Select.Option>
                         </Select>
                     </Form.Item>
 
@@ -320,8 +308,8 @@ const UserManagement = () => {
                         rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
                     >
                         <Select>
-                            <Select.Option value="active">Active</Select.Option>
-                            <Select.Option value="inactive">Inactive</Select.Option>
+                            <Select.Option value="active">Hoạt động</Select.Option>
+                            <Select.Option value="inactive">Ngưng hoạt động</Select.Option>
                         </Select>
                     </Form.Item>
 

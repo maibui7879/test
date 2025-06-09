@@ -83,6 +83,7 @@ const Statistics = () => {
 
     const chartOptions = {
         responsive: true,
+        maintainAspectRatio: false, // để chart co dãn chiều cao phù hợp div cha
         plugins: {
             legend: {
                 position: 'bottom' as const,
@@ -150,7 +151,7 @@ const Statistics = () => {
 
             <Spin spinning={loading}>
                 <Row gutter={[16, 16]}>
-                    <Col span={8}>
+                    <Col xs={24} sm={12} md={8}>
                         <Card>
                             <Statistic
                                 title="Tổng số người dùng"
@@ -159,7 +160,7 @@ const Statistics = () => {
                             />
                         </Card>
                     </Col>
-                    <Col span={8}>
+                    <Col xs={24} sm={12} md={8}>
                         <Card>
                             <Statistic
                                 title="Tổng số công việc"
@@ -171,7 +172,7 @@ const Statistics = () => {
                             />
                         </Card>
                     </Col>
-                    <Col span={8}>
+                    <Col xs={24} sm={24} md={8}>
                         <Card>
                             <Statistic
                                 title="Tổng số nhóm"
@@ -183,16 +184,16 @@ const Statistics = () => {
                 </Row>
 
                 <Row gutter={[16, 16]} className="mt-4">
-                    <Col span={12}>
+                    <Col xs={24} md={12}>
                         <Card title="Tăng trưởng người dùng">
-                            <div className="h-64">
+                            <div style={{ height: 256, width: '100%' }}>
                                 <Line data={userRegistrationData} options={lineChartOptions} />
                             </div>
                         </Card>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} md={12}>
                         <Card title="Tăng trưởng nhóm">
-                            <div className="h-64">
+                            <div style={{ height: 256, width: '100%' }}>
                                 <Line data={teamGrowthData} options={lineChartOptions} />
                             </div>
                         </Card>
@@ -200,9 +201,9 @@ const Statistics = () => {
                 </Row>
 
                 <Row gutter={[16, 16]} className="mt-4">
-                    <Col span={24}>
+                    <Col xs={24}>
                         <Card title="Phân bố công việc">
-                            <div className="h-64">
+                            <div style={{ height: 256, width: '100%' }}>
                                 <Pie data={taskDistributionData} options={chartOptions} />
                             </div>
                         </Card>

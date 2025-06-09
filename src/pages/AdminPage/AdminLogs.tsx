@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, DatePicker, Select, Space, Tag, Typography, message } from 'antd';
+import { Table, Card, DatePicker, Select, Space, Tag, Typography, message, Grid } from 'antd';
 import type { AdminLog } from '../../services/adminServices/getAdminLogs';
 import dayjs from 'dayjs';
 import getAdminLogsApi from '../../services/adminServices/getAdminLogs';
+import type { ColumnsType } from 'antd/es/table/interface';
+
+type FixedType = boolean | 'left' | 'right';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
+const { useBreakpoint } = Grid;
 
 const AdminLogs = () => {
+    const screens = useBreakpoint();
+    const isMobile = !screens.md; // màn hình dưới md là mobile
+
     const [logs, setLogs] = useState<AdminLog[]>([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
@@ -53,6 +60,7 @@ const AdminLogs = () => {
 
     useEffect(() => {
         fetchLogs(pagination.current, pagination.pageSize);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters]);
 
     const handleTableChange = (pagination: any) => {
@@ -97,13 +105,15 @@ const AdminLogs = () => {
         }
     };
 
-    const columns = [
+    const columns: ColumnsType<AdminLog> = [
         {
             title: 'Thời gian',
             dataIndex: 'created_at',
             key: 'created_at',
             render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm:ss'),
             sorter: (a: AdminLog, b: AdminLog) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+            width: 180,
+            fixed: isMobile ? undefined : ('left' as FixedType),
         },
         {
             title: 'Admin',
@@ -112,20 +122,34 @@ const AdminLogs = () => {
             render: (_: string, record: AdminLog) => (
                 <div>
                     <div>{record.admin_name}</div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{record.admin_email}</div>
+                    <div style={{ fontSize: 12, color: '#666' }}>{record.admin_email}</div>
                 </div>
             ),
+            width: 160,
         },
         {
             title: 'Hành động',
             dataIndex: 'action',
             key: 'action',
             render: (action: string, record: AdminLog) => (
-                <Space direction="vertical" size="small">
+                <Space direction="vertical" size="small" style={{ maxWidth: 200 }}>
                     <Tag color={getActionTypeColor(record.action_type)}>{record.action}</Tag>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{record.description}</div>
+                    <div
+                        style={{
+                            fontSize: 12,
+                            color: '#666',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: 200,
+                        }}
+                        title={record.description}
+                    >
+                        {record.description}
+                    </div>
                 </Space>
             ),
+            width: 220,
         },
         {
             title: 'Thay đổi',
@@ -135,7 +159,7 @@ const AdminLogs = () => {
                 if (!record.old_data && !record.new_data) return null;
 
                 return (
-                    <div style={{ fontSize: '12px' }}>
+                    <div style={{ fontSize: 12, maxWidth: 300, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         {record.old_data && (
                             <div style={{ color: '#ff4d4f' }}>
                                 <strong>Cũ:</strong> {JSON.stringify(record.old_data)}
@@ -149,11 +173,15 @@ const AdminLogs = () => {
                     </div>
                 );
             },
+            width: 320,
+            responsive: ['md'], // Ẩn trên mobile
         },
         {
             title: 'IP',
             dataIndex: 'ip_address',
             key: 'ip_address',
+            width: 140,
+            fixed: isMobile ? undefined : ('right' as FixedType),
         },
     ];
 
@@ -161,10 +189,20 @@ const AdminLogs = () => {
         <div className="p-6">
             <Card>
                 <Title level={4}>Lịch sử hoạt động Admin</Title>
-                <Space style={{ marginBottom: 16 }}>
-                    <RangePicker onChange={handleDateRangeChange} showTime format="DD/MM/YYYY HH:mm:ss" />
+
+                <Space
+                    direction={isMobile ? 'vertical' : 'horizontal'}
+                    size="middle"
+                    style={{ marginBottom: 16, width: '100%' }}
+                >
+                    <RangePicker
+                        onChange={handleDateRangeChange}
+                        showTime
+                        format="DD/MM/YYYY HH:mm:ss"
+                        style={{ width: isMobile ? '100%' : 300 }}
+                    />
                     <Select
-                        style={{ width: 120 }}
+                        style={{ width: isMobile ? '100%' : 120 }}
                         placeholder="Loại hành động"
                         allowClear
                         onChange={handleActionTypeChange}
@@ -187,6 +225,7 @@ const AdminLogs = () => {
                     }}
                     loading={loading}
                     onChange={handleTableChange}
+                    scroll={{ x: 1200 }}
                 />
             </Card>
         </div>

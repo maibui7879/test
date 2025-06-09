@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Layout, Menu } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,28 +9,34 @@ const { Sider } = Layout;
 
 interface SidebarProps {
     collapsed: boolean;
+    onCollapse?: (collapsed: boolean) => void; // để tự động điều chỉnh collapse
     routes: Route[];
 }
 
-const Sidebar = ({ collapsed, routes }: SidebarProps) => {
+const Sidebar = ({ collapsed, onCollapse, routes }: SidebarProps) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [dimensions, setDimensions] = useState({
-        width: window.innerWidth <= 768 ? 200 : 256,
-        collapsedWidth: window.innerWidth <= 768 ? 40 : 60,
-    });
+
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     useEffect(() => {
-        const handleResize = () => {
-            setDimensions({
-                width: window.innerWidth <= 768 ? 200 : 256,
-                collapsedWidth: window.innerWidth <= 768 ? 40 : 60,
-            });
-        };
-
+        const handleResize = () => setWindowWidth(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Mình chọn breakpoint 768, bạn có thể chỉnh
+    const isMobile = windowWidth <= 768;
+
+    // Khi màn hình mobile, tự động collapse sidebar nếu chưa collapse
+    useEffect(() => {
+        if (onCollapse) {
+            onCollapse(isMobile);
+        }
+    }, [isMobile, onCollapse]);
+
+    const width = isMobile ? 200 : 256;
+    const collapsedWidth = isMobile ? 40 : 60;
 
     const getMenuItem = useCallback((route: Route) => {
         const renderIcon = (icon?: any) => {
@@ -62,27 +68,25 @@ const Sidebar = ({ collapsed, routes }: SidebarProps) => {
         };
     }, []);
 
-    const menuItems = useMemo(() => {
-        return routes.map((route) => getMenuItem(route));
-    }, [routes, getMenuItem]);
+    const menuItems = useMemo(() => routes.map(getMenuItem), [routes, getMenuItem]);
 
-    const handleMenuClick = useCallback(
-        ({ key }: { key: string }) => {
-            navigate(key);
-        },
-        [navigate],
-    );
+    const handleMenuClick = useCallback(({ key }: { key: string }) => {
+        navigate(key);
+    }, [navigate]);
 
     return (
         <Sider
             trigger={null}
             collapsible
             collapsed={collapsed}
-            // theme="light"
+            onCollapse={onCollapse}
+            width={width}
+            collapsedWidth={collapsedWidth}
             className="min-h-screen bg-gradient-to-b from-gray-800 to-gray-900 shadow-xl transition-all duration-300"
-            width={dimensions.width}
-            breakpoint="lg"
-            collapsedWidth={dimensions.collapsedWidth}
+            breakpoint="md" // md = 768px
+            onBreakpoint={broken => {
+                if (onCollapse) onCollapse(broken);
+            }}
         >
             <div className="flex items-center justify-center p-4 border-b border-gray-700/50 h-16 backdrop-blur-sm">
                 <div
@@ -104,10 +108,7 @@ const Sidebar = ({ collapsed, routes }: SidebarProps) => {
                 items={menuItems}
                 onClick={handleMenuClick}
                 className="bg-transparent border-r-0"
-                style={{
-                    padding: '8px 0',
-                    fontSize: '13px',
-                }}
+                style={{ padding: '8px 0', fontSize: '13px' }}
                 inlineCollapsed={collapsed}
             />
             <SidebarFooter collapsed={collapsed} />
