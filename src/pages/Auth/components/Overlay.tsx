@@ -5,7 +5,7 @@ interface OverlayProps {
     toggleActive: () => void;
 }
 
-const Overlay: React.FC<OverlayProps> = ({ isLoginActive, toggleActive }) => {
+const Overlay = ({ isLoginActive, toggleActive }: OverlayProps) => {
     return (
         <div
             className={`relative md:absolute top-0 bottom-0 left-0 md:left-auto md:right-0 w-full md:w-1/2

@@ -1,9 +1,9 @@
+import { useUser } from '@contexts/useAuth/userContext';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useUser } from '../../../contexts/useAuth/userContext';
 
-const Login: React.FC = () => {
+const Login = () => {
     const { login, user } = useUser();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');

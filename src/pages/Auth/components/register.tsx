@@ -1,13 +1,13 @@
+import { useUser } from '@contexts/useAuth/userContext';
+import { registerApi } from '@services/authServices';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { registerApi } from '../../../services/authServices';
-import { useUser } from '../../../contexts/useAuth/userContext';
 
 interface RegisterProps {
     onRegisterSuccess: () => void;
 }
 
-const Register: React.FC<RegisterProps> = ({ onRegisterSuccess }) => {
+const Register = ({ onRegisterSuccess }: RegisterProps) => {
     const { login } = useUser();
     const [email, setEmail] = useState('');
     const [fullName, setFullName] = useState('');

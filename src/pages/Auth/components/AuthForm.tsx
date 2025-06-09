@@ -3,11 +3,10 @@ import Login from './login';
 import Register from './register';
 import Overlay from './Overlay';
 
-const AuthForm: React.FC = () => {
+const AuthForm = () => {
     const [isLoginActive, setIsLoginActive] = useState(true);
 
     const toggleActive = () => setIsLoginActive((prev) => !prev);
-
     const switchToLogin = () => setIsLoginActive(true);
 
     return (
@@ -22,7 +21,6 @@ const AuthForm: React.FC = () => {
                 width: '100vw',
             }}
         >
-            {/* Login & Register container */}
             <div
                 className={`relative w-full md:w-1/2 transition-all duration-700 ease-in-out transform
           ${isLoginActive ? 'mt-24 md:mt-0' : 'mt-0'}
