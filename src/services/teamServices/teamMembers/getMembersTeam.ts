@@ -5,6 +5,7 @@ export interface TeamMemberInfo {
     full_name: string;
     role: string;
     avatar_url: string;
+    invite_name: string;
 }
 
 const getMembers = async (teamId: number): Promise<TeamMemberInfo[]> => {

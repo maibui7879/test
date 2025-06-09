@@ -58,41 +58,47 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
     const { message, contextHolder } = useMessage();
     const navigate = useNavigate();
 
-    const fetchReminders = useCallback(async (pageNum: number = 1) => {
-        try {
-            setLoading(true);
-            const response = await getReminders({
-                is_read: '0',
-                page: pageNum.toString(),
-                limit: '5',
-            });
+    const fetchReminders = useCallback(
+        async (pageNum: number = 1) => {
+            try {
+                setLoading(true);
+                const response = await getReminders({
+                    is_read: '0',
+                    page: pageNum.toString(),
+                    limit: '5',
+                });
 
-            if (pageNum === 1) {
-                setReminders(response.data);
-            } else {
-                setReminders((prev) => [...prev, ...response.data]);
+                if (pageNum === 1) {
+                    setReminders(response.data);
+                } else {
+                    setReminders((prev) => [...prev, ...response.data]);
+                }
+
+                setHasMore(response.data.length === 5);
+                setPage(pageNum);
+            } catch (error: any) {
+                message.error(error.message || 'Không thể tải thông báo');
+            } finally {
+                setLoading(false);
             }
+        },
+        [message],
+    );
 
-            setHasMore(response.data.length === 5);
-            setPage(pageNum);
-        } catch (error: any) {
-            message.error(error.message || 'Không thể tải thông báo');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const handleMarkAsRead = useCallback(async (id: number) => {
-        try {
-            await markReminderRead(id);
-            setReminders((prev) =>
-                prev.map((reminder) => (reminder.id === id ? { ...reminder, is_read: true } : reminder)),
-            );
-            message.success({ key: 'markRead', content: 'Đã đánh dấu đã đọc' });
-        } catch (error: any) {
-            message.error({ key: 'markReadError', content: error.message || 'Không thể cập nhật trạng thái' });
-        }
-    }, []);
+    const handleMarkAsRead = useCallback(
+        async (id: number) => {
+            try {
+                await markReminderRead(id);
+                setReminders((prev) =>
+                    prev.map((reminder) => (reminder.id === id ? { ...reminder, is_read: true } : reminder)),
+                );
+                message.success({ key: 'markRead', content: 'Đã đánh dấu đã đọc' });
+            } catch (error: any) {
+                message.error({ key: 'markReadError', content: error.message || 'Không thể cập nhật trạng thái' });
+            }
+        },
+        [message],
+    );
 
     const handleScroll = useCallback(
         (e: React.UIEvent<HTMLDivElement>) => {
@@ -234,11 +240,11 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                         <div className="flex items-center">
                             <Space size="middle" className="mr-4">
                                 <Dropdown
+                                    dropdownRender={() => notificationContent}
                                     trigger={['click']}
                                     open={isNotificationOpen}
                                     onOpenChange={setIsNotificationOpen}
                                     placement="bottomRight"
-                                    dropdownRender={() => notificationContent}
                                 >
                                     <Badge
                                         count={reminders.filter((r) => !r.is_read).length}

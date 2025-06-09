@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, Select, DatePicker, Tag, Space } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button, Form, Input, Select, DatePicker, Tag, Space, Spin, message } from 'antd';
 import { EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { TaskDetailsProps } from '../type';
@@ -17,7 +17,7 @@ interface TaskOverviewProps {
     onCancel: () => void;
     onSave: () => void;
     onDelete: () => void;
-    teamId: TaskDetailsProps['teamId'];
+    teamId?: TaskDetailsProps['teamId'];
 }
 
 const TaskOverview: React.FC<TaskOverviewProps> = ({
@@ -31,27 +31,28 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
     teamId,
 }) => {
     const [teamMembers, setTeamMembers] = useState<TeamMemberInfo[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState(false);
+    const [showFullTitle, setShowFullTitle] = useState(false);
 
-    useEffect(() => {
-        const fetchTeamMembers = async () => {
-            if (teamId) {
-                setLoading(true);
-                try {
-                    const members = await getMembers(Number(teamId));
-                    setTeamMembers(members);
-                } catch (error) {
-                    console.error('Error fetching team members:', error);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchTeamMembers();
+    const fetchTeamMembers = useCallback(async () => {
+        if (!teamId) return;
+        setLoading(true);
+        try {
+            const members = await getMembers(Number(teamId));
+            setTeamMembers(members);
+        } catch (error) {
+            console.error('Error fetching team members:', error);
+            message.error('Không thể tải danh sách thành viên đội.');
+        } finally {
+            setLoading(false);
+        }
     }, [teamId]);
 
-    // Khi isEditing thay đổi sang true, set giá trị mặc định cho form
+    useEffect(() => {
+        fetchTeamMembers();
+    }, [fetchTeamMembers]);
+
+    // Sync form values when editing starts or task changes
     useEffect(() => {
         if (isEditing) {
             form.setFieldsValue({
@@ -65,6 +66,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
             });
         } else {
             form.resetFields();
+            setShowFullTitle(false);
         }
     }, [isEditing, task, form]);
 
@@ -105,23 +107,51 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
                     )}
                 </Space>
             </div>
+
             <Form form={form} layout="vertical">
+                {/* Tiêu đề */}
+                <div>
+                    <p className="text-gray-600 mb-1 font-bold">Tiêu đề:</p>
+                    {isEditing ? (
+                        <Form.Item
+                            name="title"
+                            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}
+                            validateTrigger={['onBlur', 'onSubmit']}
+                        >
+                            <Input className="hover:border-blue-400 focus:border-blue-400" />
+                        </Form.Item>
+                    ) : (
+                        <div className="flex flex-col">
+                            <div
+                                className={`font-medium text-gray-800 ${
+                                    showFullTitle
+                                        ? 'whitespace-normal max-w-full'
+                                        : 'max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap'
+                                }`}
+                                title={!showFullTitle ? task.title : undefined}
+                            >
+                                {task.title}
+                            </div>
+                            {task.title.length > 30 && (
+                                <button
+                                    type="button"
+                                    className="text-blue-500 underline text-sm mt-1 self-start"
+                                    onClick={() => setShowFullTitle((prev) => !prev)}
+                                >
+                                    {showFullTitle ? 'Ẩn bớt' : 'Xem chi tiết'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Trạng thái và độ ưu tiên */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <p className="text-gray-600 mb-1">Tiêu đề:</p>
-                        {isEditing ? (
-                            <Form.Item name="title" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}>
-                                <Input className="hover:border-blue-400 focus:border-blue-400" />
-                            </Form.Item>
-                        ) : (
-                            <p className="font-medium text-gray-800">{task.title}</p>
-                        )}
-                    </div>
-                    <div>
-                        <p className="text-gray-600 mb-1">Trạng thái:</p>
+                        <p className="text-gray-600 mb-1 font-bold">Trạng thái:</p>
                         {isEditing ? (
                             <Form.Item name="status" rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}>
-                                <Select className="hover:border-blue-400 focus:border-blue-400">
+                                <Select className="hover:border-blue-400 focus:border-blue-400" allowClear>
                                     <Select.Option value="todo">Chưa thực hiện</Select.Option>
                                     <Select.Option value="in_progress">Đang thực hiện</Select.Option>
                                     <Select.Option value="done">Hoàn thành</Select.Option>
@@ -133,62 +163,14 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
                             </Tag>
                         )}
                     </div>
-
-                    {teamId && (
-                        <div>
-                            <p className="text-gray-600 mb-1">Người thực hiện:</p>
-                            {isEditing ? (
-                                <Form.Item
-                                    name="assigned_user_id"
-                                    rules={[{ required: true, message: 'Chọn người thực hiện!' }]}
-                                >
-                                    <Select
-                                        showSearch
-                                        placeholder="Chọn người thực hiện"
-                                        filterOption={(input, option) =>
-                                            (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                                        }
-                                        className="hover:border-blue-400 focus:border-blue-400"
-                                        optionLabelProp="label"
-                                    >
-                                        {teamMembers.map((user) => (
-                                            <Select.Option
-                                                key={user.id}
-                                                value={user.id}
-                                                label={`${user.full_name} (${user.role})`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium">{user.full_name}</span>
-                                                </div>
-                                            </Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            ) : (
-                                <div className="flex items-center">
-                                    {assignedUser ? (
-                                        <>
-                                            <span className="font-medium text-gray-800">{assignedUser.full_name}</span>
-                                            <Tag color="blue" className="ml-2">
-                                                {assignedUser.role}
-                                            </Tag>
-                                        </>
-                                    ) : (
-                                        <span className="text-gray-500">Chưa giao</span>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     <div>
-                        <p className="text-gray-600 mb-1">Độ ưu tiên:</p>
+                        <p className="text-gray-600 mb-1 font-bold">Độ ưu tiên:</p>
                         {isEditing ? (
                             <Form.Item
                                 name="priority"
                                 rules={[{ required: true, message: 'Vui lòng chọn độ ưu tiên!' }]}
                             >
-                                <Select className="hover:border-blue-400 focus:border-blue-400">
+                                <Select className="hover:border-blue-400 focus:border-blue-400" allowClear>
                                     <Select.Option value="low">Thấp</Select.Option>
                                     <Select.Option value="medium">Trung bình</Select.Option>
                                     <Select.Option value="high">Cao</Select.Option>
@@ -200,8 +182,12 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
                             </Tag>
                         )}
                     </div>
+                </div>
+
+                {/* Thời gian bắt đầu và kết thúc */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <p className="text-gray-600 mb-1">Thời gian bắt đầu:</p>
+                        <p className="text-gray-600 mb-1 font-bold">Thời gian bắt đầu:</p>
                         {isEditing ? (
                             <Form.Item name="start_time">
                                 <DatePicker
@@ -217,7 +203,7 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
                         )}
                     </div>
                     <div>
-                        <p className="text-gray-600 mb-1">Thời gian kết thúc:</p>
+                        <p className="text-gray-600 mb-1 font-bold">Thời gian kết thúc:</p>
                         {isEditing ? (
                             <Form.Item name="end_time">
                                 <DatePicker
@@ -233,10 +219,67 @@ const TaskOverview: React.FC<TaskOverviewProps> = ({
                         )}
                     </div>
                 </div>
+
+                {/* Người thực hiện */}
+                {teamId && (
+                    <div>
+                        <p className="text-gray-600 mb-1 font-bold">Người thực hiện:</p>
+                        {loading ? (
+                            <Spin />
+                        ) : isEditing ? (
+                            <Form.Item
+                                name="assigned_user_id"
+                                rules={[{ required: true, message: 'Chọn người thực hiện!' }]}
+                            >
+                                <Select
+                                    showSearch
+                                    placeholder="Chọn người thực hiện"
+                                    filterOption={(input, option) =>
+                                        (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                                    }
+                                    className="hover:border-blue-400 focus:border-blue-400"
+                                    optionLabelProp="label"
+                                >
+                                    {teamMembers.map((user) => (
+                                        <Select.Option
+                                            key={user.id}
+                                            value={user.id}
+                                            label={`${user.full_name} (${user.role})`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-medium">{user.full_name}</span>
+                                                <small className="text-gray-400">{user.role}</small>
+                                            </div>
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        ) : (
+                            <div className="flex items-center">
+                                {assignedUser ? (
+                                    <>
+                                        <span className="font-medium text-gray-800">{assignedUser.full_name}</span>
+                                        <Tag color="blue" className="ml-2">
+                                            {assignedUser.role}
+                                        </Tag>
+                                    </>
+                                ) : (
+                                    <span className="text-gray-500">Chưa giao</span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Mô tả */}
                 <div>
-                    <p className="text-gray-600 mb-1">Mô tả:</p>
+                    <p className="text-gray-600 mb-1 font-bold">Mô tả:</p>
                     {isEditing ? (
-                        <Form.Item name="description" rules={[{ required: true, message: 'Nhập mô tả!' }]}>
+                        <Form.Item
+                            name="description"
+                            rules={[{ required: true, message: 'Nhập mô tả!' }]}
+                            validateTrigger={['onBlur', 'onSubmit']}
+                        >
                             <TextArea rows={3} className="hover:border-blue-400 focus:border-blue-400" />
                         </Form.Item>
                     ) : (

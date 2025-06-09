@@ -10,13 +10,15 @@ import {
     EditOutlined,
     LoadingOutlined,
     PlusOutlined,
+    LogoutOutlined,
 } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 import { useMessage } from '@/hooks/useMessage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import getTeamById from '@/services/teamServices/getTeamById';
 import { Team } from '@services/types/types';
 import { deleteTeam, updateTeam } from '@services/teamServices';
+import leaveTeam from '@/services/teamServices/leaveTeam';
 import { useUser } from '@/contexts/useAuth/userContext';
 import type { UpdateTeamPayload } from '@/services/types/types';
 
@@ -40,6 +42,7 @@ const Settings = ({ teamId }: SettingsProps) => {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const { message, contextHolder } = useMessage();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useUser();
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string>('');
@@ -50,6 +53,9 @@ const Settings = ({ teamId }: SettingsProps) => {
     const [disabled, setDisabled] = useState(true);
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
     const draggleRef = useRef<HTMLDivElement>(null);
+
+    // Check if current URL is for joined teams
+    const isJoinedTeam = location.pathname.includes('/teams/joined');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -172,17 +178,32 @@ const Settings = ({ teamId }: SettingsProps) => {
         });
     };
 
-    const handleDeleteTeam = () => {
+    const handleDeleteOrLeaveTeam = () => {
         if (!teamId) return;
         setDeleteModalOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
-        if (!teamId) return;
+        if (!teamId || !user) return;
 
         setDeleteLoading(true);
         try {
-            await deleteTeam(Number(teamId));
+            if (isJoinedTeam) {
+                // Leave team
+                await leaveTeam(Number(teamId));
+                message.success({
+                    key: 'leave-team-success',
+                    content: 'Đã rời khỏi nhóm thành công!',
+                });
+            } else {
+                // Delete team
+                await deleteTeam(Number(teamId));
+                message.success({
+                    key: 'delete-team-success',
+                    content: 'Đã xóa nhóm thành công!',
+                });
+            }
+
             setDeleteModalOpen(false);
 
             if (teamData?.creator_id === user?.id) {
@@ -191,7 +212,13 @@ const Settings = ({ teamId }: SettingsProps) => {
                 navigate('/teams/joined');
             }
         } catch (error: any) {
-            console.error('Error deleting team:', error);
+            console.error('Error deleting/leaving team:', error);
+            message.error({
+                key: 'delete-leave-error',
+                content: isJoinedTeam
+                    ? error.message || 'Có lỗi xảy ra khi rời nhóm!'
+                    : error.message || 'Có lỗi xảy ra khi xóa nhóm!',
+            });
         } finally {
             setDeleteLoading(false);
         }
@@ -224,7 +251,7 @@ const Settings = ({ teamId }: SettingsProps) => {
                 <Row gutter={[24, 24]} align="top">
                     <Col xs={24} md={8} className="flex justify-center md:justify-start">
                         <div className="relative w-48 h-48 mb-4">
-                            {isEditing ? (
+                            {isEditing && !isJoinedTeam ? (
                                 <Upload
                                     name="avatar"
                                     listType="picture-circle"
@@ -254,7 +281,7 @@ const Settings = ({ teamId }: SettingsProps) => {
                         </div>
                     </Col>
                     <Col xs={24} md={16}>
-                        {isEditing ? (
+                        {isEditing && !isJoinedTeam ? (
                             <Form
                                 form={form}
                                 layout="vertical"
@@ -321,9 +348,11 @@ const Settings = ({ teamId }: SettingsProps) => {
                                             <div>{teamData.description || 'N/A'}</div>
                                         </div>
                                     </div>
-                                    <Button type="text" icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
-                                        Chỉnh sửa
-                                    </Button>
+                                    {!isJoinedTeam && (
+                                        <Button type="text" icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
+                                            Chỉnh sửa
+                                        </Button>
+                                    )}
                                 </div>
 
                                 <div className="bg-gray-100 p-4 rounded-lg">
@@ -360,18 +389,19 @@ const Settings = ({ teamId }: SettingsProps) => {
                     <div>
                         <h3 className="text-lg font-semibold text-red-700 mb-2">Vùng nguy hiểm</h3>
                         <p className="text-red-600 mb-4">
-                            Các hành động trong khu vực này có thể ảnh hưởng nghiêm trọng đến nhóm của bạn. Vui lòng cẩn
-                            thận khi thực hiện.
+                            {isJoinedTeam
+                                ? 'Rời khỏi nhóm sẽ không thể khôi phục lại quyền truy cập. Vui lòng cẩn thận khi thực hiện.'
+                                : 'Các hành động trong khu vực này có thể ảnh hưởng nghiêm trọng đến nhóm của bạn. Vui lòng cẩn thận khi thực hiện.'}
                         </p>
                     </div>
 
                     <Button
                         danger
-                        icon={<DeleteOutlined />}
-                        onClick={handleDeleteTeam}
+                        icon={isJoinedTeam ? <LogoutOutlined /> : <DeleteOutlined />}
+                        onClick={handleDeleteOrLeaveTeam}
                         className="hover:!bg-red-600 transition-colors duration-200"
                     >
-                        Xóa nhóm
+                        {isJoinedTeam ? 'Rời nhóm' : 'Xóa nhóm'}
                     </Button>
                 </div>
             </Card>
@@ -391,13 +421,13 @@ const Settings = ({ teamId }: SettingsProps) => {
                         onFocus={() => {}}
                         onBlur={() => {}}
                     >
-                        Xác nhận xóa nhóm
+                        {isJoinedTeam ? 'Xác nhận rời nhóm' : 'Xác nhận xóa nhóm'}
                     </div>
                 }
                 open={deleteModalOpen}
                 onOk={handleDeleteConfirm}
                 onCancel={handleDeleteCancel}
-                okText="Đồng ý xóa"
+                okText={isJoinedTeam ? 'Đồng ý rời' : 'Đồng ý xóa'}
                 cancelText="Hủy"
                 okType="danger"
                 okButtonProps={{
@@ -421,9 +451,15 @@ const Settings = ({ teamId }: SettingsProps) => {
                 )}
             >
                 <div className="space-y-4">
-                    <p className="text-red-600 font-medium">Bạn có chắc chắn muốn xóa nhóm này?</p>
+                    <p className="text-red-600 font-medium">
+                        {isJoinedTeam
+                            ? 'Bạn có chắc chắn muốn rời khỏi nhóm này?'
+                            : 'Bạn có chắc chắn muốn xóa nhóm này?'}
+                    </p>
                     <p className="text-gray-600">
-                        Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến nhóm.
+                        {isJoinedTeam
+                            ? 'Sau khi rời nhóm, bạn sẽ không thể truy cập vào các tài liệu và thông tin của nhóm. Bạn có thể được mời lại vào nhóm bởi người tạo hoặc quản trị viên.'
+                            : 'Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến nhóm.'}
                     </p>
                 </div>
             </Modal>
