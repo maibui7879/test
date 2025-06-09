@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Table, Select, Space, Spin } from 'antd';
 import { UserOutlined, TeamOutlined, TagsOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { getStatisticsApi } from '../../services/adminServices';
@@ -14,10 +14,22 @@ import {
     Title,
     LineElement,
     PointElement,
+    Filler,
 } from 'chart.js';
 import { Pie, Line } from 'react-chartjs-2';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, LineElement, PointElement);
+ChartJS.register(
+    ArcElement,
+    Tooltip,
+    Legend,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    LineElement,
+    PointElement,
+    Filler,
+);
 
 const { Option } = Select;
 
@@ -26,7 +38,7 @@ const Statistics = () => {
     const [loading, setLoading] = useState(false);
     const [period, setPeriod] = useState<StatisticsPeriod>('all');
 
-    const fetchStatistics = async (selectedPeriod: StatisticsPeriod) => {
+    const fetchStatistics = useCallback(async (selectedPeriod: StatisticsPeriod) => {
         setLoading(true);
         try {
             const response = await getStatisticsApi({ period: selectedPeriod });
@@ -36,221 +48,285 @@ const Statistics = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchStatistics(period);
-    }, [period]);
+    }, [period, fetchStatistics]);
 
-    const sortMonthlyData = (data: any[]) => {
+    const sortMonthlyData = useCallback((data: any[]) => {
         return [...data].sort((a, b) => a.month.localeCompare(b.month));
-    };
+    }, []);
 
-    const filterDataByYear = (data: any[]) => {
+    const filterDataByYear = useCallback((data: any[]) => {
         return data.filter((item) => item.month.startsWith('2025'));
-    };
+    }, []);
 
-    const calculateTotalFromMonthly = (data: any[], key: string) => {
+    const calculateTotalFromMonthly = useCallback((data: any[], key: string) => {
         return data.reduce((acc, curr) => acc + (Number(curr[key]) || 0), 0);
-    };
+    }, []);
 
-    const totalUsers =
-        period === 'all'
-            ? calculateTotalFromMonthly(filterDataByYear(statistics?.statistics.users.monthly || []), 'new_users')
-            : statistics?.statistics.users.total || 0;
+    const totalUsers = useMemo(
+        () =>
+            period === 'all'
+                ? calculateTotalFromMonthly(filterDataByYear(statistics?.statistics.users.monthly || []), 'new_users')
+                : statistics?.statistics.users.total || 0,
+        [period, statistics, calculateTotalFromMonthly, filterDataByYear],
+    );
 
-    const totalTasks =
-        period === 'all'
-            ? calculateTotalFromMonthly(
-                  filterDataByYear(statistics?.statistics.tasks.personal.monthly || []),
-                  'tasks',
-              ) + calculateTotalFromMonthly(filterDataByYear(statistics?.statistics.tasks.team.monthly || []), 'tasks')
-            : (statistics?.statistics.tasks.personal.total.tasks || 0) +
-              (statistics?.statistics.tasks.team.total.tasks || 0);
+    const totalTasks = useMemo(
+        () =>
+            period === 'all'
+                ? calculateTotalFromMonthly(
+                      filterDataByYear(statistics?.statistics.tasks.personal.monthly || []),
+                      'tasks',
+                  ) +
+                  calculateTotalFromMonthly(filterDataByYear(statistics?.statistics.tasks.team.monthly || []), 'tasks')
+                : (statistics?.statistics.tasks.personal.total.tasks || 0) +
+                  (statistics?.statistics.tasks.team.total.tasks || 0),
+        [period, statistics, calculateTotalFromMonthly, filterDataByYear],
+    );
 
-    const totalCompleted =
-        period === 'all'
-            ? calculateTotalFromMonthly(
-                  filterDataByYear(statistics?.statistics.completed_tasks.monthly || []),
-                  'completed',
-              )
-            : statistics?.statistics.completed_tasks.total || 0;
+    const totalCompleted = useMemo(
+        () =>
+            period === 'all'
+                ? calculateTotalFromMonthly(
+                      filterDataByYear(statistics?.statistics.completed_tasks.monthly || []),
+                      'completed',
+                  )
+                : statistics?.statistics.completed_tasks.total || 0,
+        [period, statistics, calculateTotalFromMonthly, filterDataByYear],
+    );
 
-    const taskTableData = [
-        {
-            key: 'personal',
-            type: 'Công việc cá nhân',
-            total:
-                period === 'all'
-                    ? calculateTotalFromMonthly(
-                          filterDataByYear(statistics?.statistics.tasks.personal.monthly || []),
-                          'tasks',
-                      )
-                    : statistics?.statistics.tasks.personal.total.tasks || 0,
-            completed:
-                period === 'all'
-                    ? calculateTotalFromMonthly(
-                          filterDataByYear(statistics?.statistics.tasks.personal.monthly || []),
-                          'completed',
-                      )
-                    : statistics?.statistics.tasks.personal.total.completed || '0',
-        },
-        {
-            key: 'team',
-            type: 'Công việc nhóm',
-            total:
-                period === 'all'
-                    ? calculateTotalFromMonthly(
-                          filterDataByYear(statistics?.statistics.tasks.team.monthly || []),
-                          'tasks',
-                      )
-                    : statistics?.statistics.tasks.team.total.tasks || 0,
-            completed:
-                period === 'all'
-                    ? calculateTotalFromMonthly(
-                          filterDataByYear(statistics?.statistics.tasks.team.monthly || []),
-                          'completed',
-                      )
-                    : statistics?.statistics.tasks.team.total.completed || '0',
-        },
-    ];
-
-    const userRegistrationData = {
-        labels: statistics?.statistics.users.monthly
-            ? sortMonthlyData(filterDataByYear(statistics.statistics.users.monthly)).map((detail) => detail.month)
-            : [],
-        datasets: [
+    const taskTableData = useMemo(
+        () => [
             {
-                label: 'Người dùng mới',
-                data: statistics?.statistics.users.monthly
-                    ? sortMonthlyData(filterDataByYear(statistics.statistics.users.monthly)).map(
-                          (detail) => detail.new_users,
-                      )
-                    : [],
-                borderColor: '#1890ff',
-                backgroundColor: 'rgba(24, 144, 255, 0.1)',
-                tension: 0.4,
-                fill: true,
+                key: 'personal',
+                type: 'Công việc cá nhân',
+                total:
+                    period === 'all'
+                        ? calculateTotalFromMonthly(
+                              filterDataByYear(statistics?.statistics.tasks.personal.monthly || []),
+                              'tasks',
+                          )
+                        : statistics?.statistics.tasks.personal.total.tasks || 0,
+                completed:
+                    period === 'all'
+                        ? calculateTotalFromMonthly(
+                              filterDataByYear(statistics?.statistics.tasks.personal.monthly || []),
+                              'completed',
+                          )
+                        : statistics?.statistics.tasks.personal.total.completed || '0',
+            },
+            {
+                key: 'team',
+                type: 'Công việc nhóm',
+                total:
+                    period === 'all'
+                        ? calculateTotalFromMonthly(
+                              filterDataByYear(statistics?.statistics.tasks.team.monthly || []),
+                              'tasks',
+                          )
+                        : statistics?.statistics.tasks.team.total.tasks || 0,
+                completed:
+                    period === 'all'
+                        ? calculateTotalFromMonthly(
+                              filterDataByYear(statistics?.statistics.tasks.team.monthly || []),
+                              'completed',
+                          )
+                        : statistics?.statistics.tasks.team.total.completed || '0',
             },
         ],
-    };
+        [period, statistics, calculateTotalFromMonthly, filterDataByYear],
+    );
 
-    const taskDistributionData = {
-        labels: ['Cá nhân', 'Nhóm'],
-        datasets: [
-            {
-                data: statistics
-                    ? [statistics.statistics.tasks.personal.total.tasks, statistics.statistics.tasks.team.total.tasks]
-                    : [],
-                backgroundColor: ['#1890ff', '#52c41a'],
-                borderWidth: 1,
-            },
-        ],
-    };
+    const userRegistrationData = useMemo(
+        () => ({
+            labels: statistics?.statistics.users.monthly
+                ? sortMonthlyData(filterDataByYear(statistics.statistics.users.monthly)).map((detail) => detail.month)
+                : [],
+            datasets: [
+                {
+                    label: 'Người dùng mới',
+                    data: statistics?.statistics.users.monthly
+                        ? sortMonthlyData(filterDataByYear(statistics.statistics.users.monthly)).map(
+                              (detail) => detail.new_users,
+                          )
+                        : [],
+                    borderColor: '#1890ff',
+                    backgroundColor: 'rgba(24, 144, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                },
+            ],
+        }),
+        [statistics, sortMonthlyData, filterDataByYear],
+    );
 
-    const completedTasksData = {
-        labels: statistics?.statistics.completed_tasks.monthly
-            ? sortMonthlyData(filterDataByYear(statistics.statistics.completed_tasks.monthly)).map(
-                  (detail) => detail.month,
-              )
-            : [],
-        datasets: [
-            {
-                label: 'Công việc hoàn thành',
-                data: statistics?.statistics.completed_tasks.monthly
-                    ? sortMonthlyData(filterDataByYear(statistics.statistics.completed_tasks.monthly)).map(
-                          (detail) => detail.completed,
-                      )
-                    : [],
-                borderColor: '#52c41a',
-                backgroundColor: 'rgba(82, 196, 26, 0.1)',
-                tension: 0.4,
-                fill: true,
-            },
-        ],
-    };
+    const taskDistributionData = useMemo(
+        () => ({
+            labels: ['Cá nhân', 'Nhóm'],
+            datasets: [
+                {
+                    data: statistics
+                        ? [
+                              statistics.statistics.tasks.personal.total.tasks,
+                              statistics.statistics.tasks.team.total.tasks,
+                          ]
+                        : [],
+                    backgroundColor: ['#1890ff', '#52c41a'],
+                    borderWidth: 1,
+                },
+            ],
+        }),
+        [statistics],
+    );
 
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom' as const,
-            },
-            tooltip: {
-                callbacks: {
-                    label: function (context: any) {
-                        const label = context.label || '';
-                        const value = context.raw || 0;
-                        const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-                        const percentage = Math.round((value / total) * 100);
-                        return `${label}: ${value} (${percentage}%)`;
+    const completedTasksData = useMemo(
+        () => ({
+            labels: statistics?.statistics.completed_tasks.monthly
+                ? sortMonthlyData(filterDataByYear(statistics.statistics.completed_tasks.monthly)).map(
+                      (detail) => detail.month,
+                  )
+                : [],
+            datasets: [
+                {
+                    label: 'Công việc hoàn thành',
+                    data: statistics?.statistics.completed_tasks.monthly
+                        ? sortMonthlyData(filterDataByYear(statistics.statistics.completed_tasks.monthly)).map(
+                              (detail) => detail.completed,
+                          )
+                        : [],
+                    borderColor: '#52c41a',
+                    backgroundColor: 'rgba(82, 196, 26, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                },
+            ],
+        }),
+        [statistics, sortMonthlyData, filterDataByYear],
+    );
+
+    const chartOptions = useMemo(
+        () => ({
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom' as const,
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context: any) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        },
                     },
                 },
             },
-        },
-    };
+        }),
+        [],
+    );
 
-    const lineChartOptions = {
-        ...chartOptions,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1,
+    const lineChartOptions = useMemo(
+        () => ({
+            ...chartOptions,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                    },
                 },
             },
-        },
-    };
+        }),
+        [chartOptions],
+    );
 
-    const taskTableColumns = [
-        {
-            title: 'Loại',
-            dataIndex: 'type',
-            key: 'type',
-        },
-        {
-            title: 'Tổng số',
-            dataIndex: 'total',
-            key: 'total',
-        },
-        {
-            title: 'Đã hoàn thành',
-            dataIndex: 'completed',
-            key: 'completed',
-        },
-    ];
+    const taskTableColumns = useMemo(
+        () => [
+            {
+                title: 'Loại',
+                dataIndex: 'type',
+                key: 'type',
+            },
+            {
+                title: 'Tổng số',
+                dataIndex: 'total',
+                key: 'total',
+            },
+            {
+                title: 'Đã hoàn thành',
+                dataIndex: 'completed',
+                key: 'completed',
+            },
+        ],
+        [],
+    );
+
+    const handlePeriodChange = useCallback((value: StatisticsPeriod) => {
+        setPeriod(value);
+    }, []);
 
     return (
         <div className="p-6">
-            <div className="mb-4 flex justify-between items-center">
-                <Space>
-                    <Select value={period} onChange={setPeriod} style={{ width: 120 }}>
-                        <Option value="all">Tất cả</Option>
-                        <Option value="month">Tháng này</Option>
-                        <Option value="year">Năm nay</Option>
-                    </Select>
-                </Space>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Thống kê hệ thống</h1>
+                <Select
+                    value={period}
+                    onChange={handlePeriodChange}
+                    options={[
+                        { value: 'all', label: 'Tất cả' },
+                        { value: 'month', label: 'Tháng này' },
+                        { value: 'year', label: 'Năm nay' },
+                    ]}
+                    className="w-40"
+                />
             </div>
 
-            <Spin spinning={loading}>
+            <Spin spinning={loading} size="large">
                 <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={12} md={8}>
+                    <Col xs={24} sm={12} md={6}>
                         <Card>
-                            <Statistic title="Tổng số người dùng" value={totalUsers} prefix={<UserOutlined />} />
+                            <Statistic
+                                title="Tổng người dùng"
+                                value={totalUsers}
+                                prefix={<UserOutlined />}
+                                valueStyle={{ color: '#1890ff' }}
+                            />
                         </Card>
                     </Col>
-                    <Col xs={24} sm={12} md={8}>
+                    <Col xs={24} sm={12} md={6}>
                         <Card>
-                            <Statistic title="Tổng số công việc" value={totalTasks} prefix={<TagsOutlined />} />
+                            <Statistic
+                                title="Tổng công việc"
+                                value={totalTasks}
+                                prefix={<TagsOutlined />}
+                                valueStyle={{ color: '#52c41a' }}
+                            />
                         </Card>
                     </Col>
-                    <Col xs={24} sm={24} md={8}>
+                    <Col xs={24} sm={12} md={6}>
                         <Card>
                             <Statistic
                                 title="Công việc hoàn thành"
                                 value={totalCompleted}
                                 prefix={<CheckCircleOutlined />}
+                                valueStyle={{ color: '#722ed1' }}
+                            />
+                        </Card>
+                    </Col>
+                    <Col xs={24} sm={12} md={6}>
+                        <Card>
+                            <Statistic
+                                title="Tỷ lệ hoàn thành"
+                                value={totalTasks ? Math.round((totalCompleted / totalTasks) * 100) : 0}
+                                prefix={<TeamOutlined />}
+                                suffix="%"
+                                valueStyle={{ color: '#fa8c16' }}
                             />
                         </Card>
                     </Col>
