@@ -2,12 +2,12 @@ import apiRequest from '../common/apiRequest';
 import { UserProfile } from '../types/types';
 
 interface SearchUsersResponse {
-  data: {
-    users: UserProfile[];
-    currentPage: number;
-    total: number;
-    totalPages: number;
-  };
+    data: {
+        users: UserProfile[];
+        currentPage: number;
+        total: number;
+        totalPages: number;
+    };
 }
 
 const searchUsers = async (searchTerm: string): Promise<UserProfile[]> => {

@@ -50,7 +50,7 @@ const TeamCalendar = ({ teamId }: TeamCalendarProps) => {
     }
 
     return (
-        <div className="mx-auto p-0 md:p-4">
+        <div className="">
             <Calendar tasks={tasks} loading={loading} onTaskCreated={handleTaskCreated} />
         </div>
     );

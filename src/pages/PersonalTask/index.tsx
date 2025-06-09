@@ -140,7 +140,7 @@ function PersonalTask() {
     }, [fetchTasks]);
 
     return (
-        <div className="h-full p-6">
+        <div className="h-full ">
             {contextHolder}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-semibold text-gray-800 m-0">Danh sách công việc</h1>

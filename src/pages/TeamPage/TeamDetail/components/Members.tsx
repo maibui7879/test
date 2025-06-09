@@ -321,7 +321,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
     }, [fetchMembers]);
 
     return (
-        <div className="p-6">
+        <div>
             {contextHolder}
             <div className="mb-4">
                 <Button

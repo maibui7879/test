@@ -54,7 +54,6 @@ const Settings = ({ teamId }: SettingsProps) => {
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
     const draggleRef = useRef<HTMLDivElement>(null);
 
-    // Check if current URL is for joined teams
     const isJoinedTeam = location.pathname.includes('/teams/joined');
 
     useEffect(() => {
@@ -245,7 +244,7 @@ const Settings = ({ teamId }: SettingsProps) => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container  py-8">
             {contextHolder}
             <Card title="Thông tin cơ bản" className="shadow-lg rounded-lg mb-6">
                 <Row gutter={[24, 24]} align="top">
@@ -273,7 +272,10 @@ const Settings = ({ teamId }: SettingsProps) => {
                                 </Upload>
                             ) : (
                                 <img
-                                    src={avatarUrl || '/default-team-avatar.png'}
+                                    src={
+                                        avatarUrl ||
+                                        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZv99BmQS7BQU0o7kNhRFwjSD2lyl48qFOlw&s'
+                                    }
                                     alt="Team Avatar"
                                     className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
                                 />

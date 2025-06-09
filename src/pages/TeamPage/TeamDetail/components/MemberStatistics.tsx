@@ -110,7 +110,7 @@ function MemberStatistics({ teamId, userId, onClose }: MemberStatisticsProps) {
     const { user_info, task_statistics, active_tasks, performance_metrics } = statistics;
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
             {contextHolder}
 
             <div>
