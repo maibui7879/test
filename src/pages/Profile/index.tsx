@@ -107,10 +107,10 @@ const ProfilePage = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 md:px-8">
+        <div className=" md:px-8">
             {contextHolder}
             <div className="mx-auto">
-                <Card className="shadow-xl border-0 bg-white">
+                <Card className="shadow-xl border-separate bg-white">
                     <div className="text-center mb-8">
                         <div className="relative w-32 h-32 mx-auto mb-4">
                             <Avatar
