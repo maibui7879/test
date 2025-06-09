@@ -6,7 +6,6 @@ import { UserProvider } from './contexts/useAuth/userContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './routes/ProtectedRoute';
-import NotFoundPage from '@pages/404Page';
 
 function App() {
     const allRoutes = [...publicRoutes, ...privateRoutes, ...sidebarRoutes, ...adminSidebarRoutes];

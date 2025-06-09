@@ -28,7 +28,7 @@ interface TeamCardProps {
     onLeave?: () => void;
 }
 
-const TeamCard: React.FC<TeamCardProps> = ({ id, name, avatar_url, creator_name, type, onEdit, onDelete, onLeave }) => {
+const TeamCard = ({ id, name, avatar_url, creator_name, type, onEdit, onDelete, onLeave }: TeamCardProps) => {
     const navigate = useNavigate();
     const location = useLocation();
 

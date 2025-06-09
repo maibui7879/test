@@ -473,6 +473,7 @@ const TaskTable = ({
             width: '15%',
             align: 'center' as const,
             className: '!w-[120px] sm:!w-[15%]',
+            fixed: 'right',
             render: (_: any, record: TaskPayload) => {
                 return (
                     <Space className="animate-fade-in w-full justify-center" size="small">

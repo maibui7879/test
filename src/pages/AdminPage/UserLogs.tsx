@@ -76,23 +76,28 @@ const UserLogs = () => {
             key: 'created_at',
             render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm:ss'),
             sorter: (a: UserLog, b: UserLog) => dayjs(a.created_at).unix() - dayjs(b.created_at).unix(),
+            width: 160,
+            fixed: 'left',
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
             sorter: (a: UserLog, b: UserLog) => a.email.localeCompare(b.email),
+            width: 200,
         },
         {
             title: 'Họ và tên',
             dataIndex: 'full_name',
             key: 'full_name',
             sorter: (a: UserLog, b: UserLog) => a.full_name.localeCompare(b.full_name),
+            width: 180,
         },
         {
             title: 'Hành động',
             dataIndex: 'action',
             key: 'action',
+            width: 150,
             filters: [
                 { text: 'Đăng nhập', value: 'LOGIN' },
                 { text: 'Đăng xuất', value: 'LOGOUT' },
@@ -107,11 +112,14 @@ const UserLogs = () => {
             dataIndex: 'description',
             key: 'description',
             ellipsis: true,
+            width: 250,
         },
         {
             title: 'Địa chỉ IP',
             dataIndex: 'ip_address',
             key: 'ip_address',
+            width: 120,
+            fixed: 'right',
         },
     ];
 
@@ -184,7 +192,7 @@ const UserLogs = () => {
                     position: ['bottomCenter'],
                 }}
                 onChange={(pagination) => fetchLogs(pagination.current, pagination.pageSize)}
-                scroll={{ x: 'max-content' }}
+                scroll={{ x: 1160 }}
             />
         </Card>
     );

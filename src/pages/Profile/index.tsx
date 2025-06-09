@@ -22,7 +22,7 @@ interface ChangePassword extends ChangePasswordPayload {
     confirmPassword: string;
 }
 
-const Profile: React.FC = () => {
+const Profile = () => {
     const { user } = useUser();
     const { message, contextHolder } = useMessage();
     const [form] = Form.useForm();
