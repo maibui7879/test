@@ -172,11 +172,11 @@ function CreatedTeamsPage() {
                         allowClear
                     />
                     <Button
-                    type="primary"
-                    icon={<FontAwesomeIcon icon={faUserPlus} className="md:mr-2" />}
-                    onClick={handleOpenCreateModal}
+                        type="primary"
+                        icon={<FontAwesomeIcon icon={faUserPlus} className="md:mr-2" />}
+                        onClick={handleOpenCreateModal}
                     >
-                    <span className="hidden md:inline">Tạo nhóm mới</span>
+                        <span className="hidden md:inline">Tạo nhóm mới</span>
                     </Button>
                 </Space>
             </div>

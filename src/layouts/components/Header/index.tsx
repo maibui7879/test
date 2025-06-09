@@ -234,7 +234,6 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                         <div className="flex items-center">
                             <Space size="middle" className="mr-4">
                                 <Dropdown
-                                    overlay={notificationContent}
                                     trigger={['click']}
                                     open={isNotificationOpen}
                                     onOpenChange={setIsNotificationOpen}
