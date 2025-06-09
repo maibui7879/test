@@ -11,47 +11,58 @@ import { useMessage } from '@/hooks/useMessage';
 
 const { Content } = Layout;
 
-const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
-    const [collapsed, setCollapsed] = useState(false);
+const DefaultLayout = ({ children }: DefaultLayoutProps) => {
+    const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+    const [isManualCollapsed, setIsManualCollapsed] = useState(false);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
     const { user, logout: originalLogout } = useUser();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedRole, setSelectedRole] = useState<'admin' | 'member' | null>(() => {
         return localStorage.getItem('selectedRole') as 'admin' | 'member' | null;
     });
+
     const navigate = useNavigate();
     const location = useLocation();
     const { message, contextHolder } = useMessage();
 
-    const handleCollapse = useCallback(() => {
-        setCollapsed((prev) => !prev);
-    }, []);
+    const isMd = windowWidth >= 768;
 
     useEffect(() => {
+        let resizeTimer: NodeJS.Timeout;
+
         const handleResize = () => {
-            if (window.innerWidth <= 768) {
-                setCollapsed(true);
-            } else {
-                setCollapsed(false);
-            }
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                window.location.reload();
+            }, 500);
         };
-        handleResize();
+
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            clearTimeout(resizeTimer);
+        };
+    }, []);
+
+    const handleCollapse = useCallback(() => {
+        setCollapsed((prev) => {
+            setIsManualCollapsed(true);
+            return !prev;
+        });
     }, []);
 
     useEffect(() => {
-        if (!user) return; // No user, no action needed
+        if (!user) return;
 
-        // Check if this is the first login (e.g., no role selected and just logged in)
         const isFirstLogin = !localStorage.getItem('selectedRole') && user.role === 'admin';
 
         if (user.role === 'admin' && !location.pathname.startsWith('/admin') && selectedRole !== 'member') {
             navigate('/admin');
-            if (isFirstLogin) {
-                setIsModalVisible(true);
-            }
+            if (isFirstLogin) setIsModalVisible(true);
         } else if (user.role === 'admin' && selectedRole === null) {
-            setIsModalVisible(true); // Ensure modal shows if no role is selected
+            setIsModalVisible(true);
         }
     }, [user, location.pathname, navigate, selectedRole]);
 
@@ -80,15 +91,14 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
         navigate('/login');
     }, [originalLogout, navigate]);
 
-    const renderContent = useCallback(() => {
-        return <Content className="bg-white">{children}</Content>;
-    }, [children]);
-
     const routes = location.pathname.startsWith('/admin') ? adminSidebarRoutes : sidebarRoutes;
+
+    const overlay = !isMd && !collapsed;
 
     return (
         <>
             {contextHolder}
+
             {user?.role === 'admin' && (
                 <Modal
                     title="Chọn quyền truy cập"
@@ -130,24 +140,42 @@ const DefaultLayout = React.memo(({ children }: DefaultLayoutProps) => {
                 </Modal>
             )}
 
-            <Layout className="min-h-screen bg-white">
-                <Sidebar collapsed={collapsed} routes={routes} />
-                <Layout className="transition-all duration-300 bg-white">
+            <Layout
+                className="transition-all duration-300 bg-white"
+                style={{
+                    transition: 'margin-left 0.3s',
+                    minHeight: '100vh',
+                    overflow: 'hidden',
+                }}
+            >
+                <Sidebar
+                    collapsed={collapsed}
+                    routes={routes}
+                    overlay={overlay}
+                    onCloseOverlay={() => setCollapsed(true)}
+                />
+                <Layout className="flex flex-col h-screen">
                     <Header
                         collapsed={collapsed}
                         onCollapse={handleCollapse}
-                        user={user}
-                        logout={handleLogout}
                         onSettingsClick={handleSettingsClick}
+                        logout={handleLogout}
+                        user={user}
                     />
-                    <div className="overflow-auto" style={{ height: 'calc(100vh - 64px)' }}>
-                        {renderContent()}
-                    </div>
+                    <Content
+                        className="relative p-6 overflow-y-auto"
+                        style={{
+                            flex: 1,
+                            overflowX: 'hidden',
+                        }}
+                    >
+                        {children}
+                    </Content>
                     <Footer />
                 </Layout>
             </Layout>
         </>
     );
-});
+};
 
 export default DefaultLayout;
