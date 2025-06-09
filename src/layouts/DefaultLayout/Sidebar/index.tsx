@@ -9,7 +9,7 @@ const { Sider } = Layout;
 
 interface SidebarProps {
     collapsed: boolean;
-    onCollapse?: (collapsed: boolean) => void; // để tự động điều chỉnh collapse
+    onCollapse?: (collapsed: boolean) => void;
     routes: Route[];
 }
 
@@ -25,10 +25,8 @@ const Sidebar = ({ collapsed, onCollapse, routes }: SidebarProps) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Mình chọn breakpoint 768, bạn có thể chỉnh
     const isMobile = windowWidth <= 768;
 
-    // Khi màn hình mobile, tự động collapse sidebar nếu chưa collapse
     useEffect(() => {
         if (onCollapse) {
             onCollapse(isMobile);
@@ -70,9 +68,12 @@ const Sidebar = ({ collapsed, onCollapse, routes }: SidebarProps) => {
 
     const menuItems = useMemo(() => routes.map(getMenuItem), [routes, getMenuItem]);
 
-    const handleMenuClick = useCallback(({ key }: { key: string }) => {
-        navigate(key);
-    }, [navigate]);
+    const handleMenuClick = useCallback(
+        ({ key }: { key: string }) => {
+            navigate(key);
+        },
+        [navigate],
+    );
 
     return (
         <Sider
@@ -84,7 +85,7 @@ const Sidebar = ({ collapsed, onCollapse, routes }: SidebarProps) => {
             collapsedWidth={collapsedWidth}
             className="min-h-screen bg-gradient-to-b from-gray-800 to-gray-900 shadow-xl transition-all duration-300"
             breakpoint="md" // md = 768px
-            onBreakpoint={broken => {
+            onBreakpoint={(broken) => {
                 if (onCollapse) onCollapse(broken);
             }}
         >
