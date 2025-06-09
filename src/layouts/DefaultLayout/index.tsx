@@ -29,22 +29,21 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
     const isMd = windowWidth >= 768;
 
     useEffect(() => {
-        let resizeTimer: NodeJS.Timeout;
-
         const handleResize = () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            const newWidth = window.innerWidth;
+            setWindowWidth(newWidth);
+
+            if (!isManualCollapsed) {
+                setCollapsed(newWidth < 768);
+            }
         };
 
-        window.addEventListener('resize', handleResize);
+        window.addEventListener('resize', handleResize, { passive: true });
 
         return () => {
             window.removeEventListener('resize', handleResize);
-            clearTimeout(resizeTimer);
         };
-    }, []);
+    }, [isManualCollapsed]);
 
     const handleCollapse = useCallback(() => {
         setCollapsed((prev) => {
@@ -143,7 +142,7 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
             <Layout
                 className="transition-all duration-300 bg-white"
                 style={{
-                    transition: 'margin-left 0.3s',
+                    transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     minHeight: '100vh',
                     overflow: 'hidden',
                 }}

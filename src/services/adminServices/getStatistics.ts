@@ -1,67 +1,95 @@
 import apiRequest from '../common/apiRequest';
 
-export type StatisticsPeriod = 'day' | 'week' | 'month' | 'year';
+export type StatisticsPeriod = 'month' | 'year' | 'all';
 
 export interface GetStatisticsParams {
-    period: StatisticsPeriod;
+    period?: StatisticsPeriod;
 }
 
-export interface StatisticsDetail {
-    period: number;
+export interface MonthlyData {
+    month: string;
     new_users?: number;
-    personal_tasks?: number;
-    team_tasks?: number;
-    new_teams?: number;
+    tasks?: number;
+    completed?: string | number;
+}
+
+export interface TaskTotal {
+    tasks: number;
+    completed: string;
 }
 
 export interface StatisticsData {
-    user_registration: {
+    users: {
         total: number;
-        details: StatisticsDetail[];
+        monthly: MonthlyData[];
     };
     tasks: {
         personal: {
-            total: number;
-            details: StatisticsDetail[];
+            total: TaskTotal;
+            monthly: MonthlyData[];
         };
         team: {
-            total: number;
-            details: StatisticsDetail[];
+            total: TaskTotal;
+            monthly: MonthlyData[];
         };
     };
-    teams: {
+    completed_tasks: {
         total: number;
-        details: StatisticsDetail[];
+        monthly: MonthlyData[];
     };
 }
 
 export interface GetStatisticsResponse {
     period: StatisticsPeriod;
-    statistics: StatisticsData;
+    statistics: {
+        users: {
+            total: number;
+            monthly: Array<{
+                month: string;
+                new_users: number;
+            }>;
+        };
+        tasks: {
+            personal: {
+                total: {
+                    tasks: number;
+                    completed: string;
+                };
+                monthly: Array<{
+                    month: string;
+                    tasks: number;
+                    completed: string;
+                }>;
+            };
+            team: {
+                total: {
+                    tasks: number;
+                    completed: string;
+                };
+                monthly: Array<{
+                    month: string;
+                    tasks: number;
+                    completed: string;
+                }>;
+            };
+        };
+        completed_tasks: {
+            total: number;
+            monthly: Array<{
+                month: string;
+                completed: number;
+            }>;
+        };
+    };
 }
 
-const getStatisticsApi = async (params: GetStatisticsParams): Promise<GetStatisticsResponse> => {
-    console.log('getStatistics service called with params:', params);
-    const { period } = params;
-
-    try {
-        const response = await apiRequest<GetStatisticsResponse>(
-            `/statistics/admin?period=${period}`,
-            'GET',
-            null,
-            true,
-        );
-        console.log('API response in service:', response);
-
-        if (!response.success || !response.data) {
-            throw new Error(response.message || 'Không thể lấy thống kê');
-        }
-
-        return response.data;
-    } catch (error) {
-        console.error('Error in getStatistics service:', error);
-        throw error;
+const getStatisticsApi = async (params?: GetStatisticsParams): Promise<GetStatisticsResponse> => {
+    const url =
+        params?.period && params.period !== 'all' ? `/statistics/admin?period=${params.period}` : '/statistics/admin';
+    const response = await apiRequest<GetStatisticsResponse>(url, 'GET', null, true);
+    if (!response.success || !response.data) {
+        throw new Error(response.message || 'Không thể lấy thống kê');
     }
+    return response.data;
 };
-
 export default getStatisticsApi;
