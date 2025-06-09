@@ -288,7 +288,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                 </div>
             </nav>
         </>
-);
+    );
 }
 
 export default Header;

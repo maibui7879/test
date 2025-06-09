@@ -1,23 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Table,
-    Button,
-    Space,
-    Modal,
-    Form,
-    Input,
-    Select,
-    message,
-    Popconfirm,
-    Input as AntInput,
-    Checkbox,
-    Tag,
-} from 'antd';
+import { Table, Button, Space, Modal, Form, Input, Select, Popconfirm, Input as AntInput, Checkbox, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined, UserAddOutlined, SearchOutlined } from '@ant-design/icons';
-import { getUsersApi, createUserApi, updateUserApi, deleteUserApi } from '../../services/adminServices';
-import type { User, CreateUserParams } from '../../services/types/types';
-import type { UpdateUserBody } from '../../services/adminServices/updateUser';
+import { getUsersApi, createUserApi, updateUserApi, deleteUserApi } from '@/services/adminServices';
 import type { ColumnsType } from 'antd/es/table';
+import { CreateUserParams, User } from '@services/types/types';
+import { UpdateUserBody } from '@services/adminServices/updateUser';
+import { useMessage } from '@/hooks/useMessage';
 
 const { Search } = AntInput;
 
@@ -25,21 +13,18 @@ type UserRole = 'admin' | 'member';
 type UserStatus = 'active' | 'inactive';
 
 const UserManagement = () => {
+    const { message, contextHolder } = useMessage();
     const [users, setUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [form] = Form.useForm();
     const [editingUser, setEditingUser] = useState<User | null>(null);
-    const [searchText, setSearchText] = useState('');
     const [resetPassword, setResetPassword] = useState(false);
-
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(window.innerWidth <= 576);
-        };
+        const handleResize = () => setIsMobile(window.innerWidth <= 576);
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -54,7 +39,7 @@ const UserManagement = () => {
                 setFilteredUsers(response.data.users);
             }
         } catch (error) {
-            message.error('Không thể tải danh sách người dùng');
+            message.error({ key: 'fetch-users', content: 'Không thể tải danh sách người dùng' });
         } finally {
             setLoading(false);
         }
@@ -67,52 +52,46 @@ const UserManagement = () => {
     const handleCreateUser = async (values: CreateUserParams) => {
         try {
             await createUserApi(values);
-            message.success('Tạo người dùng thành công');
+            message.success({ key: 'create-user', content: 'Tạo người dùng thành công' });
             setModalVisible(false);
             form.resetFields();
             fetchUsers();
         } catch (error) {
-            message.error('Không thể tạo người dùng');
+            message.error({ key: 'create-user', content: 'Không thể tạo người dùng' });
         }
     };
 
     const handleUpdateUser = async (values: any) => {
         if (!editingUser) return;
-
         try {
             const updateData: UpdateUserBody = {
                 full_name: values.full_name,
                 role: values.role,
                 status: values.status,
+                ...(resetPassword && { resetPassword: true }),
             };
-
-            if (resetPassword) {
-                updateData.resetPassword = true;
-            }
-
             await updateUserApi(editingUser.id.toString(), updateData);
-            message.success('Cập nhật người dùng thành công');
+            message.success({ key: 'update-user', content: 'Cập nhật người dùng thành công' });
             setModalVisible(false);
             form.resetFields();
             setResetPassword(false);
             fetchUsers();
         } catch (error) {
-            message.error('Không thể cập nhật người dùng');
+            message.error({ key: 'update-user', content: 'Không thể cập nhật người dùng' });
         }
     };
 
     const handleDeleteUser = async (userId: string) => {
         try {
             await deleteUserApi({ userId });
-            message.success('Xóa người dùng thành công');
+            message.success({ key: 'delete-user', content: 'Xóa người dùng thành công' });
             fetchUsers();
         } catch (error) {
-            message.error('Không thể xóa người dùng');
+            message.error({ key: 'delete-user', content: 'Không thể xóa người dùng' });
         }
     };
 
     const handleSearch = (value: string) => {
-        setSearchText(value);
         const filtered = users.filter(
             (user) =>
                 user.email.toLowerCase().includes(value.toLowerCase()) ||
@@ -121,86 +100,90 @@ const UserManagement = () => {
         setFilteredUsers(filtered);
     };
 
-    const columns: ColumnsType<User> = React.useMemo(() => [
-        {
-            title: 'Email',
-            dataIndex: 'email',
-            key: 'email',
-            sorter: (a, b) => a.email.localeCompare(b.email),
-            width: 200,
-        },
-        {
-            title: 'Họ và tên',
-            dataIndex: 'full_name',
-            key: 'full_name',
-            sorter: (a, b) => (a.full_name || '').localeCompare(b.full_name || ''),
-            width: 200,
-        },
-        {
-            title: 'Vai trò',
-            dataIndex: 'role',
-            key: 'role',
-            render: (role: UserRole) => {
-                const color = role === 'admin' ? 'blue' : 'magenta';
-                const roleText = role === 'admin' ? 'Quản trị viên' : 'Người dùng';
-                return <Tag color={color}>{roleText}</Tag>;
+    const columns: ColumnsType<User> = React.useMemo(
+        () => [
+            {
+                title: 'Email',
+                dataIndex: 'email',
+                key: 'email',
+                sorter: (a, b) => a.email.localeCompare(b.email),
+                width: 200,
             },
-            width: 130,
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status: UserStatus) => {
-                const color = status === 'active' ? 'green' : 'volcano';
-                const statusText = status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động';
-                return <Tag color={color}>{statusText}</Tag>;
+            {
+                title: 'Họ và tên',
+                dataIndex: 'full_name',
+                key: 'full_name',
+                sorter: (a, b) => (a.full_name || '').localeCompare(b.full_name || ''),
+                width: 200,
             },
-            width: 130,
-        },
-        {
-            title: 'Ngày tạo',
-            dataIndex: 'created_at',
-            key: 'created_at',
-            render: (date: string) => new Date(date).toLocaleDateString(),
-            sorter: (a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime(),
-            width: 150,
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            fixed: 'right',
-            width: isMobile ? 80 : 130,
-            render: (_: any, record: User) => (
-                <Space size="middle" style={{ minWidth: 120 }}>
-                    <Button
-                        type="primary"
-                        icon={<EditOutlined />}
-                        onClick={() => {
-                            setEditingUser(record);
-                            setModalVisible(true);
-                            setResetPassword(false);
-                        }}
-                        style={{ whiteSpace: 'nowrap' }}
-                        size="small"
-                    >
-                        {!isMobile && 'Sửa'}
-                    </Button>
-                    <Popconfirm
-                        title="Bạn có chắc chắn muốn xóa người dùng này?"
-                        onConfirm={() => handleDeleteUser(record.id.toString())}
-                        okText="Có"
-                        cancelText="Không"
-                    >
-                        <Button danger icon={<DeleteOutlined />} size="small" />
-                    </Popconfirm>
-                </Space>
-            ),
-        },
-    ], [isMobile]);
+            {
+                title: 'Vai trò',
+                dataIndex: 'role',
+                key: 'role',
+                render: (role: UserRole) => (
+                    <Tag color={role === 'admin' ? 'blue' : 'magenta'}>
+                        {role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
+                    </Tag>
+                ),
+                width: 130,
+            },
+            {
+                title: 'Trạng thái',
+                dataIndex: 'status',
+                key: 'status',
+                render: (status: UserStatus) => (
+                    <Tag color={status === 'active' ? 'green' : 'volcano'}>
+                        {status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động'}
+                    </Tag>
+                ),
+                width: 130,
+            },
+            {
+                title: 'Ngày tạo',
+                dataIndex: 'created_at',
+                key: 'created_at',
+                render: (date: string) => new Date(date).toLocaleDateString(),
+                sorter: (a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime(),
+                width: 150,
+            },
+            {
+                title: 'Thao tác',
+                key: 'action',
+                fixed: 'right',
+                width: isMobile ? 80 : 130,
+                render: (_: any, record: User) => (
+                    <Space size="middle" style={{ minWidth: 120 }}>
+                        <Button
+                            type="primary"
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                                setEditingUser(record);
+                                setModalVisible(true);
+                                setResetPassword(false);
+                            }}
+                            style={{ whiteSpace: 'nowrap' }}
+                            size="small"
+                        >
+                            {!isMobile && 'Sửa'}
+                        </Button>
+                        <Popconfirm
+                            title="Bạn có chắc chắn muốn xóa người dùng này?"
+                            onConfirm={() => handleDeleteUser(record.id.toString())}
+                            okText="Có"
+                            cancelText="Không"
+                        >
+                            <Button danger icon={<DeleteOutlined />} size="small" />
+                        </Popconfirm>
+                    </Space>
+                ),
+            },
+        ],
+        [isMobile],
+    );
 
     return (
         <div className="p-6">
+            {contextHolder}
             <div className="mb-4 flex justify-between items-center">
                 <Button
                     type="primary"
@@ -302,16 +285,18 @@ const UserManagement = () => {
                         </Select>
                     </Form.Item>
 
-                    <Form.Item
-                        name="status"
-                        label="Trạng thái"
-                        rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-                    >
-                        <Select>
-                            <Select.Option value="active">Hoạt động</Select.Option>
-                            <Select.Option value="inactive">Ngưng hoạt động</Select.Option>
-                        </Select>
-                    </Form.Item>
+                    {editingUser && (
+                        <Form.Item
+                            name="status"
+                            label="Trạng thái"
+                            rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
+                        >
+                            <Select>
+                                <Select.Option value="active">Hoạt động</Select.Option>
+                                <Select.Option value="inactive">Ngưng hoạt động</Select.Option>
+                            </Select>
+                        </Form.Item>
+                    )}
 
                     <Form.Item>
                         <Button type="primary" htmlType="submit">
