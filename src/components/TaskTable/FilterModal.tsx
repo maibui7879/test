@@ -3,6 +3,7 @@ import { Modal, Form, DatePicker, Select, Button, Space } from 'antd';
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { FilterModalProps } from './types';
 import { STATUS_TAGS, PRIORITY_TAGS } from './tableState';
+import dayjs from 'dayjs';
 
 const FilterModal = ({ visible, onClose, onFilter, teamId, teamMembers = [] }: FilterModalProps) => {
     const [form] = Form.useForm();
@@ -20,8 +21,9 @@ const FilterModal = ({ visible, onClose, onFilter, teamId, teamMembers = [] }: F
             }
 
             if (values.dateRange) {
-                filters.startDate = values.dateRange[0].format('YYYY-MM-DD HH:mm:ss');
-                filters.endDate = values.dateRange[1].format('YYYY-MM-DD HH:mm:ss');
+                const [startDate, endDate] = values.dateRange;
+                filters.startDate = dayjs(startDate).format('YYYY-MM-DD HH:mm:ss');
+                filters.endDate = dayjs(endDate).format('YYYY-MM-DD HH:mm:ss');
             }
 
             if (values.assignee) {

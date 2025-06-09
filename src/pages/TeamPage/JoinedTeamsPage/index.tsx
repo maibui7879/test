@@ -99,7 +99,7 @@ function JoinedTeamsPage() {
     );
 
     return (
-        <div className="p-6 s min-h-screen">
+        <div className="p-6 ">
             {contextHolder}
             <div className="flex justify-between items-center mb-6 flex-col md:flex-row">
                 <div className="flex items-center gap-4">

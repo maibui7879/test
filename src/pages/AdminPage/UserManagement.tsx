@@ -15,13 +15,18 @@ type UserStatus = 'active' | 'inactive';
 const UserManagement = () => {
     const { message, contextHolder } = useMessage();
     const [users, setUsers] = useState<User[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [form] = Form.useForm();
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [resetPassword, setResetPassword] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0,
+    });
+    const [searchText, setSearchText] = useState('');
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 576);
@@ -30,13 +35,21 @@ const UserManagement = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (page = 1, pageSize = 10, search = '') => {
         setLoading(true);
         try {
-            const response = await getUsersApi();
-            if (response?.data.users) {
+            const response = await getUsersApi({
+                page: page.toString(),
+                limit: pageSize.toString(),
+                fullName: search || undefined,
+            });
+            if (response?.data?.users) {
                 setUsers(response.data.users);
-                setFilteredUsers(response.data.users);
+                setPagination({
+                    current: page,
+                    pageSize: pageSize,
+                    total: response.data.total || 0,
+                });
             }
         } catch (error) {
             message.error({ key: 'fetch-users', content: 'Không thể tải danh sách người dùng' });
@@ -46,8 +59,8 @@ const UserManagement = () => {
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        fetchUsers(pagination.current, pagination.pageSize, searchText);
+    }, [pagination.current, pagination.pageSize, searchText]);
 
     const handleCreateUser = async (values: CreateUserParams) => {
         try {
@@ -55,7 +68,7 @@ const UserManagement = () => {
             message.success({ key: 'create-user', content: 'Tạo người dùng thành công' });
             setModalVisible(false);
             form.resetFields();
-            fetchUsers();
+            fetchUsers(pagination.current, pagination.pageSize, searchText);
         } catch (error) {
             message.error({ key: 'create-user', content: 'Không thể tạo người dùng' });
         }
@@ -75,7 +88,7 @@ const UserManagement = () => {
             setModalVisible(false);
             form.resetFields();
             setResetPassword(false);
-            fetchUsers();
+            fetchUsers(pagination.current, pagination.pageSize, searchText);
         } catch (error) {
             message.error({ key: 'update-user', content: 'Không thể cập nhật người dùng' });
         }
@@ -85,19 +98,23 @@ const UserManagement = () => {
         try {
             await deleteUserApi({ userId });
             message.success({ key: 'delete-user', content: 'Xóa người dùng thành công' });
-            fetchUsers();
+            fetchUsers(pagination.current, pagination.pageSize, searchText);
         } catch (error) {
             message.error({ key: 'delete-user', content: 'Không thể xóa người dùng' });
         }
     };
 
     const handleSearch = (value: string) => {
-        const filtered = users.filter(
-            (user) =>
-                user.email.toLowerCase().includes(value.toLowerCase()) ||
-                (user.full_name && user.full_name.toLowerCase().includes(value.toLowerCase())),
-        );
-        setFilteredUsers(filtered);
+        setSearchText(value);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+    };
+
+    const handleTableChange = (pagination: any) => {
+        setPagination((prev) => ({
+            ...prev,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+        }));
     };
 
     const columns: ColumnsType<User> = React.useMemo(
@@ -207,14 +224,15 @@ const UserManagement = () => {
 
             <Table
                 columns={columns}
-                dataSource={filteredUsers}
+                dataSource={users}
                 rowKey="id"
                 loading={loading}
                 pagination={{
-                    pageSize: 10,
+                    ...pagination,
                     showSizeChanger: true,
                     position: ['bottomCenter'],
                 }}
+                onChange={handleTableChange}
                 scroll={{ x: 900 }}
             />
 
