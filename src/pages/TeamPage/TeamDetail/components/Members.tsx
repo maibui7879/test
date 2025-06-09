@@ -74,15 +74,16 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
         try {
             setSearchLoading(true);
             const users = await searchUsers(value);
-            setSearchResults(users);
+            setSearchResults(users || []);
         } catch (error) {
+            console.error('Search error:', error);
             setSearchResults([]);
         } finally {
             setSearchLoading(false);
         }
     }, []);
 
-    const searchUsersDebounced = useMemo(() => debounce(searchUsersFn, 500), [searchUsersFn]);
+    const searchUsersDebounced = useMemo(() => debounce(searchUsersFn, 300), [searchUsersFn]);
 
     const handleSearch = useCallback(
         (value: string) => {
@@ -350,17 +351,15 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                     >
                         <Select
                             showSearch
-                            value={searchValue}
                             placeholder="Nhập tên hoặc email để tìm kiếm"
                             defaultActiveFirstOption={false}
                             filterOption={false}
                             onSearch={handleSearch}
-                            onChange={(value) => setSearchValue(value)}
                             notFoundContent={searchLoading ? 'Đang tìm kiếm...' : 'Không tìm thấy kết quả'}
                             loading={searchLoading}
                             optionLabelProp="label"
                         >
-                            {searchResults.map((user) => (
+                            {searchResults?.map((user) => (
                                 <Select.Option key={user.id} value={user.id} label={user.full_name}>
                                     <Space>
                                         <Avatar size="small" src={user.avatar_url}>
@@ -372,7 +371,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                                         </div>
                                     </Space>
                                 </Select.Option>
-                            ))}
+                            )) || []}
                         </Select>
                     </Form.Item>
                 </Form>

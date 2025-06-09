@@ -203,7 +203,7 @@ const Settings = ({ teamId }: SettingsProps) => {
                     content: 'Đã xóa nhóm thành công!',
                 });
             }
-            
+
             setDeleteModalOpen(false);
 
             if (teamData?.creator_id === user?.id) {
@@ -215,9 +215,9 @@ const Settings = ({ teamId }: SettingsProps) => {
             console.error('Error deleting/leaving team:', error);
             message.error({
                 key: 'delete-leave-error',
-                content: isJoinedTeam 
-                    ? (error.message || 'Có lỗi xảy ra khi rời nhóm!') 
-                    : (error.message || 'Có lỗi xảy ra khi xóa nhóm!'),
+                content: isJoinedTeam
+                    ? error.message || 'Có lỗi xảy ra khi rời nhóm!'
+                    : error.message || 'Có lỗi xảy ra khi xóa nhóm!',
             });
         } finally {
             setDeleteLoading(false);
@@ -389,10 +389,9 @@ const Settings = ({ teamId }: SettingsProps) => {
                     <div>
                         <h3 className="text-lg font-semibold text-red-700 mb-2">Vùng nguy hiểm</h3>
                         <p className="text-red-600 mb-4">
-                            {isJoinedTeam 
-                                ? "Rời khỏi nhóm sẽ không thể khôi phục lại quyền truy cập. Vui lòng cẩn thận khi thực hiện."
-                                : "Các hành động trong khu vực này có thể ảnh hưởng nghiêm trọng đến nhóm của bạn. Vui lòng cẩn thận khi thực hiện."
-                            }
+                            {isJoinedTeam
+                                ? 'Rời khỏi nhóm sẽ không thể khôi phục lại quyền truy cập. Vui lòng cẩn thận khi thực hiện.'
+                                : 'Các hành động trong khu vực này có thể ảnh hưởng nghiêm trọng đến nhóm của bạn. Vui lòng cẩn thận khi thực hiện.'}
                         </p>
                     </div>
 
@@ -453,16 +452,14 @@ const Settings = ({ teamId }: SettingsProps) => {
             >
                 <div className="space-y-4">
                     <p className="text-red-600 font-medium">
-                        {isJoinedTeam 
-                            ? 'Bạn có chắc chắn muốn rời khỏi nhóm này?' 
-                            : 'Bạn có chắc chắn muốn xóa nhóm này?'
-                        }
+                        {isJoinedTeam
+                            ? 'Bạn có chắc chắn muốn rời khỏi nhóm này?'
+                            : 'Bạn có chắc chắn muốn xóa nhóm này?'}
                     </p>
                     <p className="text-gray-600">
                         {isJoinedTeam
                             ? 'Sau khi rời nhóm, bạn sẽ không thể truy cập vào các tài liệu và thông tin của nhóm. Bạn có thể được mời lại vào nhóm bởi người tạo hoặc quản trị viên.'
-                            : 'Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến nhóm.'
-                        }
+                            : 'Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến nhóm.'}
                     </p>
                 </div>
             </Modal>
