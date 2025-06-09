@@ -1,16 +1,18 @@
-import React, { useState, useEffect, Key } from 'react';
-import { Table, Card, DatePicker, Select, Button, message, Input } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Card, DatePicker, Select, Button, Input } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { getUserLogsApi } from '../../services/adminServices';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import type { ColumnsType } from 'antd/es/table';
 import type { UserLog } from '../../services/types/types';
+import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
 
 const UserLogs = () => {
+    const { message, contextHolder } = useMessage();
     const [logs, setLogs] = useState<UserLog[]>([]);
     const [filteredLogs, setFilteredLogs] = useState<UserLog[]>([]);
     const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ const UserLogs = () => {
                 total: response.total,
             });
         } catch (error) {
-            message.error('Không thể tải lịch sử hoạt động');
+            message.error({ key: 'fetch-logs', content: 'Không thể tải lịch sử hoạt động' });
         } finally {
             setLoading(false);
         }
@@ -66,15 +68,6 @@ const UserLogs = () => {
 
         setFilteredLogs(tempLogs);
     }, [logs, actionFilter, dateRange]);
-
-    const handleTableChange = (pagination: any) => {
-        fetchLogs(pagination.current, pagination.pageSize);
-    };
-
-    const handleSearch = (value: string) => {
-        setSearchText(value);
-        setPagination((prev) => ({ ...prev, current: 1 }));
-    };
 
     const columns: ColumnsType<UserLog> = [
         {
@@ -107,7 +100,7 @@ const UserLogs = () => {
                 { text: 'Cập nhật thông tin', value: 'UPDATE_PROFILE' },
                 { text: 'Admin - Xem lịch sử tham gia', value: 'Admin - Xem lịch sử tham gia' },
             ],
-            onFilter: (value: boolean | Key, record: UserLog) => record.action === value,
+            onFilter: (value, record) => record.action === value,
         },
         {
             title: 'Mô tả',
@@ -122,17 +115,13 @@ const UserLogs = () => {
         },
     ];
 
-    const handleDateRangeChange: RangePickerProps['onChange'] = (dates) => {
-        if (dates && dates[0] && dates[1]) {
-            setDateRange([dates[0], dates[1]]);
-        } else {
-            setDateRange(null);
-        }
-    };
-
-    const handleActionFilterChange = (value: string) => {
-        setActionFilter(value);
-    };
+    const actionOptions = [
+        { value: 'LOGIN', label: 'Đăng nhập' },
+        { value: 'LOGOUT', label: 'Đăng xuất' },
+        { value: 'CREATE_TEAM', label: 'Tạo nhóm' },
+        { value: 'UPDATE_PROFILE', label: 'Cập nhật thông tin' },
+        { value: 'Admin - Xem lịch sử tham gia', label: 'Admin - Xem lịch sử tham gia' },
+    ];
 
     return (
         <Card
@@ -147,21 +136,26 @@ const UserLogs = () => {
                 </Button>
             }
         >
-            {/* Responsive filter container */}
+            {contextHolder}
             <div className="flex flex-wrap md:flex-nowrap gap-3 mb-4">
                 <div className="flex-1 min-w-[250px]">
                     <Search
                         placeholder="Tìm kiếm theo họ tên"
                         allowClear
                         enterButton={<SearchOutlined />}
-                        onSearch={handleSearch}
+                        onSearch={(value) => {
+                            setSearchText(value);
+                            setPagination((prev) => ({ ...prev, current: 1 }));
+                        }}
                         style={{ width: '100%' }}
                     />
                 </div>
 
                 <div className="flex-1 min-w-[250px]">
                     <RangePicker
-                        onChange={handleDateRangeChange}
+                        onChange={(dates) =>
+                            dates && dates[0] && dates[1] ? setDateRange([dates[0], dates[1]]) : setDateRange(null)
+                        }
                         format="DD/MM/YYYY"
                         placeholder={['Từ ngày', 'Đến ngày']}
                         style={{ width: '100%' }}
@@ -172,15 +166,9 @@ const UserLogs = () => {
                     <Select
                         placeholder="Lọc theo hành động"
                         allowClear
-                        onChange={handleActionFilterChange}
+                        onChange={setActionFilter}
                         style={{ width: '100%' }}
-                        options={[
-                            { value: 'LOGIN', label: 'Đăng nhập' },
-                            { value: 'LOGOUT', label: 'Đăng xuất' },
-                            { value: 'CREATE_TEAM', label: 'Tạo nhóm' },
-                            { value: 'UPDATE_PROFILE', label: 'Cập nhật thông tin' },
-                            { value: 'Admin - Xem lịch sử tham gia', label: 'Admin - Xem lịch sử tham gia' },
-                        ]}
+                        options={actionOptions}
                     />
                 </div>
             </div>
@@ -193,9 +181,9 @@ const UserLogs = () => {
                 pagination={{
                     ...pagination,
                     showSizeChanger: true,
-                    showTotal: (total) => `Tổng số ${total} bản ghi`,
+                    position: ['bottomCenter'],
                 }}
-                onChange={handleTableChange}
+                onChange={(pagination) => fetchLogs(pagination.current, pagination.pageSize)}
                 scroll={{ x: 'max-content' }}
             />
         </Card>

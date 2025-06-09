@@ -213,7 +213,7 @@ const UserManagement = () => {
                 pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
-                    showTotal: (total) => `Tổng số ${total} người dùng`,
+                    position: ['bottomCenter'],
                 }}
                 scroll={{ x: 900 }}
             />

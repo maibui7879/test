@@ -112,7 +112,7 @@ const AdminLogs = () => {
             key: 'created_at',
             render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm:ss'),
             sorter: (a: AdminLog, b: AdminLog) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-            width: 180,
+            width: 160,
             fixed: isMobile ? undefined : ('left' as FixedType),
         },
         {
@@ -125,14 +125,14 @@ const AdminLogs = () => {
                     <div style={{ fontSize: 12, color: '#666' }}>{record.admin_email}</div>
                 </div>
             ),
-            width: 160,
+            width: 200,
         },
         {
             title: 'Hành động',
             dataIndex: 'action',
             key: 'action',
             render: (action: string, record: AdminLog) => (
-                <Space direction="vertical" size="small" style={{ maxWidth: 200 }}>
+                <Space direction="vertical" size="small" style={{ maxWidth: 250 }}>
                     <Tag color={getActionTypeColor(record.action_type)}>{record.action}</Tag>
                     <div
                         style={{
@@ -141,7 +141,7 @@ const AdminLogs = () => {
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            maxWidth: 200,
+                            maxWidth: 250,
                         }}
                         title={record.description}
                     >
@@ -149,7 +149,7 @@ const AdminLogs = () => {
                     </div>
                 </Space>
             ),
-            width: 220,
+            width: 250,
         },
         {
             title: 'Thay đổi',
@@ -159,7 +159,7 @@ const AdminLogs = () => {
                 if (!record.old_data && !record.new_data) return null;
 
                 return (
-                    <div style={{ fontSize: 12, maxWidth: 300, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    <div style={{ fontSize: 12, maxWidth: 400, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         {record.old_data && (
                             <div style={{ color: '#ff4d4f' }}>
                                 <strong>Cũ:</strong> {JSON.stringify(record.old_data)}
@@ -173,15 +173,14 @@ const AdminLogs = () => {
                     </div>
                 );
             },
-            width: 320,
-            responsive: ['md'], // Ẩn trên mobile
+            width: 400,
+            responsive: ['md'],
         },
         {
             title: 'IP',
             dataIndex: 'ip_address',
             key: 'ip_address',
-            width: 140,
-            fixed: isMobile ? undefined : ('right' as FixedType),
+            width: 120,
         },
     ];
 
@@ -225,7 +224,7 @@ const AdminLogs = () => {
                     }}
                     loading={loading}
                     onChange={handleTableChange}
-                    scroll={{ x: 1200 }}
+                    scroll={{ x: 1130 }}
                 />
             </Card>
         </div>
