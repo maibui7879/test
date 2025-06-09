@@ -71,8 +71,8 @@ const AdminLogs = () => {
         if (dates) {
             setFilters({
                 ...filters,
-                startDate: dates[0]?.toISOString(),
-                endDate: dates[1]?.toISOString(),
+                startDate: dates[0]?.format('YYYY-MM-DD HH:mm:ss'),
+                endDate: dates[1]?.format('YYYY-MM-DD HH:mm:ss'),
             });
         } else {
             setFilters({
@@ -110,7 +110,7 @@ const AdminLogs = () => {
             title: 'Thời gian',
             dataIndex: 'created_at',
             key: 'created_at',
-            render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm:ss'),
+            render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm:ss'),
             sorter: (a: AdminLog, b: AdminLog) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
             width: 160,
             fixed: isMobile ? undefined : ('left' as FixedType),
@@ -197,7 +197,7 @@ const AdminLogs = () => {
                     <RangePicker
                         onChange={handleDateRangeChange}
                         showTime
-                        format="DD/MM/YYYY HH:mm:ss"
+                        format="YYYY-MM-DD HH:mm:ss"
                         style={{ width: isMobile ? '100%' : 300 }}
                     />
                     <Select
@@ -220,7 +220,7 @@ const AdminLogs = () => {
                     pagination={{
                         ...pagination,
                         showSizeChanger: true,
-                        showTotal: (total) => `Tổng số ${total} bản ghi`,
+                        position: ['bottomCenter'],
                     }}
                     loading={loading}
                     onChange={handleTableChange}
