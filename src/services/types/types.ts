@@ -147,6 +147,7 @@ export interface Reminder {
     mes?: string;
     is_sent?: boolean;
     is_read?: boolean;
+    type?: 'task' | 'assignment';
     created_at?: string;
 }
 

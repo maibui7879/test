@@ -39,6 +39,7 @@ const ReminderPage = () => {
     const [reminders, setReminders] = useState<Reminder[]>([]);
     const [loading, setLoading] = useState(false);
     const [filter, setFilter] = useState<'unread' | 'read'>('unread');
+    const [typeFilter, setTypeFilter] = useState<string>('all');
     const [pagination, setPagination] = useState<PaginationState>({
         current: 1,
         pageSize: 10,
@@ -50,12 +51,17 @@ const ReminderPage = () => {
         async (page: number = 1) => {
             try {
                 setLoading(true);
-                const response = await getReminders({
+                const params: any = {
                     is_read: filter === 'read' ? '1' : '0',
                     page: page.toString(),
                     limit: pagination.pageSize.toString(),
-                });
+                };
 
+                if (typeFilter && typeFilter !== 'all') {
+                    params.type = typeFilter;
+                }
+
+                const response = await getReminders(params);
                 setReminders(response.data);
                 setPagination((prev) => ({
                     ...prev,
@@ -69,7 +75,7 @@ const ReminderPage = () => {
                 setLoading(false);
             }
         },
-        [filter, pagination.pageSize],
+        [filter, typeFilter, pagination.pageSize],
     );
 
     const handleMarkAsRead = useCallback(
@@ -102,17 +108,60 @@ const ReminderPage = () => {
         setPagination((prev) => ({ ...prev, current: 1 }));
     }, []);
 
+    const handleTypeFilterChange = useCallback((value: string) => {
+        setTypeFilter(value);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+    }, []);
+
     useEffect(() => {
         fetchReminders(1);
-    }, [filter, fetchReminders]);
+    }, [filter, typeFilter, fetchReminders]);
+
+    const getTypeColor = (type: string | undefined) => {
+        switch (type) {
+            case 'task':
+                return 'green';
+            case 'assignment':
+                return 'blue';
+            case 'meeting':
+                return 'purple';
+            case 'deadline':
+                return 'red';
+            default:
+                return 'default';
+        }
+    };
+
+    const getTypeLabel = (type: string | undefined) => {
+        switch (type) {
+            case 'task':
+                return 'Công việc';
+            case 'assignment':
+                return 'Phân công';
+            default:
+                return type;
+        }
+    };
 
     return (
-        <div className="p-6">
+        <div>
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 flex items-center">
                     <BellOutlined className="mr-2" />
                     Nhắc nhở
                 </h1>
+            </div>
+
+            <div className="mb-4">
+                <Segmented
+                    value={typeFilter}
+                    onChange={handleTypeFilterChange}
+                    options={[
+                        { value: 'all', label: 'Tất cả' },
+                        { value: 'task', label: 'Công việc' },
+                        { value: 'assignment', label: 'Phân công' },
+                    ]}
+                />
             </div>
 
             <Card>
@@ -124,7 +173,6 @@ const ReminderPage = () => {
                             { value: 'unread', label: 'Chưa đọc' },
                             { value: 'read', label: 'Đã đọc' },
                         ]}
-                        className="mb-4"
                     />
                 </div>
 
@@ -164,6 +212,11 @@ const ReminderPage = () => {
                                                             Mới
                                                         </Tag>
                                                     )}
+                                                {reminder.type && (
+                                                    <Tag color={getTypeColor(reminder.type)} className="ml-2">
+                                                        {getTypeLabel(reminder.type)}
+                                                    </Tag>
+                                                )}
                                             </div>
                                         }
                                         description={

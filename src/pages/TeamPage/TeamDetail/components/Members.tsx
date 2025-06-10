@@ -188,7 +188,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
             key: 'full_name',
             render: (text: string, record: TeamMemberInfo) => (
                 <Space>
-                    <Avatar src={record.avatar_url}>{text[0]}</Avatar>
+                    <Avatar src={record.avatar_url}>{record.full_name?.[0]?.toUpperCase() || '?'}</Avatar>
                     <span className="font-medium">{text}</span>
                 </Space>
             ),
@@ -243,6 +243,16 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
                     </Space>
                 );
             },
+        },
+        {
+            title: 'Người mời',
+            dataIndex: 'invite_name',
+            key: 'invite_name',
+            render: (text: string, record: TeamMemberInfo) => (
+                <Space>
+                    <span className="font-medium">{text}</span>
+                </Space>
+            ),
         },
 
         ...(currentUserRole && currentUserRole !== ROLES.MEMBER
@@ -311,7 +321,7 @@ const Members = ({ teamId, onMemberChange }: MembersProps) => {
     }, [fetchMembers]);
 
     return (
-        <div className="p-6">
+        <div>
             {contextHolder}
             <div className="mb-4">
                 <Button
