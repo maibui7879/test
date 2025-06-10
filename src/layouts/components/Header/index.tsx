@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Avatar, Dropdown, Button, Badge, Space, Typography, List, Tag, Spin } from 'antd';
+import { Avatar, Dropdown, Button, Badge, Space, Typography, List, Tag, Spin, Modal } from 'antd';
 import {
     BellOutlined,
     UserOutlined,
@@ -55,8 +55,27 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [totalReminders, setTotalReminders] = useState(0);
+    const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const { message, contextHolder } = useMessage();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchTotalReminders = async () => {
+            try {
+                const response = await getReminders({
+                    is_read: '0',
+                    page: '1',
+                    limit: '1',
+                });
+                setTotalReminders(response.pagination.total);
+            } catch (error: any) {
+                console.error('Error fetching total reminders:', error);
+            }
+        };
+        fetchTotalReminders();
+    }, []);
 
     const fetchReminders = useCallback(
         async (pageNum: number = 1) => {
@@ -74,6 +93,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                     setReminders((prev) => [...prev, ...response.data]);
                 }
 
+                setTotalReminders(response.pagination.total);
                 setHasMore(response.data.length === 5);
                 setPage(pageNum);
             } catch (error: any) {
@@ -85,6 +105,12 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
         [message],
     );
 
+    const handleReminderClick = (reminder: Reminder) => {
+        setSelectedReminder(reminder);
+        setIsModalOpen(true);
+        setIsNotificationOpen(false);
+    };
+
     const handleMarkAsRead = useCallback(
         async (id: number) => {
             try {
@@ -93,6 +119,8 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                     prev.map((reminder) => (reminder.id === id ? { ...reminder, is_read: true } : reminder)),
                 );
                 message.success({ key: 'markRead', content: 'Đã đánh dấu đã đọc' });
+                setIsModalOpen(false);
+                setSelectedReminder(null);
             } catch (error: any) {
                 message.error({ key: 'markReadError', content: error.message || 'Không thể cập nhật trạng thái' });
             }
@@ -143,20 +171,38 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
         },
     ];
 
+    const getTypeColor = (type: string | undefined) => {
+        switch (type) {
+            case 'task':
+                return 'green';
+            case 'assignment':
+                return 'blue';
+            default:
+                return 'default';
+        }
+    };
+
     const notificationContent = (
-        <div className="w-64 md:w-80 bg-white rounded-lg shadow-lg">
-            <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                <Text strong className="text-gray-800">
-                    Thông báo
-                </Text>
-                <Button type="link" onClick={() => navigate('/reminder')} className="text-blue-600 hover:text-blue-700">
+        <div className="w-[280px] sm:w-[320px] md:w-[360px] bg-white rounded-lg shadow-lg">
+            <div className="p-2.5 sm:p-3 border-b border-gray-100 flex justify-between items-center bg-white">
+                <div>
+                    <Text strong className="text-gray-800 text-sm sm:text-base">
+                        Thông báo
+                    </Text>
+                    <div className="text-[11px] sm:text-xs text-gray-500 mt-0.5">{totalReminders} thông báo</div>
+                </div>
+                <Button
+                    type="link"
+                    onClick={() => navigate('/reminder')}
+                    className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm"
+                >
                     Xem tất cả
                 </Button>
             </div>
-            <div className="max-h-96 overflow-y-auto bg-white" onScroll={handleScroll}>
+            <div className="max-h-[320px] sm:max-h-[400px] overflow-y-auto" onScroll={handleScroll}>
                 {loading && page === 1 ? (
-                    <div className="flex justify-center p-4">
-                        <Spin />
+                    <div className="flex justify-center items-center p-4 sm:p-6">
+                        <Spin size="default" />
                     </div>
                 ) : reminders.length > 0 ? (
                     <List
@@ -164,39 +210,41 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                         renderItem={(reminder) => (
                             <List.Item
                                 key={reminder.id}
-                                className="px-8 ml-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                                actions={[
-                                    !reminder.is_read && (
-                                        <Button
-                                            type="text"
-                                            icon={<CheckOutlined />}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleMarkAsRead(reminder.id);
-                                            }}
-                                            className="text-green-600 hover:text-green-700"
-                                        >
-                                            Đánh dấu đã đọc
-                                        </Button>
-                                    ),
-                                ]}
+                                className="px-2 sm:px-3 py-2 sm:py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors duration-200"
+                                onClick={() => handleReminderClick(reminder)}
                             >
                                 <List.Item.Meta
+                                    className="ml-1 sm:ml-2"
                                     title={
-                                        <div className="flex items-center">
-                                            <span className="font-medium text-gray-800">{reminder.mes}</span>
-                                            {!reminder.is_read &&
-                                                reminder.start_time &&
-                                                isNewReminder(reminder.start_time) && (
-                                                    <Tag color="blue" className="ml-2">
-                                                        Mới
-                                                    </Tag>
-                                                )}
+                                        <div className="flex items-start">
+                                            <span className="text-gray-800 text-xs sm:text-sm">
+                                                {reminder.mes}
+                                                <div className="inline-flex items-center ml-1 space-x-1">
+                                                    {!reminder.is_read &&
+                                                        reminder.start_time &&
+                                                        isNewReminder(reminder.start_time) && (
+                                                            <Tag
+                                                                color="blue"
+                                                                className="text-[8px] sm:text-[9px] px-1 py-0 leading-3"
+                                                            >
+                                                                Mới
+                                                            </Tag>
+                                                        )}
+                                                    {reminder.type && (
+                                                        <Tag
+                                                            color={getTypeColor(reminder.type)}
+                                                            className="text-[10px] sm:text-[9px] leading-3 my-1"
+                                                        >
+                                                            {reminder.type === 'task' ? 'Công việc' : 'Phân công'}
+                                                        </Tag>
+                                                    )}
+                                                </div>
+                                            </span>
                                         </div>
                                     }
                                     description={
                                         reminder.start_time && (
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                                 {formatTimeAgo(reminder.start_time)}
                                             </p>
                                         )
@@ -206,10 +254,15 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                         )}
                     />
                 ) : (
-                    <div className="p-4 text-center text-gray-500 bg-gray-50">Không có thông báo mới</div>
+                    <div className="p-4 sm:p-6 text-center text-gray-500">
+                        <div className="text-gray-400 mb-1.5 sm:mb-2">
+                            <BellOutlined className="text-lg sm:text-xl" />
+                        </div>
+                        <p className="text-xs sm:text-sm">Không có thông báo mới</p>
+                    </div>
                 )}
                 {loading && page > 1 && (
-                    <div className="flex justify-center p-2 bg-white">
+                    <div className="flex justify-center p-1.5 sm:p-2">
                         <Spin size="small" />
                     </div>
                 )}
@@ -220,6 +273,64 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
     return (
         <>
             {contextHolder}
+            <Modal
+                title={
+                    <div className="flex items-center">
+                        <span className="text-sm sm:text-base">Chi tiết thông báo</span>
+                        {selectedReminder?.type && (
+                            <Tag
+                                color={getTypeColor(selectedReminder.type)}
+                                className="ml-2 text-[8px] sm:text-[9px] px-1 py-0 leading-3"
+                            >
+                                {selectedReminder.type === 'task' ? 'Công việc' : 'Phân công'}
+                            </Tag>
+                        )}
+                    </div>
+                }
+                open={isModalOpen}
+                onCancel={() => {
+                    setIsModalOpen(false);
+                    setSelectedReminder(null);
+                }}
+                footer={[
+                    <Button
+                        key="markAsRead"
+                        type="primary"
+                        icon={<CheckOutlined />}
+                        onClick={() => selectedReminder && handleMarkAsRead(selectedReminder.id)}
+                        disabled={selectedReminder?.is_read}
+                        className="text-xs sm:text-sm"
+                    >
+                        Đánh dấu đã đọc
+                    </Button>,
+                    <Button
+                        key="close"
+                        onClick={() => {
+                            setIsModalOpen(false);
+                            setSelectedReminder(null);
+                        }}
+                        className="text-xs sm:text-sm"
+                    >
+                        Đóng
+                    </Button>,
+                ]}
+            >
+                {selectedReminder && (
+                    <div className="space-y-2 sm:space-y-3">
+                        <div className="flex items-center">
+                            {!selectedReminder.is_read && (
+                                <Tag color="blue" className="mr-2 text-[8px] sm:text-[9px] px-1 py-0 leading-3">
+                                    Mới
+                                </Tag>
+                            )}
+                            <span className="text-xs sm:text-sm text-gray-500">
+                                {selectedReminder.start_time && formatTimeAgo(selectedReminder.start_time)}
+                            </span>
+                        </div>
+                        <div className="text-gray-800 text-xs sm:text-sm">{selectedReminder.mes}</div>
+                    </div>
+                )}
+            </Modal>
             <nav className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="relative flex h-16 items-center justify-between">
@@ -247,7 +358,7 @@ function Header({ collapsed, onCollapse, user, logout, onSettingsClick }: Header
                                     placement="bottomRight"
                                 >
                                     <Badge
-                                        count={reminders.filter((r) => !r.is_read).length}
+                                        count={totalReminders}
                                         size="small"
                                         className="cursor-pointer"
                                         style={{
