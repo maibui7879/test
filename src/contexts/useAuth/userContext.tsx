@@ -60,7 +60,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         try {
             const res = await loginApi(email, password);
             const receivedToken = res.data?.token;
-            if (!receivedToken) throw new Error('Token không tồn tại');
+            if (!receivedToken) throw new Error('Sai tài khoản hoặc mất khẩu');
             saveToken(receivedToken);
             setToken(receivedToken);
 
