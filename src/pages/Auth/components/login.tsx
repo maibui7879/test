@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMessage } from '@hooks/useMessage';
 
 const Login = () => {
-    const { login } = useUser();
+    const { login, user } = useUser();
     const navigate = useNavigate();
     const { message, contextHolder } = useMessage();
     const [email, setEmail] = useState('');
@@ -16,13 +16,13 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const role = await login(email, password);
+            await login(email, password);
             message.success({
-                key: 'login-success',
-                content: role === 'admin' ? 'Chào mừng Admin!' : 'Đăng nhập thành công!',
+                key: 'login',
+                content: user?.role === 'admin' ? 'Chào mừng Admin!' : 'Đăng nhập thành công!',
             });
 
-            if (role === 'admin') {
+            if (user?.role === 'admin') {
                 navigate('/admin');
             } else {
                 navigate('/dashboard');

@@ -8,7 +8,7 @@ import { useMessage } from '@/hooks/useMessage';
 interface UserContextType {
     user: UserProfile | null;
     token: string | null;
-    login: (email: string, password: string) => Promise<string>;
+    login: (email: string, password: string) => Promise<void>;
     logout: () => void;
     fetchUserInfo: () => Promise<void>;
     isAuthenticated: boolean;
@@ -21,18 +21,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const { message } = useMessage();
 
-    const softLogout = () => {
+    const logout = useCallback(() => {
         clearToken();
         localStorage.removeItem('full_name');
         localStorage.removeItem('role');
         setToken(null);
         setUser(null);
-    };
-
-    const logout = () => {
-        softLogout();
         window.location.href = '/';
-    };
+    }, []);
 
     const handleSessionExpired = useCallback(() => {
         message.error({ key: 'session-expired', content: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.' });
@@ -64,7 +60,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         try {
             const res = await loginApi(email, password);
             const receivedToken = res.data?.token;
-            if (!receivedToken) throw new Error('Sai tài khoản hoặc mật khẩu');
+            if (!receivedToken) throw new Error('Token không tồn tại');
             saveToken(receivedToken);
             setToken(receivedToken);
 
@@ -72,7 +68,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
             const allowedRoles = ['admin', 'member'];
             if (!userInfo.role || !allowedRoles.includes(userInfo.role)) {
-                softLogout();
+                logout();
                 throw new Error('Bạn không có quyền truy cập');
             }
 
@@ -83,9 +79,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 localStorage.setItem('role', userInfo.role);
             }
             setUser(userInfo);
-            return userInfo.role;
-        } catch (error: any) {
-            softLogout();
+        } catch (error) {
             throw error;
         }
     };
@@ -95,27 +89,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }, [token, fetchUserInfo]);
 
     useEffect(() => {
-        const checkSessionInterval = setInterval(() => {
-            if (token) {
-                fetchUserInfo().catch(() => {
-                    handleSessionExpired();
-                });
-            }
-        }, 30 * 60 * 1000);
+        const checkSessionInterval = setInterval(
+            () => {
+                if (token) {
+                    fetchUserInfo().catch(() => {
+                        handleSessionExpired();
+                    });
+                }
+            },
+            30 * 60 * 1000,
+        ); // Kiểm tra mỗi 30 phút
+
         return () => clearInterval(checkSessionInterval);
     }, [token, fetchUserInfo, handleSessionExpired]);
 
     return (
-        <UserContext.Provider
-            value={{
-                user,
-                token,
-                login,
-                logout,
-                fetchUserInfo,
-                isAuthenticated: !!user && !!token,
-            }}
-        >
+        <UserContext.Provider value={{ user, token, login, logout, fetchUserInfo, isAuthenticated: !!user && !!token }}>
             {children}
         </UserContext.Provider>
     );
